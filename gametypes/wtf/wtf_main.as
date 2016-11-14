@@ -47,11 +47,18 @@ int CTFT_GRUNT_COOLDOWN = 1500;
 int CTFT_SUPPORT_COOLDOWN = 1200;
 int CTFT_SHELL_COOLDOWN = 10000;
 int CTFT_BOMB_COOLDOWN = 20000;
+int CTFT_BLAST_COOLDOWN = 3000;
+int CTFT_BLAST_AP_COST = 25;
 float CTFT_RESPAWN_RADIUS = 384.0f;
 float CTFT_BUILD_RADIUS = 160.0f;
 float CTFT_BUILD_DESTROY_RADIUS = 96.0f;
 float CTFT_MEDIC_INFLUENCE_RADIUS = 192.0f;
 float CTFT_SUPPORT_INFLUENCE_RADIUS = 192.0f;
+
+// More than the maximum damage the Runner can inflict in a single shot (he has a RL so it's 80).
+// We also want the blast to be a powerful weapon (because shots are rare) so add a bit more.
+const int CTFT_BLAST_DAMAGE = 101;
+const uint CTFT_TURRET_STUN_TIME = 1250;
 
 // precache images and sounds
 
@@ -205,6 +212,10 @@ bool GT_Command( Client @client, const String &cmdString, const String &argsStri
 	else if ( cmdString == "destroy" )
 	{
 		CTFT_DestroyCommand( client, argsString, argc );
+	}
+	else if ( cmdString == "blast" )
+	{
+		CTFT_Blast( client );
 	}
     // example of registered command
     else if ( cmdString == "gametype" )
@@ -549,7 +560,6 @@ void GT_ScoreEvent( Client @client, const String &score_event, const String &arg
         {
 			if ( @target.client != null )
 			{
-            	/* will not work without latest bins*/
             	GetPlayer( target.client ).tookDamage( arg3, arg2 );
 			}
 			// Hack: IG should not inflict more than 125 damage units on turrets
@@ -684,9 +694,9 @@ void GT_PlayerRespawn( Entity @ent, int old_team, int new_team )
         // Armor
         client.inventoryGiveItem( ARMOR_GA );
 
-        G_PrintMsg( ent , "You're spawned as ^3RUNNER^7.\n");
-		// TODO: Provide extended class description       	
-		// TODO: Print actions to the client		
+        G_PrintMsg( ent , "You're spawned as ^3RUNNER^7. This is the fastest offensive class\n" );
+		G_PrintMsg( ent , "Command `^6blast^7`: Fire a powerful energy blast that hits enemies and stuns turret\n" );
+		G_PrintMsg( ent , "Consider setting cg_particles 1 to make the blast clearly visible\n" );	
     }
     // Medic
     else if ( player.playerClass.tag == PLAYERCLASS_MEDIC )
@@ -1116,6 +1126,7 @@ void GT_InitGametype()
     G_RegisterCommand( "class" );
     G_RegisterCommand( "build" );
     G_RegisterCommand( "destroy" );
+	G_RegisterCommand( "blast" );
 
     // Make turret models pure
     G_ModelIndex( "models/objects/turret/base.md3", true );

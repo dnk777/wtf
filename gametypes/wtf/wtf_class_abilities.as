@@ -192,3 +192,39 @@ void CTFT_DropBomb( Client @client )
         }
     }
 }
+
+void CTFT_Blast( Client @client )
+{
+	if ( @client == null )
+		return;
+
+	if ( client.getEnt().isGhosting() )
+		return;
+
+	cPlayer @player = @GetPlayer( client );
+
+	if ( player.playerClass.tag != PLAYERCLASS_RUNNER )
+	{
+		client.printMessage( "This command is not available for your class\n" );
+		return;
+	}
+
+	if ( player.isBlastCooldown() )
+	{
+		client.printMessage( "You can't fire a blast yet\n" );
+		return;
+	}
+
+	if ( client.armor < CTFT_BLAST_AP_COST )
+	{
+		client.printMessage( "You don't have enough armor to fire a blast\n" );
+		return;
+	}
+
+	Entity @ent = client.getEnt();
+	if ( @G_FireWeakBolt( ent.origin, ent.angles, 8000, CTFT_BLAST_DAMAGE, 100, 1000, ent ) != null )
+	{
+		player.setBlastCooldown();
+		client.armor -= CTFT_BLAST_AP_COST;
+	}
+}

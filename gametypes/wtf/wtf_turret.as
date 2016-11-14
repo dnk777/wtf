@@ -61,7 +61,8 @@ class cTurret
     uint lastInvisibilityAlarmTime;
     uint invisibilityAlarmRepeatDelay;
 	uint lastRocketFireTime;
-	uint rocketReloadTime;	
+	uint rocketReloadTime;
+	uint stunnedTimeoutAt;
 
     float gunOffset;	// height of the gun relative to the rotator
     int flashTime;		// duration of the muzzleflash
@@ -108,6 +109,7 @@ class cTurret
         this.invisibilityAlarmRepeatDelay = 1500;
 		this.lastRocketFireTime = 0;
 		this.rocketReloadTime = 800;
+		this.stunnedTimeoutAt = 0;
         this.gunOffset = 8;
         this.flashTime = 100;
         this.yawSpeed = 100.0f;
@@ -394,6 +396,21 @@ class cTurret
         // delete moving sound (may be restored later)
         this.bodyEnt.sound = 0;
 
+		// apply stun effect if necessary
+		if ( this.stunnedTimeoutAt > levelTime )
+		{
+			// show stun effect
+			this.gunEnt.effects |= EF_GODMODE;
+			this.bodyEnt.effects |= EF_GODMODE;
+			// schedule next think
+			this.bodyEnt.nextThink = levelTime + 1;
+			return;
+		}
+		
+		// remove stun effect
+		this.gunEnt.effects &= ~EF_GODMODE;
+		this.bodyEnt.effects &= ~EF_GODMODE;
+
         // scan for targets
         this.scan();
 
@@ -563,6 +580,27 @@ class cTurret
         if ( !this.inuse || @this.bodyEnt == null )
             return;
 
+		bool wasStunned = this.stunnedTimeoutAt > levelTime;
+		bool stunReported = false;
+		// Check for stunning blast
+		if ( @attacker.client != null && damage == CTFT_BLAST_DAMAGE )
+		{
+			cPlayer @player = GetPlayer( attacker.client );
+			if ( @player != null && player.playerClass.tag == PLAYERCLASS_RUNNER )
+			{
+				this.stunnedTimeoutAt = levelTime + CTFT_TURRET_STUN_TIME;
+				if ( !wasStunned && @this.client != null )
+				{
+        			if ( GetPlayer( this.client ).playerClass.tag == PLAYERCLASS_ENGINEER
+                		&& this.client.getEnt().team == this.bodyEnt.team )
+        			{
+            			G_CenterPrintMsg( client.getEnt(), S_COLOR_RED + "Your turret is stunned!" );
+						stunReported = true;
+        			}
+				}
+			}
+		}
+
         if ( this.lastPainTime + this.painDelay > levelTime )
             return;
 
@@ -570,7 +608,7 @@ class cTurret
 
         G_Sound( this.bodyEnt, CHAN_PAIN, this.painSoundIndex, 1.0f );
 
-        if ( @this.client != null )
+        if ( !stunReported && @this.client != null )
         {
             if ( GetPlayer( this.client ).playerClass.tag == PLAYERCLASS_ENGINEER
                     && this.client.getEnt().team == this.bodyEnt.team )

@@ -34,6 +34,7 @@ class cPlayer
     uint engineerBuildCooldownTime;
     uint shellCooldownTime;
     uint bombCooldownTime;
+	uint blastCooldownTime;
     uint respawnTime;
 	bool isHealingTeammates;
 	float medicInfluence;
@@ -73,6 +74,7 @@ class cPlayer
         this.engineerBuildCooldownTime = 0;
         this.shellCooldownTime = 0;
         this.bombCooldownTime = 0;
+		this.blastCooldownTime = 0;
         this.respawnTime = 0;
 		this.isHealingTeammates = false;
 		this.medicInfluence = 0.0f;
@@ -909,6 +911,16 @@ class cPlayer
 
         return int( this.bombCooldownTime - levelTime );
     }
+
+	void setBlastCooldown()
+	{
+		this.blastCooldownTime = levelTime + CTFT_BLAST_COOLDOWN;
+	}
+
+	bool isBlastCooldown()
+	{
+		return this.blastCooldownTime > levelTime;
+	}
 
     void setShellCooldown( int baseTime )
     {
