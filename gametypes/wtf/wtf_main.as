@@ -218,6 +218,10 @@ bool GT_Command( Client @client, const String &cmdString, const String &argsStri
 	{
 		CTFT_ProtectCommand( client, argsString, argc );
 	}
+	else if ( cmdString == "supply" )
+	{
+		CTFT_SupplyCommand( client, argsString, argc );
+	}
     // example of registered command
     else if ( cmdString == "gametype" )
     {
@@ -685,15 +689,6 @@ void GT_PlayerRespawn( Entity @ent, int old_team, int new_team )
         // Weapons
         client.inventoryGiveItem( WEAP_ROCKETLAUNCHER );
         client.inventoryGiveItem( WEAP_ELECTROBOLT );
-        // Enable gunblade blast
-    	client.inventorySetCount( AMMO_GUNBLADE, 1 );
-
-		// Ammo (set an exact amount we need)
-		client.inventorySetCount( AMMO_ROCKETS, 7 );
-		client.inventorySetCount( AMMO_BOLTS, 7 );
-
-        // Armor
-        client.inventoryGiveItem( ARMOR_GA );
 
         G_PrintMsg( ent , "You're spawned as ^3RUNNER^7. This is the fastest offensive class\n" );
 		G_PrintMsg( ent , "Command `^6blast^7`: Fire a powerful energy blast that hits enemies and stuns turret\n" );
@@ -705,12 +700,6 @@ void GT_PlayerRespawn( Entity @ent, int old_team, int new_team )
         // Weapons
         client.inventoryGiveItem( WEAP_PLASMAGUN );
         client.inventoryGiveItem( WEAP_MACHINEGUN );
-        // Enable gunblade blast
-    	client.inventorySetCount( AMMO_GUNBLADE, 1 );
-
-        // Ammo (set an exact amount we need)
-        client.inventorySetCount( AMMO_PLASMA, 150 );
-		client.inventorySetCount( AMMO_BULLETS, 150 );
 
         G_PrintMsg( ent , "You're spawned as ^2MEDIC^7.\n");
 		// TODO: Provide extended class description
@@ -723,11 +712,6 @@ void GT_PlayerRespawn( Entity @ent, int old_team, int new_team )
         client.inventoryGiveItem( WEAP_ROCKETLAUNCHER );
         client.inventoryGiveItem( WEAP_LASERGUN );
         client.inventoryGiveItem( WEAP_GRENADELAUNCHER );
-        
-        // Ammo
-        client.inventoryGiveItem( AMMO_ROCKETS );
-        client.inventoryGiveItem( AMMO_LASERS );
-		client.inventorySetCount( AMMO_GRENADES, 10 );
 		
         G_PrintMsg( ent , "You're spawned as ^1GRUNT^7.\n");
         // TODO: Provide extended class description
@@ -741,11 +725,6 @@ void GT_PlayerRespawn( Entity @ent, int old_team, int new_team )
         client.inventoryGiveItem( WEAP_PLASMAGUN );
         client.inventoryGiveItem( WEAP_RIOTGUN );
 
-		// Ammo
-		client.inventorySetCount( AMMO_ROCKETS, 10 );
-		client.inventoryGiveItem( AMMO_PLASMA );
-		client.inventoryGiveItem( AMMO_SHELLS );
-
         G_PrintMsg( ent , "You're spawned as ^4ENGINEER^7. This is a defencive class with an ability to build entities\n");
 		G_PrintMsg( ent , "Command `^6build turret^7`: Spawn a turret\n");
 		G_PrintMsg( ent , "Command `^6destroy turret^7`: Destroy a turret\n");
@@ -755,8 +734,6 @@ void GT_PlayerRespawn( Entity @ent, int old_team, int new_team )
 		// Weapons
 		client.inventoryGiveItem( WEAP_LASERGUN );
 		client.inventoryGiveItem( WEAP_RIOTGUN );
-		 // Enable gunblade blast
-    	client.inventorySetCount( AMMO_GUNBLADE, 1 );
 
 		G_PrintMsg( ent, "You're spawned as ^8SUPPORT^7.\n");
 		// TODO: Provide extended class description
@@ -770,16 +747,15 @@ void GT_PlayerRespawn( Entity @ent, int old_team, int new_team )
 		client.inventoryGiveItem( WEAP_MACHINEGUN );
 		// Remove GB
 		client.inventorySetCount( WEAP_GUNBLADE, 0 );
-
-		// Ammo (set an exact amount we need)
-		client.inventorySetCount( AMMO_INSTAS, 3 );
-		client.inventorySetCount( AMMO_BOLTS, 10 );
-		client.inventorySetCount( AMMO_BULLETS, 100 );
+		// Remove IG ammo
+		client.inventorySetCount( AMMO_INSTAS, 0 );
 		
 		G_PrintMsg( ent, "You're spawned as ^5SNIPER^7.\n");
 		// TODO: Provide extended class description
 		// TODO: Print actions to the client
 	}
+
+	player.loadAmmo();
 
 
     // select rocket launcher if available
@@ -1129,6 +1105,7 @@ void GT_InitGametype()
     G_RegisterCommand( "destroy" );
 	G_RegisterCommand( "altattack" );
 	G_RegisterCommand( "protect" );
+	G_RegisterCommand( "supply" );
 
     // Make turret models pure
     G_ModelIndex( "models/objects/turret/base.md3", true );

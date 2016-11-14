@@ -35,8 +35,11 @@ class cPlayer
     uint shellCooldownTime;
     uint bombCooldownTime;
 	uint blastCooldownTime;
+	uint buyAmmoCooldownTime;
     uint respawnTime;
 	bool isHealingTeammates;
+	bool hasReceivedAmmo;
+	bool hasPendingSupplyCommand;
 	float medicInfluence;
 	float supportInfluence;
     bool invisibilityEnabled;
@@ -75,8 +78,11 @@ class cPlayer
         this.shellCooldownTime = 0;
         this.bombCooldownTime = 0;
 		this.blastCooldownTime = 0;
+		this.buyAmmoCooldownTime = 0;
         this.respawnTime = 0;
 		this.isHealingTeammates = false;
+		this.hasReceivedAmmo = false;
+		this.hasPendingSupplyCommand = false;
 		this.medicInfluence = 0.0f;
 		this.supportInfluence = 0.0f;
         this.invisibilityEnabled = false;
@@ -528,6 +534,7 @@ class cPlayer
 		this.medicInfluence = 0.0f;
 		this.supportInfluence = 0.0f;
 		this.isHealingTeammates = false;
+		this.hasReceivedAmmo = false;
 	}
 
 	void refreshInfluenceEmission()
@@ -606,7 +613,13 @@ class cPlayer
 				this.isHealingTeammates = true;
 				this.supportInfluenceScore += 0.00045 * influence * frameTime;
 			}
+			
+			if ( this.hasPendingSupplyCommand )
+				player.hasReceivedAmmo = true;
 		}
+
+		this.hasReceivedAmmo = this.hasPendingSupplyCommand;
+		this.hasPendingSupplyCommand = false;
 	}
 
 	void refreshInfluenceAbsorption()
@@ -730,6 +743,14 @@ class cPlayer
 			// fix possible rounding errors			
 			if ( this.client.armor < this.playerClass.maxArmor ) 
 				this.client.armor = this.playerClass.maxArmor;
+		}
+
+		if ( this.hasReceivedAmmo )
+		{
+			this.loadAmmo();
+			// loadAmmo() does not play this sound because it might be confusing on respawn when it is called too			
+			G_Sound( this.ent, CHAN_AUTO, G_SoundIndex( "sounds/items/weapon_pickup" ), 0.4f );
+			this.hasReceivedAmmo = false;
 		}
     }
 
@@ -982,6 +1003,48 @@ class cPlayer
                 G_CenterPrintMsg( this.ent, "Warshell wearing off in " + this.client.inventoryCount( POWERUP_SHELL ) + " seconds" );
         }
     }
+
+	void loadAmmo()
+	{
+		if ( this.playerClass.tag == PLAYERCLASS_RUNNER )
+		{
+		    // Enable gunblade blast
+			client.inventorySetCount( AMMO_GUNBLADE, 1 );
+			client.inventorySetCount( AMMO_ROCKETS, 7 );
+			client.inventorySetCount( AMMO_BOLTS, 7 );
+		}
+		else if ( this.playerClass.tag == PLAYERCLASS_MEDIC )
+		{
+		   	// Enable gunblade blast
+			client.inventorySetCount( AMMO_GUNBLADE, 1 );
+		    client.inventorySetCount( AMMO_PLASMA, 100 );
+			client.inventorySetCount( AMMO_BULLETS, 100 );
+		}
+		else if ( this.playerClass.tag == PLAYERCLASS_GRUNT )
+		{
+		    client.inventorySetCount( AMMO_ROCKETS, 10 );
+			client.inventorySetCount( AMMO_LASERS, 100 );
+			client.inventorySetCount( AMMO_GRENADES, 10 );
+		}
+		else if ( this.playerClass.tag == PLAYERCLASS_ENGINEER )
+		{
+			client.inventorySetCount( AMMO_ROCKETS, 10 );
+			client.inventorySetCount( AMMO_PLASMA, 100 );
+			client.inventorySetCount( AMMO_SHELLS, 15 );
+		}
+		else if ( this.playerClass.tag == PLAYERCLASS_SUPPORT )
+		{
+			// Enable gunblade blast
+			client.inventorySetCount( AMMO_GUNBLADE, 1 );
+			client.inventorySetCount( AMMO_LASERS, 100 );
+			client.inventorySetCount( AMMO_SHELLS, 10 );
+		}
+		else if ( this.playerClass.tag == PLAYERCLASS_SNIPER )
+		{
+			client.inventorySetCount( AMMO_BOLTS, 10 );
+			client.inventorySetCount( AMMO_BULLETS, 100 );
+		}
+	}
 }
 
 cPlayer @GetPlayer( Client @client )

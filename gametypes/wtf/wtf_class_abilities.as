@@ -249,3 +249,67 @@ void CTFT_ProtectCommand( Client @client, const String &argsString, int argc )
 
 	client.printMessage( "This command is not available for your class\n" );
 }
+
+void CTFT_SupplyCommand( Client @client, const String &argsString, int argc )
+{
+	if ( @client == null )
+		return;
+
+	if ( client.getEnt().isGhosting() )
+		return;
+
+	cPlayer @player = @GetPlayer( client );
+
+	if ( player.playerClass.tag == PLAYERCLASS_SUPPORT )
+	{
+		CTFT_SupplyAmmo( client, player );
+		return;
+	}
+	
+	if ( player.playerClass.tag == PLAYERCLASS_SNIPER )
+	{
+		CTFT_BuyInstaShot( client, player );	
+		return;
+	}
+
+	client.printMessage( "This command is not available for your class\n" );
+}
+
+void CTFT_SupplyAmmo( Client @client, cPlayer @player )
+{
+	if ( client.armor < 85 )
+	{
+		client.printMessage( "You do not have enough armor to supply ammo\n" );
+		return;
+	}
+
+	player.hasPendingSupplyCommand = true;
+	client.armor -= 85;
+}
+
+void CTFT_BuyInstaShot( Client @client, cPlayer @player )
+{
+	if ( client.armor < 45 )
+	{
+		client.printMessage( "You do not have enough armor to buy an insta shot\n");
+		return;
+	}
+	
+	if ( player.buyAmmoCooldownTime > levelTime )
+	{
+		client.printMessage( "You can't buy an insta shot yet\n" );
+		return;
+	}
+
+	int instaAmmoCount = client.inventoryCount( AMMO_INSTAS );
+	if ( instaAmmoCount >= 3 )
+	{
+		client.printMessage( "You can't have more than 3 insta shots\n" );
+		return;
+	}
+
+	client.armor -= 45;
+	client.inventorySetCount( AMMO_INSTAS, instaAmmoCount + 1 );
+	player.buyAmmoCooldownTime = levelTime + 3000 + 5000 * instaAmmoCount;
+}
+

@@ -140,7 +140,7 @@ void GENERIC_InitPlayerClasses()
         PLAYERCLASS_RUNNER,
         "$models/players/viciious",	// player model
         100,						// initial health
-        0,						    // initial armor
+        25,						    // initial armor
 		50,                         // max armor
         350,						// speed
         450,						// dash speed
@@ -170,7 +170,7 @@ void GENERIC_InitPlayerClasses()
 		PLAYERCLASS_SUPPORT,
 		"$models/players/padpork",  // player model
 		100,                        // initial health
-		25,                         // initial armor
+		0,                          // initial armor
 		100,                        // max armor
 		275,                        // speed
 		320,                        // dash speed
@@ -185,7 +185,7 @@ void GENERIC_InitPlayerClasses()
 		PLAYERCLASS_SNIPER,
 		"$models/players/silverclaw", // player model
 		100,                          // initial health
-		25,                           // initial armor
+		50,                           // initial armor
 		50,                           // max armor
 		240,                          // speed
 		320,                          // dash speed
