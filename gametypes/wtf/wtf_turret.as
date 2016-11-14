@@ -61,10 +61,7 @@ class cTurret
     uint lastInvisibilityAlarmTime;
     uint invisibilityAlarmRepeatDelay;
 	uint lastRocketFireTime;
-	uint rocketReloadTime;
-	
-    Entity @minimap;   // Minimap
-    Entity @sprite;    // On-screen sprite	
+	uint rocketReloadTime;	
 
     float gunOffset;	// height of the gun relative to the rotator
     int flashTime;		// duration of the muzzleflash
@@ -78,7 +75,6 @@ class cTurret
     bool returnToIdle; 	// go back to initial position when no enemies
     int fireMode;		// ammo item values define the projectile it will shoot
     int range;		    // distance at which enemies are located
-	bool detected;      // Is this turret detected? aka draw on map/wh?
     int spread;
     int damage;
     int knockback;
@@ -102,7 +98,6 @@ class cTurret
     {
         // set up with default values
         this.inuse = false;
-		this.detected = false;
         @this.client = null;
         @this.enemy = null;
         @this.invisibleEnemy = null;
@@ -168,18 +163,6 @@ class cTurret
             this.flashEnt.freeEntity();
             @this.flashEnt = null;
         }
-		
-        if( @this.minimap != null )
-        {
-            this.minimap.freeEntity();
-            @this.minimap = null;    
-        }
-        
-        if( @this.sprite != null )
-        {
-            this.sprite.freeEntity();
-            @this.sprite = null;    
-        }        		
 
         this.Init();
     }
@@ -274,54 +257,6 @@ class cTurret
 
         return true; // turret has been correctly spawned
     }
-	
-	void detect()
-	{
-		this.detected = true;
-		
-		Vec3 partOrigin = this.bodyEnt.origin;
-		
-        // another entity to represent it in the minimap
-        @this.minimap = @G_SpawnEntity( "capture_indicator_minimap" );
-        this.minimap.type = ET_MINIMAP_ICON;
-        this.minimap.solid = SOLID_NOT;
-        this.minimap.team = this.bodyEnt.team;
-        this.minimap.origin = partOrigin;
-        this.minimap.modelindex = G_ImageIndex( "gfx/indicators/radar_1" );
-        this.minimap.frame = 22; // size in case of a ET_MINIMAP_ICON
-        this.minimap.svflags = (this.minimap.svflags & ~uint(SVF_NOCLIENT)) | uint(SVF_BROADCAST);
-        this.minimap.linkEntity();        
-        
-        // the sprite entity is also placed upwards and sent as broadcast
-        @this.sprite = @G_SpawnEntity( "capture_indicator_sprite" );
-        this.sprite.type = ET_RADAR;
-        this.sprite.solid = SOLID_NOT;
-        this.sprite.origin = partOrigin;
-        this.sprite.team = this.bodyEnt.team;
-        this.sprite.modelindex = G_ImageIndex( "gfx/indicators/radar" );
-        this.sprite.frame = 132; // radius in case of a ET_SPRITE
-        this.sprite.svflags = (this.sprite.svflags & ~uint(SVF_NOCLIENT)) | uint(SVF_BROADCAST);
-        this.sprite.linkEntity();			
-		
-		this.detectTime = levelTime;
-	}
-	
-	void hide()
-	{
-        if( @this.minimap != null )
-        {
-            this.minimap.freeEntity();
-            @this.minimap = null;    
-        }
-        
-        if( @this.sprite != null )
-        {
-            this.sprite.freeEntity();
-            @this.sprite = null;    
-        }	
-		
-		this.detected = false;
-	}
 
     void die( Entity @inflictor, Entity @attacker )
     {
@@ -448,16 +383,6 @@ class cTurret
             return;
         }
 		
-        // Update minimap and sprite location
-		if ( this.detected == true ) 
-		{
-			this.sprite.origin = this.bodyEnt.origin;
-			this.minimap.origin = this.bodyEnt.origin;
-			
-			if ( levelTime > ( this.detectTime + CTFT_RUNNER_DETECT_DURATION ) )
-				this.hide();
-		}
-
         gunOrigin.z += this.gunOffset;
 
         this.gunEnt.origin = gunOrigin;

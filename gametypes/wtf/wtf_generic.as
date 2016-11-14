@@ -49,17 +49,6 @@ void CTFT_RemoveTurrets()
     }
 }
 
-void CTFT_RemoveDispensers()
-{
-    for ( int i = 0; i < MAX_DISPENSERS; i++ )
-    {
-        if ( gtDispensers[i].inuse == true )
-        {
-            gtDispensers[i].Free();
-        }
-    }
-}
-
 void CTFT_RemoveRevivers()
 {
     for ( int i = 0; i < maxClients; i++ )
@@ -80,40 +69,6 @@ void CTFT_RemoveBombs()
             gtBombs[i].Free();
         }
     }
-}
-
-bool CTFT_IsMaxTurretsReached( int team )
-{
-    int ii = 0;
-    for ( int i = 0; i < MAX_TURRETS; i++ )
-    {
-        if ( gtTurrets[i].inuse == true && gtTurrets[i].bodyEnt.team == team )
-        {
-            ii++;
-        }
-    }
-
-    if( ii >= CTFT_MAXTURRETS_PER_TEAM )
-        return true;
-    else
-        return false;
-}
-
-bool CTFT_IsMaxDispensersReached( int team )
-{
-    int ii = 0;
-    for ( int i = 0; i < MAX_DISPENSERS; i++ )
-    {
-        if ( gtDispensers[i].inuse == true && gtDispensers[i].bodyEnt.team == team )
-        {
-            ii++;
-        }
-    }
-
-    if( ii >= CTFT_MAXDISPENSERS_PER_TEAM )
-        return true;
-    else
-        return false;
 }
 
 bool CTFT_RemoveItemsByName( String type )

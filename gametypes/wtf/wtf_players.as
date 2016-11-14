@@ -30,16 +30,11 @@ class cPlayer
 
     uint medicCooldownTime;
 	uint gruntCooldownTime;
+	uint techCooldownTime;
     uint engineerBuildCooldownTime;
-    uint genericCooldownTime;
+    uint shellCooldownTime;
     uint bombCooldownTime;
-    uint dispenserCooldownTime;
     uint respawnTime;
-	uint rageTime;
-	uint detectTime;
-	bool rageEnabled;
-	bool detectEnabled;
-	bool detectCancelled;
     bool invisibilityEnabled;
     float invisibilityLoad;
     int invisibilityWasUsingWeapon;
@@ -65,15 +60,11 @@ class cPlayer
     {
         this.medicCooldownTime = 0;
 		this.gruntCooldownTime = 0;
+		this.techCooldownTime = 0;
         this.engineerBuildCooldownTime = 0;
-        this.genericCooldownTime = 0;
+        this.shellCooldownTime = 0;
         this.bombCooldownTime = 0;
-        this.dispenserCooldownTime = 0;
         this.respawnTime = 0;
-		this.rageTime = 0;
-		this.rageEnabled = false;
-		this.detectTime = 0;
-		this.detectEnabled = false;
         this.invisibilityEnabled = false;
         this.invisibilityLoad = 0;
         this.invisibilityCooldownTime = 0;
@@ -135,9 +126,9 @@ class cPlayer
             this.client.setHUDStat( STAT_PROGRESS_SELF, int( frac * 100 ) );
         }
 
-        if ( this.isGenericCooldown() )
+        if ( this.isShellCooldown() )
         {
-            frac = float( this.genericCooldownTimeLeft() ) / float( CTFT_GENERIC_COOLDOWN );
+            frac = float( this.shellCooldownTimeLeft() ) / float( CTFT_SHELL_COOLDOWN );
             this.client.setHUDStat( STAT_PROGRESS_SELF, int( frac * 100 ) );
         }
 
@@ -147,15 +138,14 @@ class cPlayer
             this.client.setHUDStat( STAT_PROGRESS_SELF, int( frac * 100 ) );
         }
 
-        if ( this.playerClass.tag == PLAYERCLASS_RUNNER && this.invisibilityLoad > 0 )
+        if ( this.playerClass.tag == PLAYERCLASS_SNIPER && this.invisibilityLoad > 0 )
         {
-            frac = this.invisibilityLoad / CTFT_RUNNER_INVISIBILITY_MAXLOAD;
-            if ( this.isInvisibilityCooldown() || this.invisibilityLoad < CTFT_RUNNER_INVISIBILITY_MINLOAD )
+            frac = this.invisibilityLoad / CTFT_SNIPER_INVISIBILITY_MAXLOAD;
+            if ( this.isInvisibilityCooldown() || this.invisibilityLoad < CTFT_SNIPER_INVISIBILITY_MINLOAD )
                 this.client.setHUDStat( STAT_PROGRESS_SELF, -int( frac * 100 ) );
             else
                 this.client.setHUDStat( STAT_PROGRESS_SELF, int( frac * 100 ) );
         }
-
 
         /****************************************
         * Flag state icons
@@ -545,9 +535,9 @@ class cPlayer
 
         switch ( this.playerClass.tag )
         {
-        case PLAYERCLASS_GRUNT:
-            // Grunts regen armor
-			if ( this.isGruntCooldown() == false )
+        case PLAYERCLASS_TECH:
+            // Techs regen armor
+			if ( this.isTechCooldown() == false )
 			{
 				maxArmor = G_GetItem( ARMOR_YA ).quantity;
 				maxArmor = maxArmor + 25;
@@ -558,15 +548,6 @@ class cPlayer
 				else if ( ( this.client.armor >= (maxArmor - 25) ) && this.client.armor < maxArmor )
 				{
 					this.client.armor += ( frameTime * 0.0032f );
-				}
-			}
-			
-			if ( this.rageEnabled == true )
-			{
-				if ( this.isRageTime() == false )
-				{
-					CTFT_RemoveRage ( this.client );
-					this.rageEnabled = false;
 				}
 			}
 
@@ -619,7 +600,7 @@ class cPlayer
 			}
             break;
 
-        case PLAYERCLASS_RUNNER:
+        case PLAYERCLASS_SNIPER:
             if ( this.ent.health > this.ent.maxHealth ) {
                 this.ent.health -= ( frameTime * 0.006f );
 				// fix possible rounding errors
@@ -653,27 +634,10 @@ class cPlayer
             else
             {
                 this.invisibilityLoad += ( frameTime * 0.006f );
-                if ( this.invisibilityLoad > CTFT_RUNNER_INVISIBILITY_MAXLOAD )
-                    this.invisibilityLoad = CTFT_RUNNER_INVISIBILITY_MAXLOAD;
+                if ( this.invisibilityLoad > CTFT_SNIPER_INVISIBILITY_MAXLOAD )
+                    this.invisibilityLoad = CTFT_SNIPER_INVISIBILITY_MAXLOAD;
             }
 			
-			if ( this.detectEnabled == true )
-			{
-				if ( this.isDetectTime() == false )
-				{
-					if ( this.detectCancelled == true )
-					{
-						this.client.printMessage("^1Failed!\n");
-					} 
-					else 
-					{
-						CTFT_DetectTurrets ( this.client );
-					}
-					this.detectEnabled = false;
-					this.detectCancelled = false;
-				}
-			}			
-
             break;
 
         default:
@@ -691,12 +655,14 @@ class cPlayer
         {
             this.setMedicCooldown();
         }
-        else if ( this.playerClass.tag == PLAYERCLASS_RUNNER )
+        else if ( this.playerClass.tag == PLAYERCLASS_SNIPER )
         {
             this.setInvisibilityCooldown();
-			if ( this.detectEnabled == true )
-				this.detectCancelled = true;
         }
+		else if ( this.playerClass.tag == PLAYERCLASS_TECH )
+		{
+			this.setTechCooldown();
+		}
     }
 
     void setMedicCooldown()
@@ -753,44 +719,36 @@ class cPlayer
         return int( levelTime - this.gruntCooldownTime );
     }	
 	
-    void setRageTime( uint level )
-    {
-        if ( this.playerClass.tag != PLAYERCLASS_GRUNT )
-            return;
-			
-		this.rageEnabled = true;
-        this.rageTime = levelTime + ( CTFT_RAGE_TIME * level );
-    }
+	bool isTechCooldown()
+	{
+		if ( this.playerClass.tag != PLAYERCLASS_TECH )
+			return false;
 
-    bool isRageTime()
-    {
-        if ( this.playerClass.tag != PLAYERCLASS_GRUNT )
-            return false;
+		return ( this.techCooldownTime > levelTime ) ? true : false;
+	}
 
-        return ( this.rageTime > levelTime ) ? true : false;
-    }
-	
-    void setDetectTime( )
-    {
-        if ( this.playerClass.tag != PLAYERCLASS_RUNNER )
-            return;
-			
-		this.detectEnabled = true;
-		this.detectCancelled = false;
-        this.detectTime = levelTime + CTFT_RUNNER_DETECT_TIME;
-    }
+	void setTechCooldown()
+	{
+		if ( this.playerClass.tag != PLAYERCLASS_GRUNT )
+			return;
 
-    bool isDetectTime()
-    {
-        if ( this.playerClass.tag != PLAYERCLASS_RUNNER )
-            return false;
+		this.techCooldownTime = levelTime + CTFT_TECH_COOLDOWN;
+	}
 
-        return ( this.detectTime > levelTime ) ? true : false;
-    }	
+	int techCooldownTimeLeft()
+	{
+		if ( this.playerClass.tag != PLAYERCLASS_TECH )
+			return 0;
+		
+		if ( this.techCooldownTime <= levelTime )
+			return 0;
 
+		return int( levelTime - this.techCooldownTime );
+	}
+   
     void setInvisibilityCooldown()
     {
-        if ( this.playerClass.tag != PLAYERCLASS_RUNNER )
+        if ( this.playerClass.tag != PLAYERCLASS_SNIPER )
             return;
 
         this.invisibilityCooldownTime = levelTime + CTFT_INVISIBILITY_COOLDOWN;
@@ -798,7 +756,7 @@ class cPlayer
 
     bool isInvisibilityCooldown()
     {
-        if ( this.playerClass.tag != PLAYERCLASS_RUNNER )
+        if ( this.playerClass.tag != PLAYERCLASS_SNIPER )
             return false;
 
         return ( this.invisibilityCooldownTime > levelTime ) ? true : false;
@@ -831,7 +789,7 @@ class cPlayer
         return int( this.engineerBuildCooldownTime - levelTime );
     }
 
-    void setBombCooldown( )
+    void setBombCooldown()
     {
         this.bombCooldownTime = levelTime + CTFT_BOMB_COOLDOWN;
     }
@@ -849,22 +807,22 @@ class cPlayer
         return int( this.bombCooldownTime - levelTime );
     }
 
-    void setGenericCooldown( int baseTime )
+    void setShellCooldown( int baseTime )
     {
-        this.genericCooldownTime = levelTime + CTFT_GENERIC_COOLDOWN + baseTime;
+        this.shellCooldownTime = levelTime + CTFT_SHELL_COOLDOWN + baseTime;
     }
 
-    bool isGenericCooldown()
+    bool isShellCooldown()
     {
-        return ( this.genericCooldownTime > levelTime ) ? true : false;
+        return ( this.shellCooldownTime > levelTime ) ? true : false;
     }
 
-    int genericCooldownTimeLeft()
+    int shellCooldownTimeLeft()
     {
-        if ( this.genericCooldownTime <= levelTime )
+        if ( this.shellCooldownTime <= levelTime )
             return 0;
 
-        return int( this.genericCooldownTime - levelTime );
+        return int( this.shellCooldownTime - levelTime );
     }
 
     void activateInvisibility()
@@ -893,7 +851,7 @@ class cPlayer
             return;
         }
 
-        if ( this.invisibilityLoad < CTFT_RUNNER_INVISIBILITY_MINLOAD )
+        if ( this.invisibilityLoad < CTFT_SNIPER_INVISIBILITY_MINLOAD )
         {
             this.printMessage( "Cannot use the skill yet\n" );
             return;
@@ -931,12 +889,12 @@ class cPlayer
         //G_Sound( client.getEnt(), CHAN_MUZZLEFLASH, G_SoundIndex( "sounds/world/tele_in" ), 0.3f );
     }
 
-    void activateWarShell()
+    void activateShell()
     {
         if ( this.ent.isGhosting() )
             return;
 
-        if ( this.isGenericCooldown() )
+        if ( this.isShellCooldown() )
         {
             this.printMessage( "Cannot use the skill yet\n" );
             return;
@@ -953,19 +911,19 @@ class cPlayer
             if ( this.playerClass.tag == PLAYERCLASS_GRUNT )
             {
                 this.client.inventorySetCount( POWERUP_SHELL, CTFT_BATTLESUIT_GRUNT_TIME );
-                this.setGenericCooldown( CTFT_BATTLESUIT_GRUNT_TIME * 1000 );
+                this.setShellCooldown( CTFT_BATTLESUIT_GRUNT_TIME * 1000 );
             }
             else
             {
                 this.client.inventorySetCount( POWERUP_SHELL, CTFT_BATTLESUIT_GRUNT_TIME );
-                this.setGenericCooldown( CTFT_BATTLESUIT_RUNNER_TIME * 1000 );
+                this.setShellCooldown( CTFT_BATTLESUIT_RUNNER_TIME * 1000 );
             }
 
             G_Sound( this.ent, CHAN_MUZZLEFLASH, G_SoundIndex( "sounds/items/shell_spawn" ), 0.3f );
         }
     }
 
-    void watchWarshell()
+    void watchShell()
     {
         if ( this.ent.isGhosting() )
             return;

@@ -21,8 +21,10 @@ const int PLAYERCLASS_GRUNT = 0;
 const int PLAYERCLASS_MEDIC = 1;
 const int PLAYERCLASS_RUNNER = 2;
 const int PLAYERCLASS_ENGINEER = 3;
+const int PLAYERCLASS_TECH = 4;
+const int PLAYERCLASS_SNIPER = 5;
 
-const int PLAYERCLASS_TOTAL = 4;
+const int PLAYERCLASS_TOTAL = 6;
 
 int[] playerClasses( maxClients ); // class of each player
 
@@ -100,13 +102,13 @@ void GENERIC_InitPlayerClasses()
     cPlayerClassInfos[ PLAYERCLASS_GRUNT ].setup(
         "Grunt",					// name
         PLAYERCLASS_GRUNT,
-        "$models/players/bigvic",			// player model
+        "$models/players/bigvic",	// player model
         100,						// initial health
-        0,						// initial armor
-        250,						// speed
-        350,						// dash speed
+        0,						    // initial armor
+        265,						// speed
+        330,						// dash speed
         true,						// can be stunned
-        "gfx/hud/icons/playerclass/grunt",
+        "gfx/hud/icons/playerclass/wtf_grunt",
         "gfx/hud/icons/classactions/grunt1",
         "gfx/hud/icons/classactions/grunt2"
     );
@@ -114,13 +116,13 @@ void GENERIC_InitPlayerClasses()
     cPlayerClassInfos[ PLAYERCLASS_MEDIC ].setup(
         "Medic",					// name
         PLAYERCLASS_MEDIC,
-        "$models/players/monada",			// player model
+        "$models/players/monada",	// player model
         100,						// initial health
-        0,						// initial armor
+        0,						    // initial armor
         300,						// speed
         400,						// dash speed
         true,						// can be stunned
-        "gfx/hud/icons/playerclass/medic",
+        "gfx/hud/icons/playerclass/wtf_medic",
         "gfx/hud/icons/classactions/medic1",
         null
     );
@@ -128,13 +130,13 @@ void GENERIC_InitPlayerClasses()
     cPlayerClassInfos[ PLAYERCLASS_RUNNER ].setup(
         "Runner",					// name
         PLAYERCLASS_RUNNER,
-        "$models/players/silverclaw",			// player model
+        "$models/players/viciious",	// player model
         100,						// initial health
-        0,						// initial armor
+        0,						    // initial armor
         350,						// speed
         450,						// dash speed
         false,						// can be stunned
-        "gfx/hud/icons/playerclass/runner",
+        "gfx/hud/icons/playerclass/wtf_runner",
         "gfx/hud/icons/classactions/runner1",
         "gfx/hud/icons/classactions/runner2"
     );
@@ -142,16 +144,44 @@ void GENERIC_InitPlayerClasses()
     cPlayerClassInfos[ PLAYERCLASS_ENGINEER ].setup(
         "Engineer",					// name
         PLAYERCLASS_ENGINEER,
-        "$models/players/bobot",			// player model
+        "$models/players/bobot",	// player model
         100,						// initial health
-        0,						// initial armor
-        300,						// speed
-        350,						// dash speed
+        0,						    // initial armor
+        280,						// speed
+        330,						// dash speed
         true,						// can be stunned
-        "gfx/hud/icons/playerclass/engi",
+        "gfx/hud/icons/playerclass/wtf_engineer",
         "gfx/hud/icons/classactions/engineer1",
         "gfx/hud/icons/classactions/engineer2"
     );
+
+	cPlayerClassInfos[ PLAYERCLASS_TECH ].setup(
+		"Tech",                     // name
+		PLAYERCLASS_TECH,
+		"$models/players/padpork",  // player model
+		100,                        // initial health
+		50,                         // initial armor
+		265,                        // speed
+		330,                        // dash speed
+		true,                       // can be stunned
+		"gfx/hud/playerclass/wtf_tech",
+		null,
+		null
+	);
+
+	cPlayerClassInfos[ PLAYERCLASS_SNIPER ].setup(
+		"Sniper",                     // name
+		PLAYERCLASS_SNIPER,
+		"$models/players/silverclaw", // player model
+		100,                          // initial health
+		0,                            // initial armor
+		240,                          // speed
+		320,                          // dash speed
+		true,                         // can be stunned
+		"gfx/hud/icons/playerclass/wtf_sniper",
+		null,
+		null	
+	);
 }
 
 

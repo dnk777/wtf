@@ -196,24 +196,11 @@ class cFlagBase
         Entity @stop = null;
         Vec3 origin = this.owner.origin;
 
-		// Check for blockers, turrets, ammo dispensers
+		// Check for blockers
 		int timeNow = levelTime;
-		cDispenser @dispenser = null;
 		cTurret @turret = null;
 		if ( this.checkBlockages < timeNow )
 		{
-			// Destroy dispensers
-			for ( int i = 0; i < MAX_DISPENSERS; i++ )
-			{
-				if ( gtDispensers[i].inuse == true )
-				{
-					@dispenser = @gtDispensers[i];
-
-					if( dispenser.bodyEnt.origin.distance( origin ) < CTFT_BUILD_DESTROY_RADIUS )
-						dispenser.die(target,target);
-				}
-			}
-
 			// Destroy turrets
 			for ( int i = 0; i < MAX_TURRETS; i++ )
 			{

@@ -16,7 +16,6 @@ wtf/wtf_main.as;
 wtf/wtf_entities.as;
 wtf/wtf_class_abilities.as;
 wtf/wtf_turret.as;
-wtf/wtf_dispenser.as;
 wtf/wtf_reviver.as;
 wtf/wtf_bomb.as;
 

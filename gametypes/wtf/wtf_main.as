@@ -33,30 +33,23 @@ const float CTF_CARRIER_KILL_BONUS_DISTANCE = 512.0f;
 const float CTF_OBJECT_DEFENSE_BONUS_DISTANCE = 512.0f;
 
 int CTFT_RESPAWN_TIME = 15000;
-int CTFT_MAXTURRETS_PER_TEAM = 4;
-int CTFT_MAXDISPENSERS_PER_TEAM = 3;
 int CTFT_TURRET_AP_COST = 50;
 int CTFT_TURRET_STRONG_AP_COST = 125;
 uint CTFT_ENGINEER_BUILD_COOLDOWN_TIME = 15000;
-float CTFT_RUNNER_INVISIBILITY_MINLOAD = 20;
-float CTFT_RUNNER_INVISIBILITY_MAXLOAD = 100;
+float CTFT_SNIPER_INVISIBILITY_MINLOAD = 20;
+float CTFT_SNIPER_INVISIBILITY_MAXLOAD = 100;
 uint CTFT_INVISIBILITY_COOLDOWN = 1000;
 int CTFT_BATTLESUIT_AP_COST = 50;
 int CTFT_BATTLESUIT_RUNNER_TIME = 3; 	// in seconds
 int CTFT_BATTLESUIT_GRUNT_TIME = 8;		// in seconds
-int CTFT_RAGE_TIME = 5000;
 int CTFT_MEDIC_COOLDOWN = 1500;
 int CTFT_GRUNT_COOLDOWN = 1500;
-int CTFT_GENERIC_COOLDOWN = 10000;
+int CTFT_TECH_COOLDOWN = 1500;
+int CTFT_SHELL_COOLDOWN = 10000;
 int CTFT_BOMB_COOLDOWN = 20000;
-int CTFT_DISPENSER_COOLDOWN = 15000;
 float CTFT_RESPAWN_RADIUS = 384.0f;
 float CTFT_BUILD_RADIUS = 160.0f;
 float CTFT_BUILD_DESTROY_RADIUS = 96.0f;
-float CTF_RUNNER_DETECT_DISTANCE = 2048.0f;
-int CTFT_RUNNER_DETECT_COST = 50;
-int CTFT_RUNNER_DETECT_TIME = 1500;
-uint CTFT_RUNNER_DETECT_DURATION = 90000;
 
 // precache images and sounds
 
@@ -91,6 +84,11 @@ int prcAnnouncerFlagScoreEnemy02;
 bool firstSpawn = false;
 
 Cvar ctfAllowPowerupDrop( "ctf_powerupDrop", "0", CVAR_ARCHIVE );
+
+const String SELECT_CLASS_COMMAND = 
+	"mecu \"Select class\"" 
+	+ " Grunt \"class grunt\" Medic \"class medic\" Runner \"class runner\"" 
+	+ " Engineer \"class engineer\" Tech \"class tech\" Sniper \"class sniper\"";
 
 ///*****************************************************************
 /// LOCAL FUNCTIONS
@@ -131,30 +129,9 @@ void CTF_playerKilled( Entity @target, Entity @attacker, Entity @inflictor )
 
 void CTF_SetVoicecommQuickMenu( Client @client, int playerClass )
 {
-	String menuStr = '';
-
-    if ( playerClass == PLAYERCLASS_ENGINEER ) {
-		menuStr += 
-			'"Spawn turret" "classaction1" ' + 
-			'"Spawn ammo dispenser" "classaction2" ';
-	}
-    else if ( playerClass == PLAYERCLASS_GRUNT ) {
-		menuStr += 
-			'"Drop armor" "classaction1" ' + 
-			'"Drop/detonate bomb" "classaction2" ';
-	}
-    else if ( playerClass == PLAYERCLASS_MEDIC ) {
-		menuStr += 	
-			'"Drop health" "classaction1" '
-			'"Empty" "" ';
-	}
-    else if ( playerClass == PLAYERCLASS_RUNNER ) {
-		menuStr += 
-			'"Activate invisibility" "classaction1" ' + 
-			'"Reveal nearby turrets "classaction2" ';
-	}
-		
-	menuStr += 
+	// TODO: Add actions	
+	// TODO: Add more useful messages
+	String menuStr = 
 		'"Area secured" "vsay_team areasecured" ' + 
 		'"Go to quad" "vsay_team gotoquad" ' + 
 		'"Go to powerup" "vsay_team gotopowerup" ' +		
@@ -202,38 +179,6 @@ bool GT_Command( Client @client, const String &cmdString, const String &argsStri
     	GENERIC_CheatVarResponse( client, cmdString, argsString, argc );
     	return true;
     }
-    else if ( cmdString == "classaction1" )
-    {
-        if ( @client != null )
-        {
-            cPlayer @player = @GetPlayer( client );
-
-            if ( player.playerClass.tag == PLAYERCLASS_ENGINEER )
-                CTFT_DropTurret( client, AMMO_BULLETS );
-            else if ( player.playerClass.tag == PLAYERCLASS_GRUNT )
-                CTFT_DropArmor( client, "Yellow Armor" );
-            else if ( player.playerClass.tag == PLAYERCLASS_MEDIC )
-                CTFT_DropHealth( client );
-            else if ( player.playerClass.tag == PLAYERCLASS_RUNNER )
-                player.activateInvisibility();
-        }
-    }
-    else if ( cmdString == "classaction2" )
-    {
-        if ( @client != null )
-        {
-            cPlayer @player = @GetPlayer( client );
-
-            if ( player.playerClass.tag == PLAYERCLASS_ENGINEER )
-                CTFT_DropDispenser( client );
-            else if ( player.playerClass.tag == PLAYERCLASS_GRUNT )
-                CTFT_DropBomb( client );
-            else if ( player.playerClass.tag == PLAYERCLASS_MEDIC )
-                CTFT_DropHealth( client );
-            else if ( player.playerClass.tag == PLAYERCLASS_RUNNER )
-                CTFT_DetectTurretsDelayed( client );
-        }
-    }
     else if ( cmdString == "gametypemenu" )
     {
         if ( client.getEnt().team < TEAM_PLAYERS )
@@ -242,7 +187,7 @@ bool GT_Command( Client @client, const String &cmdString, const String &argsStri
             return true;
         }
 
-        client.execGameCommand( "mecu \"Select class\" Grunt \"class grunt\" Medic \"class medic\" Runner \"class runner\" Engineer \"class engineer\"" );
+        client.execGameCommand( SELECT_CLASS_COMMAND );
         return true;
     }
     else if ( cmdString == "class" )
@@ -553,7 +498,7 @@ String @GT_ScoreboardMessage( uint maxlen )
 
             //G_ConfigString( CS_SCB_PLAYERTAB_LAYOUT, "%n 112 %s 52 %i 52 %l 48 %p l1 %r l1" );
             //G_ConfigString( CS_SCB_PLAYERTAB_TITLES, "Name Clan Score Ping C R" );
-
+ 
 			int score = ent.client.stats.score + int( ent.client.stats.totalDamageGiven * 0.01 );
 
             // "Name Score Ping C R"
@@ -584,10 +529,20 @@ void GT_ScoreEvent( Client @client, const String &score_event, const String &arg
 
         Entity @target = @G_GetEntity( arg1 );
 
-        if ( @target != null && @target.client != null )
+        if ( @target != null )
         {
-            /* will not work without latest bins*/
-            GetPlayer( target.client ).tookDamage( arg3, arg2 );
+			if ( @target.client != null )
+			{
+            	/* will not work without latest bins*/
+            	GetPlayer( target.client ).tookDamage( arg3, arg2 );
+			}
+			// Hack: IG should not inflict more than 125 damage units on turrets
+			else if ( arg2 == 200.0f )
+			{
+				// We did a cheap numeric test first to cut off this string comparison
+				if ( target.classname == "turret_body" )
+					target.health += 75.0f;
+			}
         }
     }
     else if ( score_event == "kill" )
@@ -633,38 +588,9 @@ void GT_ScoreEvent( Client @client, const String &score_event, const String &arg
 
                     if ( @targetPlayer == @bomb.player )
                         bomb.die(tmp, tmp);
-
                 }
             }
         }
-    }
-    else if ( score_event == "award" )
-    {
-		if ( args == "^3On fire!" || args == "^3Raging!" || args == "^3Fraglord!" || args == "^3Extermination!" || args == "^3God Mode!" )
-		{
-			if ( @client == null )
-				return;
-
-			cPlayer @targetPlayer = @GetPlayer( client );
-			if ( targetPlayer.playerClass.tag == PLAYERCLASS_GRUNT )
-			{
-				uint level = 0;
-				if ( args == "^3On fire!" )
-					level = 1;
-				else if ( args == "^3Raging!" )
-					level = 2;
-				else if ( args == "^3Fraglord!" )
-					level = 3;
-				else if ( args == "^3Extermination!" )
-					level = 4;
-				else if ( args == "^3God Mode!" )
-					level = 5;
-
-				 CTFT_SpawnRage ( client, level );
-			}
-
-		}
-
     }
 }
 
@@ -691,7 +617,7 @@ void GT_PlayerRespawn( Entity @ent, int old_team, int new_team )
                 player.setPlayerClass( rand() % PLAYERCLASS_TOTAL );
             }
             else
-                client.execGameCommand( "mecu \"Select class\" Grunt \"class grunt\" Medic \"class medic\" Runner \"class runner\" Engineer \"class engineer\"" );
+                client.execGameCommand( SELECT_CLASS_COMMAND );
         }
 
         // Set newly joined players to respawn queue
@@ -724,75 +650,119 @@ void GT_PlayerRespawn( Entity @ent, int old_team, int new_team )
     player.refreshModel();
     player.refreshMovement();
 
+	client.inventorySetCount( WEAP_GUNBLADE, 1 );
+
     // Runner
     if ( player.playerClass.tag == PLAYERCLASS_RUNNER )
     {
         // Weapons
-        client.inventoryGiveItem( WEAP_RIOTGUN );
-        client.inventoryGiveItem( WEAP_LASERGUN );
-        client.inventoryGiveItem( WEAP_MACHINEGUN );
-        client.inventorySetCount( WEAP_GUNBLADE, 1 );
+        client.inventoryGiveItem( WEAP_ROCKETLAUNCHER );
+        client.inventoryGiveItem( WEAP_ELECTROBOLT );
+        // Enable gunblade blast
+    	client.inventorySetCount( AMMO_GUNBLADE, 1 );
 
-        // Strong ammo etc
-        client.inventoryGiveItem( AMMO_SHELLS );
+		// Ammo (set an exact amount we need)
+		client.inventorySetCount( AMMO_ROCKETS, 7 );
+		client.inventorySetCount( AMMO_BOLTS, 7 );
+
+        // Armor
         client.inventoryGiveItem( ARMOR_GA );
 
-        G_PrintMsg( ent , "You're spawned as ^5RUNNER^7. This is a the fastest class with weak health and armor\n");
-        G_PrintMsg( ent , "^2Class action 1: ^7Activate ^5Invisibility\n");
-        G_PrintMsg( ent , "^1Class action 2: ^5Reveal nearby turrets ^7for 30 seconds.\n");
+        G_PrintMsg( ent , "You're spawned as ^5RUNNER^7.\n");
+		// TODO: Provide extended class description       	
+		// TODO: Print actions to the client		
     }
     // Medic
     else if ( player.playerClass.tag == PLAYERCLASS_MEDIC )
     {
         // Weapons
         client.inventoryGiveItem( WEAP_PLASMAGUN );
-        client.inventoryGiveItem( WEAP_ELECTROBOLT );
-        client.inventoryGiveItem( WEAP_LASERGUN );
         client.inventoryGiveItem( WEAP_MACHINEGUN );
+        // Enable gunblade blast
+    	client.inventorySetCount( AMMO_GUNBLADE, 1 );
 
-        // Strong ammo etc
-        client.inventoryGiveItem( AMMO_LASERS );
+        // Ammo (set an exact amount we need)
+        client.inventorySetCount( AMMO_PLASMA, 150 );
+		client.inventorySetCount( AMMO_BULLETS, 150 );
 
-        G_PrintMsg( ent , "You're spawned as ^3MEDIC^7. This is a healer class with regeneration and ability to drop health. You can also revive dead team mates by walking over their respawner marker.\n");
-        G_PrintMsg( ent , "^2Class action 1: ^7Drop ^225 Health^7 for your team mates\n");
+        G_PrintMsg( ent , "You're spawned as ^2MEDIC^7.\n");
+		// TODO: Provide extended class description
+        // TODO: Print actions to the client
     }
     // Grunt
     else if ( player.playerClass.tag == PLAYERCLASS_GRUNT )
     {
         // Weapons
         client.inventoryGiveItem( WEAP_ROCKETLAUNCHER );
-        client.inventoryGiveItem( WEAP_PLASMAGUN );
+        client.inventoryGiveItem( WEAP_LASERGUN );
         client.inventoryGiveItem( WEAP_GRENADELAUNCHER );
-        client.inventorySetCount( WEAP_GUNBLADE, 1 );
-        // Strong ammo etc
-        client.inventoryGiveItem( ARMOR_YA );
+        
+        // Ammo
         client.inventoryGiveItem( AMMO_ROCKETS );
-        client.inventoryGiveItem( AMMO_PLASMA );
+        client.inventoryGiveItem( AMMO_LASERS );
+		client.inventorySetCount( AMMO_GRENADES, 10 );
+		
+		// Armor
+		client.inventoryGiveItem( ARMOR_RA );
 
-        G_PrintMsg( ent , "You're spawned as ^1GRUNT^7. This is a tank class with slow movement, strong armor and strong weapons\n");
-        G_PrintMsg( ent , "^2Class action 1: ^7Drop ^3Yellow Armor ^7for your team mates\n");
-        G_PrintMsg( ent , "^1Class action 2: ^7Throw a ^5Cluster Bomb^7. Press ^1Class action 2^7 again to detonate it.\n");
+        G_PrintMsg( ent , "You're spawned as ^1GRUNT^7.\n");
+        // TODO: Provide extended class description
+		// TODO: Print actions to the client
     }
     // Engineer
     else if ( player.playerClass.tag == PLAYERCLASS_ENGINEER )
     {
         // Weapons
         client.inventoryGiveItem( WEAP_ROCKETLAUNCHER );
+        client.inventoryGiveItem( WEAP_PLASMAGUN );
         client.inventoryGiveItem( WEAP_RIOTGUN );
-        client.inventoryGiveItem( WEAP_ELECTROBOLT );
-        client.inventorySetCount( WEAP_GUNBLADE, 1 );
 
-        // Strong ammo etc
+		// Ammo
+		client.inventorySetCount( AMMO_ROCKETS, 10 );
+		client.inventoryGiveItem( AMMO_PLASMA );
+		client.inventoryGiveItem( AMMO_SHELLS );
+
+        // Armor
         client.inventoryGiveItem( ARMOR_GA );
-        client.inventoryGiveItem( AMMO_BOLTS );
 
-        G_PrintMsg( ent , "You're spawned as ^8ENGINEER^7. This is a supportive class with slow movement and ability to build turrets\n");
-        G_PrintMsg( ent , "^2Class action 1:^7 Spawn a turret with ^9Machine Gun\n");
-        G_PrintMsg( ent , "^1Class action 2:^7 Spawn an ^8Ammo dispenser\n");
+        G_PrintMsg( ent , "You're spawned as ^8ENGINEER^7.\n");
+		// TODO: Provide extended class description
+		// TODO: Print actions to the client
     }
+	else if ( player.playerClass.tag == PLAYERCLASS_TECH )
+	{
+		// Weapons
+		client.inventoryGiveItem( WEAP_LASERGUN );
+		client.inventoryGiveItem( WEAP_RIOTGUN );
+		 // Enable gunblade blast
+    	client.inventorySetCount( AMMO_GUNBLADE, 1 );
 
-    // enable gunblade blast
-    client.inventorySetCount( AMMO_GUNBLADE, 1 );
+		// Armor
+		client.inventoryGiveItem( ARMOR_GA );
+
+		G_PrintMsg( ent, "You're spawned as ^4TECH^7.\n");
+		// TODO: Provide extended class description
+		// TODO: Print actions to the client	
+	}
+	else if ( player.playerClass.tag == PLAYERCLASS_SNIPER )
+	{
+		// Weapons
+		client.inventoryGiveItem( WEAP_INSTAGUN );		
+		client.inventoryGiveItem( WEAP_ELECTROBOLT );
+		client.inventoryGiveItem( WEAP_MACHINEGUN );
+		// Remove GB
+		client.inventorySetCount( WEAP_GUNBLADE, 0 );
+
+		// Ammo (set an exact amount we need)
+		client.inventorySetCount( AMMO_INSTAS, 3 );
+		client.inventorySetCount( AMMO_BOLTS, 10 );
+		client.inventorySetCount( AMMO_BULLETS, 100 );
+		
+		G_PrintMsg( ent, "You're spawned as ^3SNIPER^7.\n");
+		// TODO: Provide extended class description
+		// TODO: Print actions to the client
+	}
+
 
     // select rocket launcher if available
     client.selectWeapon( -1 ); // auto-select best weapon in the inventory
@@ -807,8 +777,7 @@ void GT_PlayerRespawn( Entity @ent, int old_team, int new_team )
     if ( @player.reviver != null && player.reviver.revived )
     {
         // when revived do not clear all timers
-        player.genericCooldownTime = 0;
-        player.dispenserCooldownTime = 0;
+        player.shellCooldownTime = 0;
         player.respawnTime = 0;
         player.invisibilityEnabled = false;
         player.invisibilityLoad = 0;
@@ -858,7 +827,7 @@ void GT_ThinkRules()
         player.refreshModel();
         player.refreshMovement();
         player.refreshRegeneration();
-        player.watchWarshell();
+        player.watchShell();
         player.updateHUDstats();
     }
 }
@@ -922,7 +891,6 @@ void GT_MatchStateStarted()
     case MATCH_STATE_POSTMATCH:
         GENERIC_SetUpEndMatch();
         CTFT_RemoveTurrets();
-        CTFT_RemoveDispensers();
         CTFT_RemoveBombs();
         CTFT_RemoveRevivers();
         break;
@@ -947,7 +915,6 @@ void CTFT_SetUpMatch()
     CTF_ResetFlags();
     CTFT_ResetRespawnQueue();
     CTFT_RemoveTurrets();
-    CTFT_RemoveDispensers();
     CTFT_RemoveBombs();
     CTFT_RemoveItemsByName("25 Health");
     CTFT_RemoveItemsByName("Yellow Armor");
