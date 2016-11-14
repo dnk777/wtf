@@ -865,7 +865,7 @@ class cPlayer
             // load or unload visibility
             if ( this.invisibilityEnabled )
             {
-                this.invisibilityLoad -= ( frameTime * 0.012f );
+                this.invisibilityLoad -= ( frameTime * 0.055f );
                 if ( this.invisibilityLoad < 0 )
                 {
                     this.invisibilityLoad = 0;
@@ -875,7 +875,7 @@ class cPlayer
             }
             else
             {
-                this.invisibilityLoad += ( frameTime * 0.006f );
+                this.invisibilityLoad += ( frameTime * 0.033f );
                 if ( this.invisibilityLoad > CTFT_SNIPER_INVISIBILITY_MAXLOAD )
                     this.invisibilityLoad = CTFT_SNIPER_INVISIBILITY_MAXLOAD;
             }
