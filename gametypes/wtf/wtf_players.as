@@ -35,6 +35,8 @@ class cPlayer
     uint shellCooldownTime;
     uint bombCooldownTime;
     uint respawnTime;
+	float medicInfluence;
+	float techInfluence;
     bool invisibilityEnabled;
     float invisibilityLoad;
     int invisibilityWasUsingWeapon;
@@ -44,6 +46,9 @@ class cPlayer
     cPlayer @deadcamMedic;
     uint deadcamMedicScanTime;
 
+	double medicInfluenceScore;
+	double techInfluenceScore;
+
     cPlayer()
     {
         // initialize all as grunt
@@ -52,6 +57,9 @@ class cPlayer
         @this.turret = null;
         @this.bomb = null;
         this.resetTimers();
+		
+		this.medicInfluenceScore = 0.0;
+		this.techInfluenceScore = 0.0;
     }
 
     ~cPlayer() {}
@@ -65,6 +73,8 @@ class cPlayer
         this.shellCooldownTime = 0;
         this.bombCooldownTime = 0;
         this.respawnTime = 0;
+		this.medicInfluence = 0.0f;
+		this.techInfluence = 0.0f;
         this.invisibilityEnabled = false;
         this.invisibilityLoad = 0;
         this.invisibilityCooldownTime = 0;
@@ -526,94 +536,154 @@ class cPlayer
         }
     }
 
+	void clearInfluence()
+	{
+		this.medicInfluence = 0.0f;
+		this.techInfluence = 0.0f;	
+	}
+
+	void refreshInfluenceEmission()
+	{
+		if ( this.ent.isGhosting() )
+			return;
+
+		if ( this.playerClass.tag == PLAYERCLASS_MEDIC )
+		{
+			if ( !this.isMedicCooldown() )
+				refreshMedicInfluenceEmission();
+		}		
+		else if ( this.playerClass.tag == PLAYERCLASS_TECH )
+		{
+			if ( !this.isTechCooldown() )
+				refreshTechInfluenceEmission();
+		}
+	}
+
+	void refreshMedicInfluenceEmission()
+	{
+		Trace trace;
+		array<Entity @> @inradius = G_FindInRadius( this.ent.origin, CTFT_MEDIC_INFLUENCE_RADIUS );
+		for ( uint i = 0; i < inradius.size(); ++i )
+		{
+			Entity @entity = inradius[i];
+			if ( @entity.client == null || entity.client.state() < CS_SPAWNED || entity.isGhosting() )
+                continue;
+
+            if ( entity.team != this.ent.team || @entity == @this.ent )
+                continue;
+			
+			if ( trace.doTrace( this.ent.origin, vec3Origin, vec3Origin, entity.origin, entity.entNum, MASK_SOLID ) )
+				continue;
+
+			float distance = this.ent.origin.distance( entity.origin );
+			float influence = 1.0f - 0.5f * distance / CTFT_MEDIC_INFLUENCE_RADIUS;
+			
+			cPlayer @player = GetPlayer( entity.client );
+			player.medicInfluence += influence;
+			
+			// Add score only when a player needs health
+			if ( entity.health < entity.maxHealth )			
+				this.medicInfluenceScore += 0.00035 * influence * frameTime;
+		}
+	}
+
+	void refreshTechInfluenceEmission()
+	{
+		Trace trace;
+		array<Entity @> @inradius = G_FindInRadius( this.ent.origin, CTFT_TECH_INFLUENCE_RADIUS );
+		for ( uint i = 0; i < inradius.size(); ++i )
+		{
+			Entity @entity = inradius[i];
+			if ( @entity.client == null || entity.client.state() < CS_SPAWNED || entity.isGhosting() )
+                continue;
+
+            if ( entity.team != this.ent.team || @entity == @this.ent )
+                continue;
+
+			if ( trace.doTrace( this.ent.origin, vec3Origin, vec3Origin, entity.origin, entity.entNum, MASK_SOLID ) )
+				continue;
+
+			float distance = this.ent.origin.distance( entity.origin );
+			float influence = 1.0f - 0.5f * distance / CTFT_TECH_INFLUENCE_RADIUS;
+			
+			cPlayer @player = GetPlayer( entity.client );
+			player.techInfluence += influence; 
+			
+			// Add score only when a player needs refilling armor
+			if ( entity.client.armor < player.playerClass.maxArmor )			
+				this.techInfluenceScore += 0.00045 * influence * frameTime;
+		}
+	}
+
+	void refreshInfluenceAbsorption()
+	{
+		if ( this.medicInfluence > 1.0f )
+			this.medicInfluence = 1.0f;
+
+		if ( this.techInfluence > 1.0f )
+			this.techInfluence = 1.0f;
+
+		if ( this.medicInfluence > 0 )
+			this.ent.effects |= EF_REGEN;
+		else
+			this.ent.effects &= ~EF_REGEN;
+
+		if ( this.techInfluence > 0 )
+			this.ent.effects |= EF_QUAD;
+		else
+			this.ent.effects &= ~EF_QUAD;
+	}
+
     void refreshRegeneration()
     {
         if ( this.ent.isGhosting() )
             return;
 
-        float maxArmor, maxArmorEnd;
+		// First, check generic health/armor regeneration due to medic/tech influence
 
-        switch ( this.playerClass.tag )
-        {
-        case PLAYERCLASS_TECH:
-            // Techs regen armor
-			if ( this.isTechCooldown() == false )
+		if ( this.medicInfluence > 0 )
+		{
+			if ( this.ent.health < this.ent.maxHealth )
+				this.ent.health += ( frameTime * this.medicInfluence * 0.017f );
+		}
+
+		if ( this.techInfluence > 0 )
+		{
+			if ( this.client.armor < this.playerClass.maxArmor )
+				this.client.armor += ( frameTime * this.techInfluence * 0.017f );
+		}
+
+		// Then, check class-specific regeneration
+		
+		if ( this.playerClass.tag == PLAYERCLASS_MEDIC )
+		{
+			// Medic regens health unless in cooldown
+            if ( !this.isMedicCooldown() )
+            {
+                // Medic regens health
+                if ( this.ent.health < 100 ) 
+                    this.ent.health += ( frameTime * 0.019f );
+            }
+		}
+		else if ( this.playerClass.tag == PLAYERCLASS_TECH )
+		{
+			// Techs regen armor
+			if ( !this.isTechCooldown() )
 			{
-				maxArmor = G_GetItem( ARMOR_YA ).quantity;
-				maxArmor = maxArmor + 25;
-				if ( this.client.armor < (maxArmor - 25) )
+				int maxArmor = this.playerClass.maxArmor;
+				if ( this.client.armor < ( maxArmor - 25 ) )
 				{
 					this.client.armor += ( frameTime * 0.012f );
 				}
-				else if ( ( this.client.armor >= (maxArmor - 25) ) && this.client.armor < maxArmor )
+				else if ( ( this.client.armor >= ( maxArmor - 25 ) ) && this.client.armor < maxArmor )
 				{
 					this.client.armor += ( frameTime * 0.0032f );
 				}
 			}
-
-            if ( this.ent.health > this.ent.maxHealth ) {
-                this.ent.health -= ( frameTime * 0.006f );
-				// fix possible rounding errors
-				if( this.ent.health < this.ent.maxHealth ) {
-					this.ent.health = this.ent.maxHealth;
-				}
-			}
-
-            break;
-
-        case PLAYERCLASS_MEDIC:
-            // Medic regens health unless in cooldown
-            if ( this.isMedicCooldown() == false )
-            {
-                // Medic regens health
-                if ( this.ent.health < 100 ) {
-                    this.ent.health += ( frameTime * 0.024f );
-					if( this.ent.health > 100 ) {
-						this.ent.health = 100;
-					}
-				}
-            }
-
-            // Lose armor
-            if ( this.client.armor > 50 ) {
-                this.client.armor -= ( frameTime * 0.004f );
-				if( this.client.armor < 50 ) {
-					this.client.armor = 50;
-				}
-			}
-
-            break;
-
-        case PLAYERCLASS_ENGINEER:
-            // Engineer regens armor up to 50
-            maxArmor = CTFT_TURRET_AP_COST-15;
-            maxArmorEnd = CTFT_TURRET_AP_COST;
-
-            if ( this.client.armor <= maxArmor ) {
-                this.client.armor += ( frameTime * 0.012f );
-			}
-            if ( this.client.armor < maxArmorEnd ) {
-                this.client.armor += ( frameTime * 0.006f );
-			}
-			if( this.client.armor > maxArmorEnd ) {
-				this.client.armor = maxArmorEnd;
-			}
-            break;
-
-        case PLAYERCLASS_SNIPER:
-            if ( this.ent.health > this.ent.maxHealth ) {
-                this.ent.health -= ( frameTime * 0.006f );
-				// fix possible rounding errors
-				if( this.ent.health < this.ent.maxHealth ) {
-					this.ent.health = this.ent.maxHealth;
-				}
-			}
-
-            // if shield was enabled, disable invis
-            if ( this.client.inventoryCount( POWERUP_SHELL ) > 0 )
-                this.deactivateInvisibility();
-
-            // if carrying the flag, disable invisibility
+		}
+		else if ( this.playerClass.tag == PLAYERCLASS_SNIPER )
+		{
+			// if carrying the flag, disable invisibility
             if ( ( this.ent.effects & EF_CARRIER ) != 0 )
                 this.deactivateInvisibility();
 
@@ -637,12 +707,25 @@ class cPlayer
                 if ( this.invisibilityLoad > CTFT_SNIPER_INVISIBILITY_MAXLOAD )
                     this.invisibilityLoad = CTFT_SNIPER_INVISIBILITY_MAXLOAD;
             }
-			
-            break;
+		}
 
-        default:
-            break;
-        }
+		// Drain health/armor if if exceeds a class limit
+
+		if ( this.ent.health > this.ent.maxHealth )
+		{
+        	this.ent.health -= ( frameTime * 0.006f );
+			// fix possible rounding errors
+			if( this.ent.health < this.ent.maxHealth )
+				this.ent.health = this.ent.maxHealth;
+		}
+
+		if ( this.client.armor > this.playerClass.maxArmor ) 
+		{
+	    	this.client.armor -= ( frameTime * 0.004f );
+			// fix possible rounding errors			
+			if ( this.client.armor < this.playerClass.maxArmor ) 
+				this.client.armor = this.playerClass.maxArmor;
+		}
     }
 
     void tookDamage ( int attackerNum, float damage )

@@ -42,14 +42,16 @@ uint CTFT_INVISIBILITY_COOLDOWN = 1000;
 int CTFT_BATTLESUIT_AP_COST = 50;
 int CTFT_BATTLESUIT_RUNNER_TIME = 3; 	// in seconds
 int CTFT_BATTLESUIT_GRUNT_TIME = 8;		// in seconds
-int CTFT_MEDIC_COOLDOWN = 1500;
+int CTFT_MEDIC_COOLDOWN = 1200;
 int CTFT_GRUNT_COOLDOWN = 1500;
-int CTFT_TECH_COOLDOWN = 1500;
+int CTFT_TECH_COOLDOWN = 1200;
 int CTFT_SHELL_COOLDOWN = 10000;
 int CTFT_BOMB_COOLDOWN = 20000;
 float CTFT_RESPAWN_RADIUS = 384.0f;
 float CTFT_BUILD_RADIUS = 160.0f;
 float CTFT_BUILD_DESTROY_RADIUS = 96.0f;
+float CTFT_MEDIC_INFLUENCE_RADIUS = 192.0f;
+float CTFT_TECH_INFLUENCE_RADIUS = 192.0f;
 
 // precache images and sounds
 
@@ -475,6 +477,7 @@ String @GT_ScoreboardMessage( uint maxlen )
     String entry;
     Team @team;
     Entity @ent;
+	cPlayer @player;
     int i, t, classIcon;
 
     for ( t = TEAM_ALPHA; t < GS_MAX_TEAMS; t++ )
@@ -499,12 +502,17 @@ String @GT_ScoreboardMessage( uint maxlen )
             //G_ConfigString( CS_SCB_PLAYERTAB_LAYOUT, "%n 112 %s 52 %i 52 %l 48 %p l1 %r l1" );
             //G_ConfigString( CS_SCB_PLAYERTAB_TITLES, "Name Clan Score Ping C R" );
  
-			int score = ent.client.stats.score + int( ent.client.stats.totalDamageGiven * 0.01 );
+			@player = GetPlayer( ent.client );
+			double rawExtraScore = 0.0f;
+			rawExtraScore += ent.client.stats.totalDamageGiven * 0.01;
+			rawExtraScore += player.medicInfluenceScore;
+			rawExtraScore += player.techInfluenceScore;
+			int shownScore = ent.client.stats.score + int( rawExtraScore );
 
             // "Name Score Ping C R"
             entry = "&p " + playerID + " "
                     + ent.client.clanName + " "
-                    + score + " "
+                    + shownScore + " "
                     + ent.client.ping + " "
                     + classIcon + " "
                     + ( ent.client.isReady() ? "1" : "0" ) + " ";
@@ -642,7 +650,7 @@ void GT_PlayerRespawn( Entity @ent, int old_team, int new_team )
 
     // Reset health and armor before setting abilities.
     ent.health = 100;
-    ent.client.armor = 0;
+    ent.client.armor = player.playerClass.armor;
 
     // Assign movement abilities for classes
 
@@ -702,9 +710,6 @@ void GT_PlayerRespawn( Entity @ent, int old_team, int new_team )
         client.inventoryGiveItem( AMMO_LASERS );
 		client.inventorySetCount( AMMO_GRENADES, 10 );
 		
-		// Armor
-		client.inventoryGiveItem( ARMOR_RA );
-
         G_PrintMsg( ent , "You're spawned as ^1GRUNT^7.\n");
         // TODO: Provide extended class description
 		// TODO: Print actions to the client
@@ -722,9 +727,6 @@ void GT_PlayerRespawn( Entity @ent, int old_team, int new_team )
 		client.inventoryGiveItem( AMMO_PLASMA );
 		client.inventoryGiveItem( AMMO_SHELLS );
 
-        // Armor
-        client.inventoryGiveItem( ARMOR_GA );
-
         G_PrintMsg( ent , "You're spawned as ^8ENGINEER^7.\n");
 		// TODO: Provide extended class description
 		// TODO: Print actions to the client
@@ -736,9 +738,6 @@ void GT_PlayerRespawn( Entity @ent, int old_team, int new_team )
 		client.inventoryGiveItem( WEAP_RIOTGUN );
 		 // Enable gunblade blast
     	client.inventorySetCount( AMMO_GUNBLADE, 1 );
-
-		// Armor
-		client.inventoryGiveItem( ARMOR_GA );
 
 		G_PrintMsg( ent, "You're spawned as ^4TECH^7.\n");
 		// TODO: Provide extended class description
@@ -814,11 +813,17 @@ void GT_ThinkRules()
         flagBase.thinkRules();
     }
 
-    for ( int i = 0; i < maxClients; i++ )
+	// We have to split the naiive single loop to avoid overwriting influence of other players. 
+
+	for ( int i = 0; i < maxClients; i++ )
+	{
+		GetPlayer( i ).clearInfluence();
+	}
+
+	for ( int i = 0; i < maxClients; i++ )
     {
         // update model and movement
         cPlayer @player = @GetPlayer( i );
-
         if ( player.client.state() < CS_SPAWNED )
             continue;
 
@@ -826,6 +831,18 @@ void GT_ThinkRules()
         player.refreshChasecam();
         player.refreshModel();
         player.refreshMovement();
+		player.refreshInfluenceEmission();
+    }
+	
+    for ( int i = 0; i < maxClients; i++ )
+    {
+        
+        cPlayer @player = @GetPlayer( i );
+        if ( player.client.state() < CS_SPAWNED )
+            continue;
+
+        // fixme : move methods to player
+		player.refreshInfluenceAbsorption();
         player.refreshRegeneration();
         player.watchShell();
         player.updateHUDstats();
@@ -929,6 +946,7 @@ void CTFT_SetUpMatch()
 
     Entity @ent;
     Team @team;
+	cPlayer @player;
     int i;
 
     for ( i = TEAM_PLAYERS; i < GS_MAX_TEAMS; i++ )
@@ -941,6 +959,12 @@ void CTFT_SetUpMatch()
         {
             @ent = @team.ent( j );
             ent.client.stats.clear(); // clear player scores & stats
+			@player = GetPlayer( ent.client );
+			if ( @player != null )
+			{
+				player.medicInfluenceScore = 0.0f;
+				player.techInfluenceScore = 0.0f;
+			}
         }
     }
 }

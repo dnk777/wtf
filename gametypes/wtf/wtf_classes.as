@@ -33,6 +33,8 @@ class cPlayerClass
 {
     int tag;
     int maxHealth;
+	int armor;
+	int maxArmor;
     int maxSpeed;
     int dashSpeed;
     int jumpSpeed;
@@ -50,6 +52,8 @@ class cPlayerClass
         this.dashSpeed = -1;
         this.jumpSpeed = -1;
         this.maxHealth = 100;
+		this.armor = 0;
+		this.maxArmor = 50;
         this.takeStun = true;
         this.initialized = false;
         this.iconIndex = 0;
@@ -60,12 +64,14 @@ class cPlayerClass
 
     ~cPlayerClass() {}
 
-    void setup( String &class_name, int tag, String &model, int health, int armor, int maxSpeed, int dashSpeed, bool stun,
+    void setup( String &class_name, int tag, String &model, int health, int armor, int maxArmor, int maxSpeed, int dashSpeed, bool stun,
         const String &icon, const String @action1Icon, const String @action2Icon )
     {
         this.name = class_name;
         this.playerModel = model;
         this.maxHealth = health;
+		this.armor = armor;
+		this.maxArmor = maxArmor;
         this.dashSpeed = dashSpeed;
         this.maxSpeed = maxSpeed;
         this.takeStun = stun;
@@ -104,7 +110,8 @@ void GENERIC_InitPlayerClasses()
         PLAYERCLASS_GRUNT,
         "$models/players/bigvic",	// player model
         100,						// initial health
-        0,						    // initial armor
+        25,						    // initial armor
+		125,                        // max armor
         265,						// speed
         330,						// dash speed
         true,						// can be stunned
@@ -119,6 +126,7 @@ void GENERIC_InitPlayerClasses()
         "$models/players/monada",	// player model
         100,						// initial health
         0,						    // initial armor
+		75,                         // max armor
         300,						// speed
         400,						// dash speed
         true,						// can be stunned
@@ -133,6 +141,7 @@ void GENERIC_InitPlayerClasses()
         "$models/players/viciious",	// player model
         100,						// initial health
         0,						    // initial armor
+		50,                         // max armor
         350,						// speed
         450,						// dash speed
         false,						// can be stunned
@@ -146,7 +155,8 @@ void GENERIC_InitPlayerClasses()
         PLAYERCLASS_ENGINEER,
         "$models/players/bobot",	// player model
         100,						// initial health
-        0,						    // initial armor
+        50,						    // initial armor
+		75,                         // max armor
         280,						// speed
         330,						// dash speed
         true,						// can be stunned
@@ -160,7 +170,8 @@ void GENERIC_InitPlayerClasses()
 		PLAYERCLASS_TECH,
 		"$models/players/padpork",  // player model
 		100,                        // initial health
-		50,                         // initial armor
+		25,                         // initial armor
+		100,                        // max armor
 		265,                        // speed
 		330,                        // dash speed
 		true,                       // can be stunned
@@ -174,7 +185,8 @@ void GENERIC_InitPlayerClasses()
 		PLAYERCLASS_SNIPER,
 		"$models/players/silverclaw", // player model
 		100,                          // initial health
-		0,                            // initial armor
+		25,                           // initial armor
+		50,                           // max armor
 		240,                          // speed
 		320,                          // dash speed
 		true,                         // can be stunned
