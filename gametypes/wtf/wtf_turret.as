@@ -560,7 +560,7 @@ class cTurret
 				float distanceToEnemy = this.bodyEnt.origin.distance( this.enemy.origin );
 				if ( distanceToEnemy > 250 && distanceToEnemy < 2500 )
 				{
-					G_FireRocket( this.gunEnt.origin, currentAngles, this.rocketSpeed, this.rocketSplash, this.rocketDamage, this.rocketKnockback, this.rocketStun, this.bodyEnt );
+					this.fireRocket();
 					this.lastRocketFireTime = levelTime;
 				}
 			}
@@ -581,6 +581,14 @@ class cTurret
 
         this.bodyEnt.nextThink = levelTime + 1;
     }
+
+	void fireRocket()
+	{
+		Vec3 predictedTarget;
+		PredictProjectileNoClip( this.gunEnt.origin, this.rocketSpeed, this.enemy.origin, this.enemy.velocity, predictedTarget );
+		Vec3 toTarget = predictedTarget - this.gunEnt.origin;
+		G_FireRocket( this.gunEnt.origin, toTarget.toAngles(), this.rocketSpeed, this.rocketSplash, this.rocketDamage, this.rocketKnockback, this.rocketStun, this.bodyEnt );
+	}
 
     void pain( Entity @attacker, float kick, float damage )
     {
@@ -691,4 +699,58 @@ cTurret @ClientDropTurret( Client @client )
     return @turret;
 }
 
+// Ported from new bots code
+
+// This is a port of public domain projectile prediction code by Kain Shin
+// http://ringofblades.com/Blades/Code/PredictiveAim.cs
+// This function assumes that target velocity is constant and gravity is not applied to projectile and target.
+bool PredictProjectileNoClip(const Vec3 &in fireOrigin, float projectileSpeed, const Vec3 &in target, const Vec3 &in targetVelocity, Vec3 &out predictedTarget)
+{
+    float projectileSpeedSq = projectileSpeed * projectileSpeed;
+    float targetSpeed = targetVelocity.length();
+	float targetSpeedSq = targetSpeed * targetSpeed;
+    Vec3 targetToFire = fireOrigin - target;
+	float targetToFireDist = targetToFire.length();
+    float targetToFireDistSq = targetToFireDist * targetToFireDist;
+    Vec3 targetToFireDir( targetToFire );
+    targetToFireDir.normalize();
+
+    Vec3 targetVelocityDir( targetVelocity );
+    targetVelocityDir.normalize();
+
+    float cosTheta = targetToFireDir * targetVelocityDir;
+
+    float t;
+    if ( abs( projectileSpeedSq - targetSpeedSq ) < 0.0001 )
+    {
+        if ( cosTheta <= 0 )
+            return false;
+
+        t = 0.5f * targetToFireDist / ( targetSpeed * cosTheta );
+    }
+    else
+    {
+        float a = projectileSpeedSq - targetSpeedSq;
+        float b = 2.0f * targetToFireDist * targetSpeed * cosTheta;
+        float c = -targetToFireDistSq;
+        float discriminant = b * b - 4.0f * a * c;
+
+        if ( discriminant < 0 )
+            return false;
+
+        float uglyNumber = sqrt( discriminant );
+        float t0 = 0.5f * ( -b + uglyNumber ) / a;
+        float t1 = 0.5f * ( -b - uglyNumber ) / a;
+		t = ( t0 < t1 ) ? t0 : t1;
+        if ( t < 0.0001 )
+		{
+			t = ( t0 > t1 ) ? t0 : t1;
+		}
+        if ( t < 0.0001 )
+            return false;
+    }
+
+	predictedTarget = target + t * targetVelocity;
+    return true;
+}
 
