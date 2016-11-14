@@ -218,7 +218,9 @@ void CTFT_Blast( Client @client, cPlayer @player )
 	}
 
 	Entity @ent = client.getEnt();
-	if ( @G_FireWeakBolt( ent.origin, ent.angles, 8000, CTFT_BLAST_DAMAGE, 100, 1000, ent ) != null )
+	Vec3 fireOrigin( ent.origin );
+	fireOrigin.z += ent.viewHeight;
+	if ( @G_FireWeakBolt( fireOrigin, ent.angles, 8000, CTFT_BLAST_DAMAGE, 100, 1000, ent ) != null )
 	{
 		player.setRunnerAbilityCooldown();
 		client.armor -= CTFT_BLAST_AP_COST;
