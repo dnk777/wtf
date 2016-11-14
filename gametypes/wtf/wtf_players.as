@@ -339,7 +339,7 @@ class cPlayer
         {
             if ( this.respawnTime <= levelTime )
             {
-                this.respawnTime = levelTime + CTFT_RESPAWN_TIME;
+                this.respawnTime = levelTime + CTFT_BASE_RESPAWN_TIME;
                 this.client.respawn( true );
                 this.ent.spawnqueueAdd();
                 this.client.chaseCam( null, true );
@@ -418,27 +418,21 @@ class cPlayer
             {
                 this.deadcamMedicScanTime = levelTime + 300;
 
-                // find the closest medic in your team
-                Team @team = @G_GetTeam( this.ent.team );
-                if ( @team == null )
-                    return;
-
-                // check for medics in the team and compare distances
+                // find the closest medic in any team
                 cPlayer @otherPlayer;
                 float distance, bestDistance;
                 @this.deadcamMedic = null;
                 bestDistance = 2048; // max distance
-                for ( int i = 0; @team.ent( i ) != null; i++ )
+                for ( int i = 0; i < maxClients; i++ )
                 {
-                    if ( @team.ent( i ).client == null )
-                        continue;
+					Client @otherClient = @G_GetClient( i );
+					if ( @otherClient == null || otherClient.state() < CS_SPAWNED )
+						continue;
+		
+					if ( otherClient.team < TEAM_ALPHA || otherClient.getEnt().isGhosting() )
+						continue;
 
-                    @otherPlayer = @GetPlayer( team.ent( i ).client.playerNum );
-                    if ( @otherPlayer == null )
-                        continue;
-
-                    if ( otherPlayer.ent.isGhosting() )
-                        continue;
+                    @otherPlayer = @GetPlayer( client );
 
                     if ( otherPlayer.playerClass.tag != PLAYERCLASS_MEDIC )
                         continue;

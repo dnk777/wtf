@@ -32,7 +32,8 @@ const float CTF_FLAG_RECOVERY_BONUS_DISTANCE = 512.0f;
 const float CTF_CARRIER_KILL_BONUS_DISTANCE = 512.0f;
 const float CTF_OBJECT_DEFENSE_BONUS_DISTANCE = 512.0f;
 
-int CTFT_RESPAWN_TIME = 15000;
+int CTFT_BASE_RESPAWN_TIME = 10000;
+int CTFT_DISABLED_REVIVER_RESPAWN_PENALTY = 5000;
 int CTFT_TURRET_AP_COST = 50;
 int CTFT_TURRET_STRONG_AP_COST = 125;
 uint CTFT_ENGINEER_BUILD_COOLDOWN_TIME = 15000;
@@ -483,7 +484,7 @@ Entity @GT_SelectSpawnPoint( Entity @self )
             // see if this guy has a reviver
             if ( @player.reviver != null )
             {
-                if ( player.reviver.revived == true )
+                if ( player.reviver.triggered == true )
                     return player.reviver.ent;
             }
         }
@@ -595,7 +596,7 @@ void GT_ScoreEvent( Client @client, const String &score_event, const String &arg
 
         // Class-specific death stuff
         cPlayer @targetPlayer = @GetPlayer( ent.client );
-        targetPlayer.respawnTime = levelTime + CTFT_RESPAWN_TIME;
+        targetPlayer.respawnTime = levelTime + CTFT_BASE_RESPAWN_TIME;
 
         // Spawn respawn indicator
         if ( match.getState() == MATCH_STATE_PLAYTIME )
@@ -653,7 +654,7 @@ void GT_PlayerRespawn( Entity @ent, int old_team, int new_team )
 
         // Set newly joined players to respawn queue
         if ( new_team == TEAM_ALPHA || new_team == TEAM_BETA )
-            player.respawnTime = levelTime + CTFT_RESPAWN_TIME;
+            player.respawnTime = levelTime + CTFT_BASE_RESPAWN_TIME;
     }
 
     if ( ent.isGhosting() )
@@ -701,7 +702,9 @@ void GT_PlayerRespawn( Entity @ent, int old_team, int new_team )
         client.inventoryGiveItem( WEAP_PLASMAGUN );
         client.inventoryGiveItem( WEAP_MACHINEGUN );
 
-        G_PrintMsg( ent , "You're spawned as ^2MEDIC^7. This is a supportive class with health regeneration and ability to heal teammates in your aura. You can also revive dead team mates by walking over their respawner marker.\n" );
+        G_PrintMsg( ent , "You're spawned as ^2MEDIC^7. This is a supportive class with health regeneration and ability to heal teammates in your aura\n" );
+		G_PrintMsg( ent, "You can revive dead teammates by walking over their reviver marker\n" );
+		G_PrintMsg( ent, "You can disable enemy revivers by walking over their reviver marker\n" );
 		G_PrintMsg( ent, "Command ^6supply^7: Give an adrenaline yourself and teammates in your aura. The adrenaline boosts teammates speed for a couple of seconds.\n" );
     }
     // Grunt
@@ -766,7 +769,7 @@ void GT_PlayerRespawn( Entity @ent, int old_team, int new_team )
     // add a teleportation effect
     ent.respawnEffect();
 
-    if ( @player.reviver != null && player.reviver.revived )
+    if ( @player.reviver != null && player.reviver.triggered )
     {
         // when revived do not clear all timers
         player.shellCooldownTime = 0;

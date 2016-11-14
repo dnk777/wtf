@@ -31,16 +31,16 @@ class cReviver
     int modelindex;
     int duration;
     cPlayer @player;
-    bool revived;
+    bool triggered;
 
     void Init()
     {
         // set up with default values
         this.inuse = false;
-        this.revived = false;
+        this.triggered = false;
         this.decalindex = G_ImageIndex( "gfx/indicators/radar_decal" );
         this.modelindex = G_ModelIndex( "models/objects/reviver/reviver.md3" );
-        this.duration = CTFT_RESPAWN_TIME - 250;
+        this.duration = CTFT_BASE_RESPAWN_TIME - 250;
         @this.player = null;
     }
 
@@ -100,7 +100,7 @@ class cReviver
         ent.clipMask = MASK_PLAYERSOLID;
         ent.mass = player.ent.mass;
         ent.svflags &= ~SVF_NOCLIENT;
-        ent.svflags |= SVF_ONLYTEAM|SVF_BROADCAST; // set for only visible from teammates
+        ent.svflags |= SVF_BROADCAST;
         ent.takeDamage = DAMAGE_NO; // change if enemies can kill respawners
         ent.health = 200;
 
@@ -166,20 +166,33 @@ class cReviver
         this.Free();
     }
 
-    void use( Client @activator )
+	void use( Client @activator )
+	{
+		if ( this.triggered == true )
+			return;
+
+		if ( @this.player == null )
+			return;
+
+		if ( @activator == null )
+			return;
+
+		if ( activator.getEnt().team == this.ent.team )
+			this.revive( activator );
+		else
+			this.disable( activator );
+
+		// reduce score gain (you gain score healing teammates too)
+		activator.stats.addScore( 1 );
+
+		this.Free(); // respawning might free it already, but doesn't hurt to do it twice.
+	}
+	
+    void revive( Client @activator )
     {
     	Client @cl;
 
-    	if( this.revived == true )
-			return;
-
-    	if( @this.player == null )
-			return;
-
-		if( @activator == null )
-			return;
-
-		this.player.printMessage( S_COLOR_MAGENTA + "You have been revived by " + S_COLOR_WHITE + activator.name + S_COLOR_WHITE + "!\n" );
+    	this.player.printMessage( S_COLOR_MAGENTA + "You have been revived by " + S_COLOR_WHITE + activator.name + S_COLOR_WHITE + "!\n" );
 		activator.printMessage( S_COLOR_MAGENTA + "You revived " + S_COLOR_WHITE + this.player.client.name + S_COLOR_WHITE + "!\n" );
 
 		for( int i = 0; i < maxClients; i++ )
@@ -196,11 +209,17 @@ class cReviver
 
 		G_Print( this.player.client.name + S_COLOR_MAGENTA + " was revived by " + S_COLOR_WHITE + activator.name + S_COLOR_WHITE + "!\n" );
 
-		this.revived = true;
+		this.triggered = true;
 		this.player.client.respawn( false );
-		activator.stats.addScore( 3 );
-		this.Free(); // respawning should free it already, but doesn't hurt to do it twice.
     }
+
+	void disable( Client @activator )
+	{
+		activator.printMessage( S_COLOR_CYAN + "You have disabled an enemy reviver!\n" );
+		// Add respawn penalty delay for the dead player
+		this.player.respawnTime += CTFT_DISABLED_REVIVER_RESPAWN_PENALTY;
+		this.triggered = true;
+	}
 }
 
 void reviver_stop( Entity @self )
@@ -222,9 +241,6 @@ void reviver_touch( Entity @self, Entity @other, const Vec3 planeNormal, int sur
 {
     if ( @other.client == null )
         return;
-
-	if( self.team != other.team )
-		return;
 
 	if( GetPlayer( other.client ).playerClass.tag != PLAYERCLASS_MEDIC )
 		return;
