@@ -338,6 +338,7 @@ class cTurret
 
         if ( @this.client != null )
         {
+			G_CenterPrintMsg( this.client.getEnt(), S_COLOR_RED + "Your turret has been destroyed!\n" );
             cPlayer @player = GetPlayer( this.client );
             if ( @player != null )
                 @player.turret = null;
@@ -422,6 +423,20 @@ class cTurret
     {
         if ( !this.inuse )
             return;
+
+		// I'm not sure if it is the right approach to handle client left events
+		if ( @this.client != null )
+		{
+			if ( this.client.state() < CS_SPAWNED || this.client.getEnt().team < TEAM_ALPHA )
+			{
+				cPlayer @player = GetPlayer( client );
+				if ( @player != null )
+					@player.turret = null;
+				@this.client = null;
+				this.die( null, null );
+				return;	
+			}
+		}
 
         // refresh all turret parts origins based on the body part origin
         Vec3 gunOrigin = this.bodyEnt.origin;
@@ -635,7 +650,7 @@ class cTurret
             if ( GetPlayer( this.client ).playerClass.tag == PLAYERCLASS_ENGINEER
                     && this.client.getEnt().team == this.bodyEnt.team )
             {
-                G_CenterPrintMsg( client.getEnt(), S_COLOR_RED + "Your turrets are being damaged" );
+                G_CenterPrintMsg( client.getEnt(), S_COLOR_RED + "Your turret is being damaged!" );
             }
         }
     }

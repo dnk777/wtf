@@ -260,6 +260,8 @@ class cPlayer
     {
         bool success = false;
 
+		cPlayerClass @oldClass = @this.playerClass;
+
         if ( @className != null )
         {
             for ( int i = 0; i < PLAYERCLASS_TOTAL; i++ )
@@ -275,6 +277,18 @@ class cPlayer
 
         if ( !success && @this.playerClass == null ) // never be null
             @this.playerClass = @cPlayerClassInfos[PLAYERCLASS_GRUNT];
+
+		if ( @oldClass != null )
+		{
+			// Destroy an Engineer's turret
+			if ( oldClass.tag == PLAYERCLASS_ENGINEER && this.playerClass.tag != PLAYERCLASS_ENGINEER )
+			{
+				if ( @this.turret != null )
+				{
+					this.turret.die( null, null );
+				}
+			}
+		}
 
         return success;
     }

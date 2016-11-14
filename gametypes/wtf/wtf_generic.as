@@ -39,6 +39,11 @@ void CTFT_RemoveTurrets()
     {
         if ( gtTurrets[i].inuse == true )
         {
+			cPlayer @player = GetPlayer( gtTurrets[i].client );
+			if ( @player != null )
+			{
+				@player.turret = null;
+			}
             gtTurrets[i].Free();
         }
     }
