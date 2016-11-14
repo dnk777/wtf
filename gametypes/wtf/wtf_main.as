@@ -997,8 +997,8 @@ void GT_SpawnGametype()
 
 void GT_InitGametype()
 {
-    gametype.title = "CTF: Tactics";
-    gametype.version = "1.0";
+    gametype.title = "WTF";
+    gametype.version = "0.01";
     gametype.author = "Warsow Development Team";
 
     // if the gametype doesn't have a config file, create it
