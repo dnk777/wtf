@@ -213,9 +213,9 @@ bool GT_Command( Client @client, const String &cmdString, const String &argsStri
 	{
 		CTFT_DestroyCommand( client, argsString, argc );
 	}
-	else if ( cmdString == "blast" )
+	else if ( cmdString == "altattack" )
 	{
-		CTFT_Blast( client );
+		CTFT_AltAttackCommand( client, argsString, argc );
 	}
     // example of registered command
     else if ( cmdString == "gametype" )
@@ -1126,7 +1126,7 @@ void GT_InitGametype()
     G_RegisterCommand( "class" );
     G_RegisterCommand( "build" );
     G_RegisterCommand( "destroy" );
-	G_RegisterCommand( "blast" );
+	G_RegisterCommand( "altattack" );
 
     // Make turret models pure
     G_ModelIndex( "models/objects/turret/base.md3", true );

@@ -18,16 +18,19 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
 const int MAX_BOMBS = 16;
-const uint EXPLODE_DELAY = 300;
+const uint BOMB_EXPLODE_DELAY = 300;
+const uint BOMB_EXPIRE_TIME = 2000; 
 
 cBomb[] gtBombs( MAX_BOMBS );
 
 Vec3 bombMins( -8, -8, -8 ), bombMaxs( 8, 8, 8 );
 
+// WTF: It is not a bomb but just a cluster grenade now.
 class cBomb
 {
     bool inuse;
 	uint explodeTime;
+	uint expireTime;
 	int bombAlarmSoundIndex;
 
     Entity @bombEnt;
@@ -39,6 +42,7 @@ class cBomb
         this.inuse = false;
         @this.player = null;
 		this.explodeTime = 0;
+		this.expireTime = 0;
 		this.bombAlarmSoundIndex = G_SoundIndex( "sounds/misc/timer_bip_bip" );
     }
 
@@ -103,10 +107,10 @@ class cBomb
         this.bombEnt.clipMask = MASK_PLAYERSOLID;
         this.bombEnt.moveType = MOVETYPE_TOSS;
         this.bombEnt.svflags &= ~SVF_NOCLIENT;
-        this.bombEnt.health = 150;
+        this.bombEnt.health = 25;
         this.bombEnt.mass = 250;
-        this.bombEnt.takeDamage = 0;
-        this.bombEnt.nextThink = levelTime + 1000;
+        this.bombEnt.takeDamage = 1;
+        this.bombEnt.nextThink = levelTime + 300;
         this.bombEnt.linkEntity();
 
         // the count field will be used to store the index of the cbomb object
@@ -125,6 +129,7 @@ class cBomb
         @this.player = @player;
         this.bombEnt.count = index;
         this.inuse = true;
+		this.expireTime = levelTime + BOMB_EXPIRE_TIME;
 
         return true; // bomb has been correctly spawned
     }
@@ -132,7 +137,7 @@ class cBomb
 	void setExplode()
 	{
 		G_Sound( this.bombEnt, CHAN_VOICE, this.bombAlarmSoundIndex, 0.25f );
-		this.explodeTime = levelTime + EXPLODE_DELAY;
+		this.explodeTime = levelTime + BOMB_EXPLODE_DELAY;
 	}
 
     void die( Entity @inflictor, Entity @attacker )
@@ -177,32 +182,23 @@ void bomb_body_touch( Entity @ent, Entity @other, const Vec3 planeNormal, int su
     if ( @other == null )
         return;
 
-    if ( other.classname == "worldspawn" )
-    {
-        // Make it sticky =P
-        ent.moveType = MOVETYPE_NONE;
-        ent.linkEntity();
-    }
+	if ( other.takeDamage == 0 )
+		return;
 
-    // Pick up the bomb if owner is touching
-    if ( @other.client != null )
-    {
-        cPlayer @player = @GetPlayer( other.client );
+	if ( ent.count < 0 || ent.count >= MAX_BOMBS )
+		return;
 
-        if ( @player.bomb != null )
-        {
-            if ( @ent == @player.bomb.bombEnt )
-            {
-                player.bomb.Free();
-                player.bombCooldownTime = levelTime;
+	cBomb @bomb = gtBombs[ent.count];
 
-                other.client.printMessage("You picked up your cluster bomb.\n");
-                int spawnSoundIndex = G_SoundIndex( "sounds/items/ammo_pickup" );
-                G_Sound( other, CHAN_AUTO, spawnSoundIndex, 0.4f );
-            }
-        }
-    }
+	if ( other.team == bomb.player.ent.team )
+		return;
 
+	// an explosion is already scheduled
+	if ( bomb.explodeTime > 0 )
+		return;
+
+	// dont' explode immediately even on touch, give an enemy a chance to escape
+	bomb.setExplode();
 }
 
 void bomb_body_die( Entity @self, Entity @inflictor, Entity @attacker )
@@ -220,16 +216,50 @@ void bomb_body_think( Entity @self )
         return;
     }
 
-	if ( self.count >= 0 && self.count < MAX_BOMBS )
+	if ( self.count < 0 || self.count >= MAX_BOMBS )
 	{
-		if ( gtBombs[self.count].explodeTime > 0 && levelTime > gtBombs[self.count].explodeTime ) 
-		{
-	        bomb_body_die( self, @G_GetEntity(0), @G_GetEntity(0) );
-	        return;		
-		}
+		bomb_body_die( self, @G_GetEntity(0), @G_GetEntity(0) );
+        return;
 	}
 
-    self.nextThink = levelTime + 25; // no need to check this every frame
+	cBomb @bomb = gtBombs[self.count];
+
+	if ( bomb.explodeTime > 0 && levelTime > bomb.explodeTime ) 
+	{
+        bomb_body_die( self, @G_GetEntity(0), @G_GetEntity(0) );
+        return;
+	}
+	
+	// an explosion is already scheduled
+	if ( bomb.explodeTime > 0 )
+	{
+		self.nextThink = levelTime + 1;
+		return;
+	}
+
+	if ( bomb.expireTime > 0 && levelTime > bomb.expireTime ) 
+	{
+		// do not explode immediately (play a sound alarm)
+        bomb.setExplode();
+		self.nextThink = levelTime + BOMB_EXPLODE_DELAY;
+        return;
+	}
+
+	// scan nearby entities
+	array<Entity @> @inradius = @G_FindInRadius( self.origin, 96.0f );
+	for ( uint i = 0; i < inradius.size(); ++i )
+	{
+		Entity @ent = inradius[i];
+		if ( ent.team == self.team )
+			continue;
+		if ( ent.takeDamage == 0 )
+			continue;
+
+		bomb.setExplode();
+		break;
+	}
+
+    self.nextThink = levelTime + 60; // no need to scan every frame
 }
 
 cBomb @ClientDropBomb( Client @client )
@@ -278,7 +308,7 @@ cBomb @ClientDropBomb( Client @client )
     // assign some frontal velocity to the bomb, as for being dropped by the player
     dir.normalize();
     dir *= 750;
-    dir.z += 100;
+    dir.z += 150;
 
     bomb.bombEnt.velocity = dir;
     bomb.bombEnt.linkEntity();

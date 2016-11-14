@@ -43,7 +43,7 @@ void CTFT_BuildCommand( Client @client, const String &argsString, int argc )
 
 	if ( token == "turret" )
 	{
-		CTFT_BuildTurret( client );
+		CTFT_BuildTurret( client, player );
 		return;
 	}
 
@@ -76,17 +76,15 @@ void CTFT_DestroyCommand( Client @client, const String &argsString, int argc )
 
 	if ( token == "turret" )
 	{
-		CTFT_DestroyTurret( client );
+		CTFT_DestroyTurret( client, player );
 		return;
 	}
 
 	client.printMessage( "Illegal command usage. Available arguments: `turret`" );
 }
 
-void CTFT_BuildTurret( Client @client )
+void CTFT_BuildTurret( Client @client, cPlayer @player )
 {
-	cPlayer @player = @GetPlayer( client );
-
     if ( @player.turret != null )
     {
         client.printMessage( "You have already spawned a turret\n" );
@@ -135,10 +133,8 @@ void CTFT_BuildTurret( Client @client )
     }
 }
 
-void CTFT_DestroyTurret( Client @client )
+void CTFT_DestroyTurret( Client @client, cPlayer @player )
 {
-	cPlayer @player = @GetPlayer( client );
-	
 	if ( @player.turret == null )
 	{
 		client.printMessage( "There is no your turret\n" );
@@ -151,23 +147,37 @@ void CTFT_DestroyTurret( Client @client )
 	client.armor += CTFT_TURRET_AP_COST;
 }
 
-// KIKI WAnts BIG BOOM!!
-void CTFT_DropBomb( Client @client )
+void CTFT_AltAttackCommand( Client @client, const String &argsString, int argc )
 {
-	if( @client == null )
+	if ( @client == null )
+		return;
+	
+	if ( client.getEnt().isGhosting() )
 		return;
 
-    if ( client.getEnt().isGhosting() )
-        return;
+	cPlayer @player = @GetPlayer( client );
 
-    cPlayer @player = @GetPlayer( client );
-
-	if( @player.bomb != null )
+	if ( player.playerClass.tag == PLAYERCLASS_GRUNT )
 	{
-		if ( player.bomb.explodeTime > 0 )
-			return;
-			
-		player.bomb.setExplode();
+		CTFT_ThrowClusterGrenade( client, player );
+		return;
+	}
+
+	if ( player.playerClass.tag == PLAYERCLASS_RUNNER )
+	{
+		CTFT_Blast( client, player );
+		return;
+	}
+
+	client.printMessage( "This command is not available for your class\n" );
+}
+
+// KIKI WAnts BIG BOOM!!
+void CTFT_ThrowClusterGrenade( Client @client, cPlayer @player )
+{
+	if ( player.playerClass.tag != PLAYERCLASS_GRUNT )
+	{
+		client.printMessage( "This command is not available for your class\n" );
 		return;
 	}
 
@@ -179,7 +189,7 @@ void CTFT_DropBomb( Client @client )
 
     if ( client.armor < ( CTFT_TURRET_AP_COST ) )
     {
-        client.printMessage( "You don't have enough armor to spawn a bomb\n" );
+        client.printMessage( "You don't have enough armor to throw a grenade\n" );
     }
     else
     {
@@ -193,22 +203,8 @@ void CTFT_DropBomb( Client @client )
     }
 }
 
-void CTFT_Blast( Client @client )
+void CTFT_Blast( Client @client, cPlayer @player )
 {
-	if ( @client == null )
-		return;
-
-	if ( client.getEnt().isGhosting() )
-		return;
-
-	cPlayer @player = @GetPlayer( client );
-
-	if ( player.playerClass.tag != PLAYERCLASS_RUNNER )
-	{
-		client.printMessage( "This command is not available for your class\n" );
-		return;
-	}
-
 	if ( player.isBlastCooldown() )
 	{
 		client.printMessage( "You can't fire a blast yet\n" );
