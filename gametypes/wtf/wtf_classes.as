@@ -21,7 +21,7 @@ const int PLAYERCLASS_GRUNT = 0;
 const int PLAYERCLASS_MEDIC = 1;
 const int PLAYERCLASS_RUNNER = 2;
 const int PLAYERCLASS_ENGINEER = 3;
-const int PLAYERCLASS_TECH = 4;
+const int PLAYERCLASS_SUPPORT = 4;
 const int PLAYERCLASS_SNIPER = 5;
 
 const int PLAYERCLASS_TOTAL = 6;
@@ -165,9 +165,9 @@ void GENERIC_InitPlayerClasses()
         "gfx/hud/icons/classactions/engineer2"
     );
 
-	cPlayerClassInfos[ PLAYERCLASS_TECH ].setup(
-		"Tech",                     // name
-		PLAYERCLASS_TECH,
+	cPlayerClassInfos[ PLAYERCLASS_SUPPORT ].setup(
+		"Support",                  // name
+		PLAYERCLASS_SUPPORT,
 		"$models/players/padpork",  // player model
 		100,                        // initial health
 		25,                         // initial armor
@@ -175,7 +175,7 @@ void GENERIC_InitPlayerClasses()
 		265,                        // speed
 		330,                        // dash speed
 		true,                       // can be stunned
-		"gfx/hud/icons/playerclass/wtf_tech",
+		"gfx/hud/icons/playerclass/wtf_support",
 		null,
 		null
 	);

@@ -44,14 +44,14 @@ int CTFT_BATTLESUIT_RUNNER_TIME = 3; 	// in seconds
 int CTFT_BATTLESUIT_GRUNT_TIME = 8;		// in seconds
 int CTFT_MEDIC_COOLDOWN = 1200;
 int CTFT_GRUNT_COOLDOWN = 1500;
-int CTFT_TECH_COOLDOWN = 1200;
+int CTFT_SUPPORT_COOLDOWN = 1200;
 int CTFT_SHELL_COOLDOWN = 10000;
 int CTFT_BOMB_COOLDOWN = 20000;
 float CTFT_RESPAWN_RADIUS = 384.0f;
 float CTFT_BUILD_RADIUS = 160.0f;
 float CTFT_BUILD_DESTROY_RADIUS = 96.0f;
 float CTFT_MEDIC_INFLUENCE_RADIUS = 192.0f;
-float CTFT_TECH_INFLUENCE_RADIUS = 192.0f;
+float CTFT_SUPPORT_INFLUENCE_RADIUS = 192.0f;
 
 // precache images and sounds
 
@@ -90,7 +90,7 @@ Cvar ctfAllowPowerupDrop( "ctf_powerupDrop", "0", CVAR_ARCHIVE );
 const String SELECT_CLASS_COMMAND = 
 	"mecu \"Select class\"" 
 	+ " Grunt \"class grunt\" Medic \"class medic\" Runner \"class runner\"" 
-	+ " Engineer \"class engineer\" Tech \"class tech\" Sniper \"class sniper\"";
+	+ " Engineer \"class engineer\" Support \"class support\" Sniper \"class sniper\"";
 
 ///*****************************************************************
 /// LOCAL FUNCTIONS
@@ -506,7 +506,7 @@ String @GT_ScoreboardMessage( uint maxlen )
 			double rawExtraScore = 0.0f;
 			rawExtraScore += ent.client.stats.totalDamageGiven * 0.01;
 			rawExtraScore += player.medicInfluenceScore;
-			rawExtraScore += player.techInfluenceScore;
+			rawExtraScore += player.supportInfluenceScore;
 			int shownScore = ent.client.stats.score + int( rawExtraScore );
 
             // "Name Score Ping C R"
@@ -731,7 +731,7 @@ void GT_PlayerRespawn( Entity @ent, int old_team, int new_team )
 		// TODO: Provide extended class description
 		// TODO: Print actions to the client
     }
-	else if ( player.playerClass.tag == PLAYERCLASS_TECH )
+	else if ( player.playerClass.tag == PLAYERCLASS_SUPPORT )
 	{
 		// Weapons
 		client.inventoryGiveItem( WEAP_LASERGUN );
@@ -739,7 +739,7 @@ void GT_PlayerRespawn( Entity @ent, int old_team, int new_team )
 		 // Enable gunblade blast
     	client.inventorySetCount( AMMO_GUNBLADE, 1 );
 
-		G_PrintMsg( ent, "You're spawned as ^8TECH^7.\n");
+		G_PrintMsg( ent, "You're spawned as ^8SUPPORT^7.\n");
 		// TODO: Provide extended class description
 		// TODO: Print actions to the client	
 	}
@@ -963,7 +963,7 @@ void CTFT_SetUpMatch()
 			if ( @player != null )
 			{
 				player.medicInfluenceScore = 0.0f;
-				player.techInfluenceScore = 0.0f;
+				player.supportInfluenceScore = 0.0f;
 			}
         }
     }

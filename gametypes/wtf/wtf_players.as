@@ -30,13 +30,13 @@ class cPlayer
 
     uint medicCooldownTime;
 	uint gruntCooldownTime;
-	uint techCooldownTime;
+	uint supportCooldownTime;
     uint engineerBuildCooldownTime;
     uint shellCooldownTime;
     uint bombCooldownTime;
     uint respawnTime;
 	float medicInfluence;
-	float techInfluence;
+	float supportInfluence;
     bool invisibilityEnabled;
     float invisibilityLoad;
     int invisibilityWasUsingWeapon;
@@ -47,7 +47,7 @@ class cPlayer
     uint deadcamMedicScanTime;
 
 	double medicInfluenceScore;
-	double techInfluenceScore;
+	double supportInfluenceScore;
 
     cPlayer()
     {
@@ -59,7 +59,7 @@ class cPlayer
         this.resetTimers();
 		
 		this.medicInfluenceScore = 0.0;
-		this.techInfluenceScore = 0.0;
+		this.supportInfluenceScore = 0.0;
     }
 
     ~cPlayer() {}
@@ -68,13 +68,13 @@ class cPlayer
     {
         this.medicCooldownTime = 0;
 		this.gruntCooldownTime = 0;
-		this.techCooldownTime = 0;
+		this.supportCooldownTime = 0;
         this.engineerBuildCooldownTime = 0;
         this.shellCooldownTime = 0;
         this.bombCooldownTime = 0;
         this.respawnTime = 0;
 		this.medicInfluence = 0.0f;
-		this.techInfluence = 0.0f;
+		this.supportInfluence = 0.0f;
         this.invisibilityEnabled = false;
         this.invisibilityLoad = 0;
         this.invisibilityCooldownTime = 0;
@@ -539,7 +539,7 @@ class cPlayer
 	void clearInfluence()
 	{
 		this.medicInfluence = 0.0f;
-		this.techInfluence = 0.0f;	
+		this.supportInfluence = 0.0f;	
 	}
 
 	void refreshInfluenceEmission()
@@ -552,10 +552,10 @@ class cPlayer
 			if ( !this.isMedicCooldown() )
 				refreshMedicInfluenceEmission();
 		}		
-		else if ( this.playerClass.tag == PLAYERCLASS_TECH )
+		else if ( this.playerClass.tag == PLAYERCLASS_SUPPORT )
 		{
-			if ( !this.isTechCooldown() )
-				refreshTechInfluenceEmission();
+			if ( !this.isSupportCooldown() )
+				refreshSupportInfluenceEmission();
 		}
 	}
 
@@ -587,10 +587,10 @@ class cPlayer
 		}
 	}
 
-	void refreshTechInfluenceEmission()
+	void refreshSupportInfluenceEmission()
 	{
 		Trace trace;
-		array<Entity @> @inradius = G_FindInRadius( this.ent.origin, CTFT_TECH_INFLUENCE_RADIUS );
+		array<Entity @> @inradius = G_FindInRadius( this.ent.origin, CTFT_SUPPORT_INFLUENCE_RADIUS );
 		for ( uint i = 0; i < inradius.size(); ++i )
 		{
 			Entity @entity = inradius[i];
@@ -604,14 +604,14 @@ class cPlayer
 				continue;
 
 			float distance = this.ent.origin.distance( entity.origin );
-			float influence = 1.0f - 0.5f * distance / CTFT_TECH_INFLUENCE_RADIUS;
+			float influence = 1.0f - 0.5f * distance / CTFT_SUPPORT_INFLUENCE_RADIUS;
 			
 			cPlayer @player = GetPlayer( entity.client );
-			player.techInfluence += influence; 
+			player.supportInfluence += influence; 
 			
 			// Add score only when a player needs refilling armor
 			if ( entity.client.armor < player.playerClass.maxArmor )			
-				this.techInfluenceScore += 0.00045 * influence * frameTime;
+				this.supportInfluenceScore += 0.00045 * influence * frameTime;
 		}
 	}
 
@@ -620,15 +620,15 @@ class cPlayer
 		if ( this.medicInfluence > 1.0f )
 			this.medicInfluence = 1.0f;
 
-		if ( this.techInfluence > 1.0f )
-			this.techInfluence = 1.0f;
+		if ( this.supportInfluence > 1.0f )
+			this.supportInfluence = 1.0f;
 
 		if ( this.medicInfluence > 0 )
 			this.ent.effects |= EF_REGEN;
 		else
 			this.ent.effects &= ~EF_REGEN;
 
-		if ( this.techInfluence > 0 )
+		if ( this.supportInfluence > 0 )
 			this.ent.effects |= EF_QUAD;
 		else
 			this.ent.effects &= ~EF_QUAD;
@@ -639,7 +639,7 @@ class cPlayer
         if ( this.ent.isGhosting() )
             return;
 
-		// First, check generic health/armor regeneration due to medic/tech influence
+		// First, check generic health/armor regeneration due to medic/support influence
 
 		if ( this.medicInfluence > 0 )
 		{
@@ -647,10 +647,10 @@ class cPlayer
 				this.ent.health += ( frameTime * this.medicInfluence * 0.017f );
 		}
 
-		if ( this.techInfluence > 0 )
+		if ( this.supportInfluence > 0 )
 		{
 			if ( this.client.armor < this.playerClass.maxArmor )
-				this.client.armor += ( frameTime * this.techInfluence * 0.017f );
+				this.client.armor += ( frameTime * this.supportInfluence * 0.017f );
 		}
 
 		// Then, check class-specific regeneration
@@ -665,10 +665,10 @@ class cPlayer
                     this.ent.health += ( frameTime * 0.019f );
             }
 		}
-		else if ( this.playerClass.tag == PLAYERCLASS_TECH )
+		else if ( this.playerClass.tag == PLAYERCLASS_SUPPORT )
 		{
-			// Techs regen armor
-			if ( !this.isTechCooldown() )
+			// The Support regen armor
+			if ( !this.isSupportCooldown() )
 			{
 				int maxArmor = this.playerClass.maxArmor;
 				if ( this.client.armor < ( maxArmor - 25 ) )
@@ -742,9 +742,9 @@ class cPlayer
         {
             this.setInvisibilityCooldown();
         }
-		else if ( this.playerClass.tag == PLAYERCLASS_TECH )
+		else if ( this.playerClass.tag == PLAYERCLASS_SUPPORT )
 		{
-			this.setTechCooldown();
+			this.setSupportCooldown();
 		}
     }
 
@@ -802,31 +802,31 @@ class cPlayer
         return int( levelTime - this.gruntCooldownTime );
     }	
 	
-	bool isTechCooldown()
+	bool isSupportCooldown()
 	{
-		if ( this.playerClass.tag != PLAYERCLASS_TECH )
+		if ( this.playerClass.tag != PLAYERCLASS_SUPPORT )
 			return false;
 
-		return ( this.techCooldownTime > levelTime ) ? true : false;
+		return ( this.supportCooldownTime > levelTime ) ? true : false;
 	}
 
-	void setTechCooldown()
+	void setSupportCooldown()
 	{
 		if ( this.playerClass.tag != PLAYERCLASS_GRUNT )
 			return;
 
-		this.techCooldownTime = levelTime + CTFT_TECH_COOLDOWN;
+		this.supportCooldownTime = levelTime + CTFT_SUPPORT_COOLDOWN;
 	}
 
-	int techCooldownTimeLeft()
+	int supportCooldownTimeLeft()
 	{
-		if ( this.playerClass.tag != PLAYERCLASS_TECH )
+		if ( this.playerClass.tag != PLAYERCLASS_SUPPORT )
 			return 0;
 		
-		if ( this.techCooldownTime <= levelTime )
+		if ( this.supportCooldownTime <= levelTime )
 			return 0;
 
-		return int( levelTime - this.techCooldownTime );
+		return int( levelTime - this.supportCooldownTime );
 	}
    
     void setInvisibilityCooldown()
