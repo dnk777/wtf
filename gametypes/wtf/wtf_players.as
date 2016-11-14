@@ -556,7 +556,7 @@ class cPlayer
 				// if the translocator has been killed during translocation
 				if ( @this.translocator == null )
 				{
-					client.printMessage( S_COLOR_RED + "Your translocator was destroyed!\n" );
+					G_CenterPrintMsg( this.ent, S_COLOR_RED + "Your translocator was destroyed!\n" );
 					this.ent.linkEntity();
 					// kill player
 					this.ent.sustainDamage( null, null, Vec3( 0, 0, 1 ), 9999.0f, 50.0f, 1000.0f, 0 );
@@ -564,7 +564,7 @@ class cPlayer
 				// if the translocator is damaged	
 				else if ( this.translocator.bodyEnt.health < CTFT_TRANSLOCATOR_HEALTH )
 				{
-					client.printMessage( S_COLOR_RED + "Your translocator was damaged!\n" );
+					G_CenterPrintMsg( this.ent, S_COLOR_RED + "Your translocator was damaged!\n" );
 					this.ent.linkEntity();
 					// kill player
 					this.ent.sustainDamage( null, null, Vec3( 0, 0, 1 ), 9999.0f, 50.0f, 1000.0f, 0 );
@@ -778,7 +778,7 @@ class cPlayer
 			this.hasReceivedAmmo = false;
 
 			if ( !this.hasPendingSupplyAmmoCommand )
-				this.client.printMessage( "A teammate gave you some ammo!\n" );
+				G_CenterPrintMsg( this.ent, S_COLOR_CYAN + "A teammate gave you some ammo!\n" );
 		}
 
 		if ( this.hasReceivedAdrenaline )
@@ -788,7 +788,7 @@ class cPlayer
 			this.hasReceivedAdrenaline = false;
 
 			if ( !this.hasPendingSupplyAdrenalineCommand )
-				this.client.printMessage( "A teammate gave you some adrenaline!\n" );
+				G_CenterPrintMsg( this.ent, S_COLOR_MAGENTA + "You gained some adrenaline! Be quick!\n" );
 		}
 
 		this.hasPendingSupplyAmmoCommand = false;

@@ -205,29 +205,45 @@ bool GT_Command( Client @client, const String &cmdString, const String &argsStri
             GetPlayer( client ).setPlayerClassCommand( argsString );
         return true;
     }
+	else if ( cmdString == "classaction1" )
+	{
+		CTFT_Classaction1Command( client );
+		return true;
+	}
+	else if ( cmdString == "classaction2" )
+	{
+		CTFT_Classaction2Command( client );
+		return true;
+	}
 	else if ( cmdString == "build" )
 	{
 		CTFT_BuildCommand( client, argsString, argc );
+		return true;
 	}
 	else if ( cmdString == "destroy" )
 	{
 		CTFT_DestroyCommand( client, argsString, argc );
+		return true;
 	}
 	else if ( cmdString == "altattack" )
 	{
 		CTFT_AltAttackCommand( client, argsString, argc );
+		return true;
 	}
 	else if ( cmdString == "protect" )
 	{
 		CTFT_ProtectCommand( client, argsString, argc );
+		return true;
 	}
 	else if ( cmdString == "supply" )
 	{
 		CTFT_SupplyCommand( client, argsString, argc );
+		return true;
 	}
 	else if ( cmdString == "trans" )
 	{
 		CTFT_TransCommand( client, argsString, argc );
+		return true;
 	}
     // example of registered command
     else if ( cmdString == "gametype" )
@@ -697,15 +713,18 @@ void GT_PlayerRespawn( Entity @ent, int old_team, int new_team )
         client.inventoryGiveItem( WEAP_ROCKETLAUNCHER );
         client.inventoryGiveItem( WEAP_ELECTROBOLT );
 
-        G_PrintMsg( ent , "You're spawned as ^3RUNNER^7. This is the fastest offensive class.\n" );
-		G_PrintMsg( ent , "Command ^6altattack^7: Fire a powerful energy blast that hits enemies and stuns turrets\n" );
-		G_PrintMsg( ent , "Consider setting cg_particles 1 to make the blast clearly visible\n" );
-		G_PrintMsg( ent , "Command ^6trans throw^7: Throw (or return and throw ) a translocator\n" );
-		G_PrintMsg( ent , "Command ^6trans check^7: Check the translocator status\n" );
-		G_PrintMsg( ent , "Command ^6trans return^7: Force returning a translocator\n" );
-		G_PrintMsg( ent , "Command ^6trans use^7: Teleport to the translocator origin\n" );
-		G_PrintMsg( ent , "A translocator gets returned automatically in a few seconds\n" );
-		G_PrintMsg( ent , "When a translocator is returned, your armor points spent on trowing it are restored\n" );
+        G_PrintMsg( ent, "You're spawned as ^3RUNNER^7. This is the fastest offensive class.\n" );
+		G_PrintMsg( ent, "Command ^6altattack^7: Fire a powerful energy blast that hits enemies and stuns turrets\n" );
+		G_PrintMsg( ent, "^9Consider setting ^2cg_particles 1^9 to make the blast clearly visible\n" );
+		G_PrintMsg( ent, "Command ^6trans throw^7: Throw (or return and throw) a translocator\n" );
+		G_PrintMsg( ent, "Command ^6trans check^7: Check the translocator status\n" );
+		G_PrintMsg( ent, "Command ^6trans return^7: Force returning a translocator\n" );
+		G_PrintMsg( ent, "Command ^6trans use^7: Teleport to the translocator origin\n" );
+		G_PrintMsg( ent, "^9A translocator gets returned automatically in a few seconds\n" );
+		G_PrintMsg( ent, "^9When a translocator is returned, your armor points spent on throwing it are restored\n" );
+		G_PrintMsg( ent, "^9Your translocator may be damaged. Consider checking it first before using it.\n" );
+		G_PrintMsg( ent, "Generic command ^8classaction1^7: Throws your translocator, if it is thrown uses it\n" );
+		G_PrintMsg( ent, "Generic command ^8classaction2^7: Same as ^6altattack^7\n" ); 
     }
     // Medic
     else if ( player.playerClass.tag == PLAYERCLASS_MEDIC )
@@ -714,10 +733,14 @@ void GT_PlayerRespawn( Entity @ent, int old_team, int new_team )
         client.inventoryGiveItem( WEAP_PLASMAGUN );
         client.inventoryGiveItem( WEAP_MACHINEGUN );
 
-        G_PrintMsg( ent , "You're spawned as ^2MEDIC^7. This is a supportive class with health regeneration and ability to heal teammates in your aura\n" );
-		G_PrintMsg( ent, "You can revive dead teammates by walking over their reviver marker\n" );
-		G_PrintMsg( ent, "You can disable enemy revivers by walking over their reviver marker\n" );
-		G_PrintMsg( ent, "Command ^6supply^7: Give an adrenaline yourself and teammates in your aura. The adrenaline boosts teammates speed for a couple of seconds.\n" );
+        G_PrintMsg( ent, "You're spawned as ^2MEDIC^7. This is a supportive class with health regenration\n" );
+		G_PrintMsg( ent, "^9You heal teammates in 192 units of your aura\n" );
+		G_PrintMsg( ent, "^9You can revive dead teammates by walking over their reviver marker\n" );
+		G_PrintMsg( ent, "^9You can disable enemy revivers by walking over their reviver marker\n" );
+		G_PrintMsg( ent, "Command ^6supply^7: Give an adrenaline yourself and teammates in your aura\n");
+		G_PrintMsg( ent, "^9The adrenaline boosts teammates speed for a couple of seconds\n" );
+		G_PrintMsg( ent , "Generic command ^8classaction1^7: Same as ^6supply^7\n" ); 
+		G_PrintMsg( ent , "Generic command ^8classaction2^7: Same as ^6supply^7\n" );
     }
     // Grunt
     else if ( player.playerClass.tag == PLAYERCLASS_GRUNT )
@@ -727,9 +750,11 @@ void GT_PlayerRespawn( Entity @ent, int old_team, int new_team )
         client.inventoryGiveItem( WEAP_LASERGUN );
         client.inventoryGiveItem( WEAP_GRENADELAUNCHER );
 		
-        G_PrintMsg( ent , "You're spawned as ^1GRUNT^7. This is a tank class with slow movement, strong armor and strong weapons.\n");
-        G_PrintMsg( ent , "Command ^6altattack^7: Throw a cluster grenade\n" );
-		G_PrintMsg( ent , "Command ^6protect^7: Use a protection Warshell\n" );
+        G_PrintMsg( ent, "You're spawned as ^1GRUNT^7. This is a tank class with slow movement, strong armor and weapons.\n");
+        G_PrintMsg( ent, "Command ^6altattack^7: Throw a cluster grenade\n" );
+		G_PrintMsg( ent, "Command ^6protect^7: Use a protection Warshell\n" );
+		G_PrintMsg( ent, "Generic command ^8classaction1^7: Same as ^6protect^7\n" ); 
+		G_PrintMsg( ent, "Generic command ^8classaction2^7: Same as ^6altattack^7\n" );
     }
     // Engineer
     else if ( player.playerClass.tag == PLAYERCLASS_ENGINEER )
@@ -739,9 +764,15 @@ void GT_PlayerRespawn( Entity @ent, int old_team, int new_team )
         client.inventoryGiveItem( WEAP_PLASMAGUN );
         client.inventoryGiveItem( WEAP_RIOTGUN );
 
-        G_PrintMsg( ent , "You're spawned as ^4ENGINEER^7. This is a defencive class with an ability to build entities.\n" );
-		G_PrintMsg( ent , "Command ^6build turret^7: Spawn a turret\n" );
-		G_PrintMsg( ent , "Command ^6destroy turret^7: Destroy a turret\n" );
+        G_PrintMsg( ent, "You're spawned as ^4ENGINEER^7. This is a defencive class with an ability to build entities.\n" );
+		G_PrintMsg( ent, "^9You can build a single turret that fires bullets and rockets\n" );
+		G_PrintMsg( ent, "^9Your turret gets destroyed when you switch to another class\n" );
+		G_PrintMsg( ent, "^9Be aware of your turret! It can be damaged, stunned or hacked.\n" );
+		G_PrintMsg( ent, "^9Destroy a turret and build a new one if your turret is heavily damaged\n" );
+		G_PrintMsg( ent, "Command ^6build turret^7: Spawn a turret\n" );
+		G_PrintMsg( ent, "Command ^6destroy turret^7: Destroy a turret\n" );
+		G_PrintMsg( ent, "Generic command ^8classaction1^7: Same as ^6build turret^7\n" ); 
+		G_PrintMsg( ent, "Generic command ^8classaction2^7: Same as ^6destroy turret^7\n" );
     }
 	else if ( player.playerClass.tag == PLAYERCLASS_SUPPORT )
 	{
@@ -749,8 +780,11 @@ void GT_PlayerRespawn( Entity @ent, int old_team, int new_team )
 		client.inventoryGiveItem( WEAP_LASERGUN );
 		client.inventoryGiveItem( WEAP_RIOTGUN );
 
-		G_PrintMsg( ent, "You're spawned as ^8SUPPORT^7. This is a supportive class with armor regeneration and an ability to repair armor of teammates in your aura.\n" );
+		G_PrintMsg( ent, "You're spawned as ^8SUPPORT^7. This is a supportive class with armor regeneration.\n" );
+		G_PrintMsg( ent, "^9You repair teammates armor in 192 units of your aura\n" );
 		G_PrintMsg( ent, "Command ^6supply^7: Give ammo yourself and teammates in your aura\n" );
+		G_PrintMsg( ent, "Generic command ^8classaction1^7: Same as ^6supply^7\n" ); 
+		G_PrintMsg( ent, "Generic command ^8classaction2^7: Same as ^6supply^7\n" );
 	}
 	else if ( player.playerClass.tag == PLAYERCLASS_SNIPER )
 	{
@@ -766,6 +800,9 @@ void GT_PlayerRespawn( Entity @ent, int old_team, int new_team )
 		G_PrintMsg( ent, "You're spawned as ^5SNIPER^7. This is a defencive class with best weapons for far-range fights.\n" );
 		G_PrintMsg( ent, "Command ^6protect^7: Toggle invisibility\n" );
 		G_PrintMsg( ent, "Command ^6supply^7: Buy an instagun shot\n" );
+		G_PrintMsg( ent, "^9You can't carry more than 3 instagun shots\n" );
+		G_PrintMsg( ent, "Generic command ^8classaction1^7: Same as ^6protect^7\n" ); 
+		G_PrintMsg( ent, "Generic command ^8classaction2^7: Same as ^6supply^7\n" );
 	}
 
 	player.loadAmmo();
@@ -1123,6 +1160,8 @@ void GT_InitGametype()
     G_RegisterCommand( "gametype" );
     G_RegisterCommand( "gametypemenu" );
     G_RegisterCommand( "class" );
+	G_RegisterCommand( "classaction1" );
+	G_RegisterCommand( "classaction2" );
     G_RegisterCommand( "build" );
     G_RegisterCommand( "destroy" );
 	G_RegisterCommand( "altattack" );

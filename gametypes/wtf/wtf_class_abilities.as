@@ -386,3 +386,72 @@ void CTFT_TransCommand( Client @client, String &argsString, int argc )
 	client.printMessage( "Illegal command usage. Available arguments: ^6throw^7, ^6check^7, ^6return^7, ^6use^7\n" );
 }
 
+void CTFT_Classaction1Command( Client @client )
+{
+	if ( @client == null )
+		return;
+
+	if ( client.getEnt().isGhosting() )
+		return;
+
+	cPlayer @player = GetPlayer( client );
+
+	switch ( player.playerClass.tag )
+	{
+		case PLAYERCLASS_GRUNT:
+			player.activateShell();
+			break;
+		case PLAYERCLASS_MEDIC:
+			CTFT_SupplyAdrenaline( client, player );
+			break;
+		case PLAYERCLASS_RUNNER:
+			if ( @player.translocator == null )
+				player.throwTranslocator();
+			else
+				player.useTranslocator();
+			break;
+		case PLAYERCLASS_ENGINEER:
+			CTFT_BuildTurret( client, player );
+			break;
+		case PLAYERCLASS_SUPPORT:
+			CTFT_SupplyAmmo( client, player );
+			break;
+		case PLAYERCLASS_SNIPER:
+			player.activateInvisibility();
+			break;
+	}
+}
+
+void CTFT_Classaction2Command( Client @client )
+{
+	if ( @client == null )
+		return;
+
+	if ( client.getEnt().isGhosting() )
+		return;
+
+	cPlayer @player = GetPlayer( client );
+
+	switch ( player.playerClass.tag )
+	{
+		case PLAYERCLASS_GRUNT:
+			CTFT_ThrowClusterGrenade( client, player );
+			break;
+		case PLAYERCLASS_MEDIC:
+			CTFT_SupplyAdrenaline( client, player );
+			break;
+		case PLAYERCLASS_RUNNER:
+			CTFT_Blast( client, player );
+			break;
+		case PLAYERCLASS_ENGINEER:
+			CTFT_DestroyTurret( client, player );
+			break;
+		case PLAYERCLASS_SUPPORT:
+			CTFT_SupplyAmmo( client, player );
+			break;
+		case PLAYERCLASS_SNIPER:
+			CTFT_BuyInstaShot( client, player );
+			break;
+	}
+}
+
