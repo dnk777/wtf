@@ -39,14 +39,11 @@ uint CTFT_ENGINEER_BUILD_COOLDOWN_TIME = 15000;
 float CTFT_SNIPER_INVISIBILITY_MINLOAD = 20;
 float CTFT_SNIPER_INVISIBILITY_MAXLOAD = 100;
 uint CTFT_INVISIBILITY_COOLDOWN = 1000;
-int CTFT_BATTLESUIT_AP_COST = 50;
-int CTFT_BATTLESUIT_RUNNER_TIME = 3; 	// in seconds
-int CTFT_BATTLESUIT_GRUNT_TIME = 8;		// in seconds
+int CTFT_BATTLESUIT_AP_COST = 75;
+int CTFT_BATTLESUIT_GRUNT_TIME = 4;		// in seconds
+uint CTFT_GRUNT_ABILITY_COOLDOWN = 20000;
 int CTFT_MEDIC_COOLDOWN = 1200;
-int CTFT_GRUNT_COOLDOWN = 1500;
 int CTFT_SUPPORT_COOLDOWN = 1200;
-int CTFT_SHELL_COOLDOWN = 10000;
-int CTFT_BOMB_COOLDOWN = 20000;
 int CTFT_BLAST_COOLDOWN = 3000;
 int CTFT_BLAST_AP_COST = 25;
 float CTFT_RESPAWN_RADIUS = 384.0f;
@@ -216,6 +213,10 @@ bool GT_Command( Client @client, const String &cmdString, const String &argsStri
 	else if ( cmdString == "altattack" )
 	{
 		CTFT_AltAttackCommand( client, argsString, argc );
+	}
+	else if ( cmdString == "protect" )
+	{
+		CTFT_ProtectCommand( client, argsString, argc );
 	}
     // example of registered command
     else if ( cmdString == "gametype" )
@@ -1127,6 +1128,7 @@ void GT_InitGametype()
     G_RegisterCommand( "build" );
     G_RegisterCommand( "destroy" );
 	G_RegisterCommand( "altattack" );
+	G_RegisterCommand( "protect" );
 
     // Make turret models pure
     G_ModelIndex( "models/objects/turret/base.md3", true );

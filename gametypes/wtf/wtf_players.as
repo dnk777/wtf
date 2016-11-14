@@ -29,7 +29,7 @@ class cPlayer
     cBomb @bomb;
 
     uint medicCooldownTime;
-	uint gruntCooldownTime;
+	uint gruntAbilityCooldownTime;
 	uint supportCooldownTime;
     uint engineerBuildCooldownTime;
     uint shellCooldownTime;
@@ -69,7 +69,7 @@ class cPlayer
     void resetTimers()
     {
         this.medicCooldownTime = 0;
-		this.gruntCooldownTime = 0;
+		this.gruntAbilityCooldownTime = 0;
 		this.supportCooldownTime = 0;
         this.engineerBuildCooldownTime = 0;
         this.shellCooldownTime = 0;
@@ -140,15 +140,9 @@ class cPlayer
             this.client.setHUDStat( STAT_PROGRESS_SELF, int( frac * 100 ) );
         }
 
-        if ( this.isShellCooldown() )
+        if ( this.isGruntCooldown() )
         {
-            frac = float( this.shellCooldownTimeLeft() ) / float( CTFT_SHELL_COOLDOWN );
-            this.client.setHUDStat( STAT_PROGRESS_SELF, int( frac * 100 ) );
-        }
-
-        if ( this.isBombCooldown() )
-        {
-            frac = float( this.bombCooldownTimeLeft() ) / float( CTFT_BOMB_COOLDOWN );
+            frac = float( this.gruntCooldownTimeLeft() ) / float( CTFT_GRUNT_ABILITY_COOLDOWN );
             this.client.setHUDStat( STAT_PROGRESS_SELF, int( frac * 100 ) );
         }
 
@@ -513,21 +507,10 @@ class cPlayer
             this.client.pmoveJumpSpeed = this.playerClass.jumpSpeed;
             this.ent.mass = 200;
 
-            // grunt class is slower when wearing a warshell
+            // there used to be a grunt Warshell slowdown code
+			// the Grunt is very slow anyway, do not make him even slower
             if ( this.playerClass.tag == PLAYERCLASS_GRUNT )
-            {
-                if ( this.client.inventoryCount( POWERUP_SHELL ) > 0 )
-                {
-                    this.client.pmoveMaxSpeed = this.playerClass.maxSpeed - 40;
-                    this.ent.mass = 350;
-                    this.client.pmoveFeatures = this.client.pmoveFeatures & ~(PMFEAT_WALLJUMP|PMFEAT_DASH);
-                }
-                else
-                {
-                    this.client.pmoveFeatures = this.client.pmoveFeatures | PMFEAT_WALLJUMP | PMFEAT_DASH;
-                    this.ent.mass = 325;
-                }
-            }
+                this.ent.mass = 325;
 
             /* Needs latest bins */
             this.client.takeStun = this.playerClass.takeStun;
@@ -634,12 +617,12 @@ class cPlayer
 		if ( this.supportInfluence > 1.0f )
 			this.supportInfluence = 1.0f;
 
-		if ( this.medicInfluence > 0 )
+		if ( this.medicInfluence > 0 && ( this.ent.effects & EF_PLAYER_HIDENAME ) == 0 )
 			this.ent.effects |= EF_REGEN;
 		else
 			this.ent.effects &= ~EF_REGEN;
 
-		if ( this.supportInfluence > 0 )
+		if ( this.supportInfluence > 0 && ( this.ent.effects & EF_PLAYER_HIDENAME ) == 0 )
 			this.ent.effects |= EF_QUAD;
 		else
 			this.ent.effects &= ~EF_QUAD;
@@ -752,11 +735,7 @@ class cPlayer
 
     void tookDamage ( int attackerNum, float damage )
     {
-        if ( this.playerClass.tag == PLAYERCLASS_GRUNT )
-        {
-            this.setGruntCooldown();
-        }	
-        else if ( this.playerClass.tag == PLAYERCLASS_MEDIC )
+        if ( this.playerClass.tag == PLAYERCLASS_MEDIC )
         {
             this.setMedicCooldown();
         }
@@ -796,33 +775,6 @@ class cPlayer
 
         return int( levelTime - this.medicCooldownTime );
     }
-	
-    void setGruntCooldown()
-    {
-        if ( this.playerClass.tag != PLAYERCLASS_GRUNT )
-            return;
-
-        this.gruntCooldownTime = levelTime + CTFT_GRUNT_COOLDOWN;
-    }
-
-    bool isGruntCooldown()
-    {
-        if ( this.playerClass.tag != PLAYERCLASS_GRUNT )
-            return false;
-
-        return ( this.gruntCooldownTime > levelTime ) ? true : false;
-    }
-
-    int gruntCooldownTimeLeft()
-    {
-        if ( this.playerClass.tag != PLAYERCLASS_GRUNT )
-            return 0;
-
-        if ( this.gruntCooldownTime <= levelTime )
-            return 0;
-
-        return int( levelTime - this.gruntCooldownTime );
-    }	
 	
 	bool isSupportCooldown()
 	{
@@ -894,24 +846,6 @@ class cPlayer
         return int( this.engineerBuildCooldownTime - levelTime );
     }
 
-    void setBombCooldown()
-    {
-        this.bombCooldownTime = levelTime + CTFT_BOMB_COOLDOWN;
-    }
-
-    bool isBombCooldown()
-    {
-        return ( this.bombCooldownTime > levelTime ) ? true : false;
-    }
-
-    int bombCooldownTimeLeft()
-    {
-        if ( this.bombCooldownTime <= levelTime )
-            return 0;
-
-        return int( this.bombCooldownTime - levelTime );
-    }
-
 	void setBlastCooldown()
 	{
 		this.blastCooldownTime = levelTime + CTFT_BLAST_COOLDOWN;
@@ -922,22 +856,22 @@ class cPlayer
 		return this.blastCooldownTime > levelTime;
 	}
 
-    void setShellCooldown( int baseTime )
+    void setGruntCooldown()
     {
-        this.shellCooldownTime = levelTime + CTFT_SHELL_COOLDOWN + baseTime;
+        this.gruntAbilityCooldownTime = levelTime + CTFT_GRUNT_ABILITY_COOLDOWN;
     }
 
-    bool isShellCooldown()
+    bool isGruntCooldown()
     {
-        return ( this.shellCooldownTime > levelTime ) ? true : false;
+        return ( this.gruntAbilityCooldownTime > levelTime ) ? true : false;
     }
 
-    int shellCooldownTimeLeft()
+    int gruntCooldownTimeLeft()
     {
-        if ( this.shellCooldownTime <= levelTime )
+        if ( this.gruntAbilityCooldownTime <= levelTime )
             return 0;
 
-        return int( this.shellCooldownTime - levelTime );
+        return int( this.gruntAbilityCooldownTime - levelTime );
     }
 
     void activateInvisibility()
@@ -1008,8 +942,14 @@ class cPlayer
     {
         if ( this.ent.isGhosting() )
             return;
+	
+		if ( this.playerClass.tag != PLAYERCLASS_GRUNT )
+		{
+			this.printMessage( "This ability is not available for your class\n" );
+			return;
+		}
 
-        if ( this.isShellCooldown() )
+        if ( this.isGruntCooldown() )
         {
             this.printMessage( "Cannot use the skill yet\n" );
             return;
@@ -1017,22 +957,13 @@ class cPlayer
 
         if ( this.client.armor < CTFT_BATTLESUIT_AP_COST )
         {
-            this.printMessage( "You don't have enough armor to spawn battlesuit\n" );
+            this.printMessage( "You don't have enough armor to spawn a Warshell\n" );
         }
         else
         {
             this.client.armor -= CTFT_TURRET_AP_COST;
-
-            if ( this.playerClass.tag == PLAYERCLASS_GRUNT )
-            {
-                this.client.inventorySetCount( POWERUP_SHELL, CTFT_BATTLESUIT_GRUNT_TIME );
-                this.setShellCooldown( CTFT_BATTLESUIT_GRUNT_TIME * 1000 );
-            }
-            else
-            {
-                this.client.inventorySetCount( POWERUP_SHELL, CTFT_BATTLESUIT_GRUNT_TIME );
-                this.setShellCooldown( CTFT_BATTLESUIT_RUNNER_TIME * 1000 );
-            }
+            this.client.inventorySetCount( POWERUP_SHELL, CTFT_BATTLESUIT_GRUNT_TIME );
+            this.setGruntCooldown();
 
             G_Sound( this.ent, CHAN_MUZZLEFLASH, G_SoundIndex( "sounds/items/shell_spawn" ), 0.3f );
         }

@@ -181,7 +181,7 @@ void CTFT_ThrowClusterGrenade( Client @client, cPlayer @player )
 		return;
 	}
 
-    if ( player.isBombCooldown() )
+    if ( player.isGruntCooldown() )
     {
         client.printMessage( "You can't throw a bomb yet\n" );
         return;
@@ -197,7 +197,7 @@ void CTFT_ThrowClusterGrenade( Client @client, cPlayer @player )
         if ( @bomb != null )
         {
             client.armor = client.armor - ( CTFT_TURRET_AP_COST ); // Costs the same as turret
-			player.setBombCooldown();
+			player.setGruntCooldown();
 			@player.bomb = bomb;
         }
     }
@@ -223,4 +223,29 @@ void CTFT_Blast( Client @client, cPlayer @player )
 		player.setBlastCooldown();
 		client.armor -= CTFT_BLAST_AP_COST;
 	}
+}
+
+void CTFT_ProtectCommand( Client @client, const String &argsString, int argc )
+{
+	if ( @client == null )
+		return;
+	
+	if ( client.getEnt().isGhosting() )
+		return;
+
+	cPlayer @player = @GetPlayer( client );
+
+	if ( player.playerClass.tag == PLAYERCLASS_GRUNT )
+	{
+		player.activateShell();
+		return;
+	}
+
+	if ( player.playerClass.tag == PLAYERCLASS_SNIPER )
+	{
+		player.activateInvisibility();
+		return;
+	}
+
+	client.printMessage( "This command is not available for your class\n" );
 }
