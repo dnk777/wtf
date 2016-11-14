@@ -35,6 +35,7 @@ class cPlayer
     uint shellCooldownTime;
     uint bombCooldownTime;
     uint respawnTime;
+	bool isHealingTeammates;
 	float medicInfluence;
 	float supportInfluence;
     bool invisibilityEnabled;
@@ -73,6 +74,7 @@ class cPlayer
         this.shellCooldownTime = 0;
         this.bombCooldownTime = 0;
         this.respawnTime = 0;
+		this.isHealingTeammates = false;
 		this.medicInfluence = 0.0f;
 		this.supportInfluence = 0.0f;
         this.invisibilityEnabled = false;
@@ -539,7 +541,8 @@ class cPlayer
 	void clearInfluence()
 	{
 		this.medicInfluence = 0.0f;
-		this.supportInfluence = 0.0f;	
+		this.supportInfluence = 0.0f;
+		this.isHealingTeammates = false;
 	}
 
 	void refreshInfluenceEmission()
@@ -580,10 +583,13 @@ class cPlayer
 			
 			cPlayer @player = GetPlayer( entity.client );
 			player.medicInfluence += influence;
-			
+
 			// Add score only when a player needs health
-			if ( entity.health < entity.maxHealth )			
+			if ( entity.health < entity.maxHealth )	
+			{
+				this.isHealingTeammates = true;
 				this.medicInfluenceScore += 0.00035 * influence * frameTime;
+			}
 		}
 	}
 
@@ -610,8 +616,11 @@ class cPlayer
 			player.supportInfluence += influence; 
 			
 			// Add score only when a player needs refilling armor
-			if ( entity.client.armor < player.playerClass.maxArmor )			
+			if ( entity.client.armor < player.playerClass.maxArmor )
+			{
+				this.isHealingTeammates = true;
 				this.supportInfluenceScore += 0.00045 * influence * frameTime;
+			}
 		}
 	}
 
@@ -662,7 +671,12 @@ class cPlayer
             {
                 // Medic regens health
                 if ( this.ent.health < 100 ) 
-                    this.ent.health += ( frameTime * 0.019f );
+				{
+					if ( this.isHealingTeammates )
+						this.ent.health += ( frameTime * 0.006f );
+					else          	
+						this.ent.health += ( frameTime * 0.019f );
+				}
             }
 		}
 		else if ( this.playerClass.tag == PLAYERCLASS_SUPPORT )
@@ -671,14 +685,20 @@ class cPlayer
 			if ( !this.isSupportCooldown() )
 			{
 				int maxArmor = this.playerClass.maxArmor;
+				float armorGain = 0.0f;
 				if ( this.client.armor < ( maxArmor - 25 ) )
 				{
-					this.client.armor += ( frameTime * 0.012f );
+					armorGain = frameTime * 0.012f;
 				}
 				else if ( ( this.client.armor >= ( maxArmor - 25 ) ) && this.client.armor < maxArmor )
 				{
-					this.client.armor += ( frameTime * 0.0032f );
+					armorGain = frameTime * 0.007f;
 				}
+
+				if ( this.isHealingTeammates )
+					armorGain *= 0.35f;
+
+				this.client.armor += armorGain;
 			}
 		}
 		else if ( this.playerClass.tag == PLAYERCLASS_SNIPER )
