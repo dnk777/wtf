@@ -112,8 +112,8 @@ void GENERIC_InitPlayerClasses()
         100,						// initial health
         25,						    // initial armor
 		125,                        // max armor
-        265,						// speed
-        330,						// dash speed
+        240,						// speed
+        320,						// dash speed
         true,						// can be stunned
         "gfx/hud/icons/playerclass/wtf_grunt",
         "gfx/hud/icons/classactions/grunt1",
@@ -172,8 +172,8 @@ void GENERIC_InitPlayerClasses()
 		100,                        // initial health
 		25,                         // initial armor
 		100,                        // max armor
-		265,                        // speed
-		330,                        // dash speed
+		275,                        // speed
+		320,                        // dash speed
 		true,                       // can be stunned
 		"gfx/hud/icons/playerclass/wtf_support",
 		null,
