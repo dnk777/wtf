@@ -60,6 +60,8 @@ class cTurret
     int invisibilityAlarmSoundIndex;
     uint lastInvisibilityAlarmTime;
     uint invisibilityAlarmRepeatDelay;
+	uint lastRocketFireTime;
+	uint rocketReloadTime;
 	
     Entity @minimap;   // Minimap
     Entity @sprite;    // On-screen sprite	
@@ -81,9 +83,12 @@ class cTurret
     int damage;
     int knockback;
     int stun;
+	int rocketSpeed;
+	int rocketSplash;
+	int rocketDamage;
+	int rocketKnockback;
+	int rocketStun;
 	uint detectTime;
-    int projectileSpeed;	// only for projectiles (rockets, grenades, plasma)
-    int splashRadius;		// only for projectiles (rockets, grenades, plasma)
 
     int painSoundIndex;
     uint lastPainTime;
@@ -106,23 +111,28 @@ class cTurret
         this.invisibilityAlarmSoundIndex = G_SoundIndex( "sounds/misc/timer_bip_bip" );
         this.lastInvisibilityAlarmTime = 0;
         this.invisibilityAlarmRepeatDelay = 1500;
+		this.lastRocketFireTime = 0;
+		this.rocketReloadTime = 800;
         this.gunOffset = 8;
         this.flashTime = 100;
         this.yawSpeed = 100.0f;
         this.pitchSpeed = 24.0f;
         this.scanDelay = 500;
-        this.range = 750;
+        this.range = 2000;
         this.spread = 75;
-        this.damage = 10;
+        this.damage = 8;
         this.knockback = 7;
         this.stun = 0;
+		this.rocketSpeed = 1150;
+		this.rocketSplash = 125;
+		this.rocketDamage = 80;
+		this.rocketKnockback = 100;
+		this.rocketStun = 1250;
         this.refireDelay = 200;
         this.minPITCH = -45;
         this.fireMode = AMMO_BULLETS;
         this.fireSoundIndex = G_SoundIndex( "sounds/weapons/machinegun_fire" );
         this.moveSoundIndex = G_SoundIndex( "sounds/movers/elevator_move" );
-        this.projectileSpeed = 1175; //  set up as for AMMO_ROCKETS
-        this.splashRadius = 150; // set up as for AMMO_ROCKETS
         this.returnToIdle = false;
         this.lastPainTime = 0;
         this.painDelay = 300;
@@ -214,7 +224,7 @@ class cTurret
         this.bodyEnt.clipMask = MASK_PLAYERSOLID;
         this.bodyEnt.moveType = MOVETYPE_TOSS;
         this.bodyEnt.svflags &= ~SVF_NOCLIENT;
-        this.bodyEnt.health = 250;
+        this.bodyEnt.health = 400;
         this.bodyEnt.mass = 450;
         this.bodyEnt.takeDamage = 1;
         this.bodyEnt.nextThink = levelTime + 1;
@@ -544,40 +554,16 @@ class cTurret
                 && ( levelTime > this.invisibleEnemySince + invisibleEnemyReactionTime )
                 && ( currentAngles == desiredAngles ) )
         {
-            switch ( this.fireMode )
-            {
-            case AMMO_BULLETS:
-                G_FireBullet( this.gunEnt.origin, currentAngles, this.range, this.spread, this.damage, this.knockback, this.stun, this.bodyEnt );
-                break;
-
-            case AMMO_INSTAS:
-                G_FireInstaShot( this.gunEnt.origin, currentAngles, this.range, this.damage, this.knockback, this.stun, this.bodyEnt );
-                break;
-
-            case AMMO_BOLTS:
-                G_FireStrongBolt( this.gunEnt.origin, currentAngles, this.range, this.damage, this.knockback, this.stun, this.bodyEnt );
-                break;
-
-            case AMMO_PLASMA:
-                G_FirePlasma( this.gunEnt.origin, currentAngles, this.projectileSpeed, this.splashRadius, this.damage, this.knockback, this.stun, this.bodyEnt );
-                break;
-
-            case AMMO_ROCKETS:
-                G_FireRocket( this.gunEnt.origin, currentAngles, this.projectileSpeed, this.splashRadius, this.damage, this.knockback, this.stun, this.bodyEnt );
-                break;
-
-            case AMMO_GRENADES:
-                G_FireGrenade( this.gunEnt.origin, currentAngles, this.projectileSpeed, this.splashRadius, this.damage, this.knockback, this.stun, this.bodyEnt );
-                break;
-
-            case AMMO_GUNBLADE:
-                G_FireBlast( this.gunEnt.origin, currentAngles, this.projectileSpeed, this.splashRadius, this.damage, this.knockback, this.stun, this.bodyEnt );
-                break;
-
-            default:
-                G_Print( "Gametype script: cTurret::think(): Invalid fire mode\n" );
-                break;
-            }
+			G_FireBullet( this.gunEnt.origin, currentAngles, this.range, this.spread, this.damage, this.knockback, this.stun, this.bodyEnt );
+			if ( levelTime - this.lastRocketFireTime >= this.rocketReloadTime )
+			{
+				float distanceToEnemy = this.bodyEnt.origin.distance( this.enemy.origin );
+				if ( distanceToEnemy > 250 && distanceToEnemy < 2500 )
+				{
+					G_FireRocket( this.gunEnt.origin, currentAngles, this.rocketSpeed, this.rocketSplash, this.rocketDamage, this.rocketKnockback, this.rocketStun, this.bodyEnt );
+					this.lastRocketFireTime = levelTime;
+				}
+			}
 
             if ( !this.inuse )
                 return;
