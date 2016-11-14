@@ -47,7 +47,7 @@ void CTFT_BuildCommand( Client @client, const String &argsString, int argc )
 		return;
 	}
 
-	client.printMessage( "Illegal command usage. Available arguments: `turret`" );
+	client.printMessage( "Illegal command usage. Available arguments: ^6turret^7.\n" );
 }
 
 void CTFT_DestroyCommand( Client @client, const String &argsString, int argc )
@@ -80,7 +80,7 @@ void CTFT_DestroyCommand( Client @client, const String &argsString, int argc )
 		return;
 	}
 
-	client.printMessage( "Illegal command usage. Available arguments: `turret`" );
+	client.printMessage( "Illegal command usage. Available arguments: ^6turret^7.\n" );
 }
 
 void CTFT_BuildTurret( Client @client, cPlayer @player )
@@ -205,7 +205,7 @@ void CTFT_ThrowClusterGrenade( Client @client, cPlayer @player )
 
 void CTFT_Blast( Client @client, cPlayer @player )
 {
-	if ( player.isBlastCooldown() )
+	if ( player.isRunnerAbilityCooldown() )
 	{
 		client.printMessage( "You can't fire a blast yet\n" );
 		return;
@@ -220,7 +220,7 @@ void CTFT_Blast( Client @client, cPlayer @player )
 	Entity @ent = client.getEnt();
 	if ( @G_FireWeakBolt( ent.origin, ent.angles, 8000, CTFT_BLAST_DAMAGE, 100, 1000, ent ) != null )
 	{
-		player.setBlastCooldown();
+		player.setRunnerAbilityCooldown();
 		client.armor -= CTFT_BLAST_AP_COST;
 	}
 }
@@ -336,5 +336,53 @@ void CTFT_BuyInstaShot( Client @client, cPlayer @player )
 	client.armor -= 45;
 	client.inventorySetCount( AMMO_INSTAS, instaAmmoCount + 1 );
 	player.buyAmmoCooldownTime = levelTime + 3000 + 5000 * instaAmmoCount;
+}
+
+void CTFT_TransCommand( Client @client, String &argsString, int argc )
+{
+	if ( @client == null )
+		return;
+
+	if ( client.getEnt().isGhosting() )
+		return;
+
+	cPlayer @player = GetPlayer( client );
+
+	if ( player.playerClass.tag != PLAYERCLASS_RUNNER )
+	{
+		client.printMessage( "This command is not available for your class\n" );
+		return;
+	}
+
+	if ( argc != 1 )
+	{
+		client.printMessage( "Illegal command usage (a single argument is expected)\n" );
+		return;
+	}
+
+	String token = argsString.getToken( 0 );
+
+	if ( token == "throw" )
+	{
+		player.throwTranslocator();
+		return;
+	}
+	if ( token == "check" )
+	{
+		player.checkTranslocator();
+		return;
+	}
+	if ( token == "return" )
+	{
+		player.returnTranslocator();
+		return;
+	}
+	if ( token == "use" )
+	{
+		player.useTranslocator();
+		return;
+	}
+
+	client.printMessage( "Illegal command usage. Available arguments: ^6throw^7, ^6check^7, ^6return^7, ^6use^7\n" );
 }
 

@@ -18,6 +18,7 @@ wtf/wtf_class_abilities.as;
 wtf/wtf_turret.as;
 wtf/wtf_reviver.as;
 wtf/wtf_bomb.as;
+wtf/wtf_translocator.as;
 
 legacy/quake1.as;
 

@@ -45,8 +45,10 @@ int CTFT_BATTLESUIT_GRUNT_TIME = 4;		// in seconds
 uint CTFT_GRUNT_ABILITY_COOLDOWN = 20000;
 int CTFT_MEDIC_COOLDOWN = 1200;
 int CTFT_SUPPORT_COOLDOWN = 1200;
-int CTFT_BLAST_COOLDOWN = 3000;
-int CTFT_BLAST_AP_COST = 25;
+int CTFT_RUNNER_ABILITY_COOLDOWN = 2000;
+int CTFT_BLAST_AP_COST = 15;
+int CTFT_TRANSLOCATOR_AP_COST = 20;
+float CTFT_TRANSLOCATOR_HEALTH = 99;
 float CTFT_RESPAWN_RADIUS = 384.0f;
 float CTFT_BUILD_RADIUS = 160.0f;
 float CTFT_BUILD_DESTROY_RADIUS = 96.0f;
@@ -222,6 +224,10 @@ bool GT_Command( Client @client, const String &cmdString, const String &argsStri
 	else if ( cmdString == "supply" )
 	{
 		CTFT_SupplyCommand( client, argsString, argc );
+	}
+	else if ( cmdString == "trans" )
+	{
+		CTFT_TransCommand( client, argsString, argc );
 	}
     // example of registered command
     else if ( cmdString == "gametype" )
@@ -694,6 +700,12 @@ void GT_PlayerRespawn( Entity @ent, int old_team, int new_team )
         G_PrintMsg( ent , "You're spawned as ^3RUNNER^7. This is the fastest offensive class.\n" );
 		G_PrintMsg( ent , "Command ^6altattack^7: Fire a powerful energy blast that hits enemies and stuns turrets\n" );
 		G_PrintMsg( ent , "Consider setting cg_particles 1 to make the blast clearly visible\n" );
+		G_PrintMsg( ent , "Command ^6trans throw^7: Throw (or return and throw ) a translocator\n" );
+		G_PrintMsg( ent , "Command ^6trans check^7: Check the translocator status\n" );
+		G_PrintMsg( ent , "Command ^6trans return^7: Force returning a translocator\n" );
+		G_PrintMsg( ent , "Command ^6trans use^7: Teleport to the translocator origin\n" );
+		G_PrintMsg( ent , "A translocator gets returned automatically in a few seconds\n" );
+		G_PrintMsg( ent , "When a translocator is returned, your armor points spent on trowing it are restored\n" );
     }
     // Medic
     else if ( player.playerClass.tag == PLAYERCLASS_MEDIC )
@@ -820,6 +832,8 @@ void GT_ThinkRules()
 			// Prevent applying these commands after respawn
 			player.hasPendingSupplyAmmoCommand = false;
 			player.hasPendingSupplyAdrenalineCommand = false;
+			player.isTranslocating = false;
+			player.hasJustTranslocated = false;
 		}
 	}
 
@@ -1114,6 +1128,7 @@ void GT_InitGametype()
 	G_RegisterCommand( "altattack" );
 	G_RegisterCommand( "protect" );
 	G_RegisterCommand( "supply" );
+	G_RegisterCommand( "trans" );
 
     // Make turret models pure
     G_ModelIndex( "models/objects/turret/base.md3", true );

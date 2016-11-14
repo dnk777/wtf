@@ -27,6 +27,7 @@ class cPlayer
     cReviver @reviver;
     cTurret @turret;    
     cBomb @bomb;
+	cTranslocator @translocator;
 
     uint medicCooldownTime;
 	uint gruntAbilityCooldownTime;
@@ -34,7 +35,7 @@ class cPlayer
     uint engineerBuildCooldownTime;
     uint shellCooldownTime;
     uint bombCooldownTime;
-	uint blastCooldownTime;
+	uint runnerAbilityCooldownTime;
 	uint buyAmmoCooldownTime;
 	uint adrenalineTime;
     uint respawnTime;
@@ -43,6 +44,9 @@ class cPlayer
 	bool hasReceivedAdrenaline;
 	bool hasPendingSupplyAmmoCommand;
 	bool hasPendingSupplyAdrenalineCommand;
+	bool isTranslocating;     // A player entity is on its old origin and a teleport effect is shown
+	bool hasJustTranslocated; // A player entity is on its new origin and a teleport effect is shown
+	Vec3 translocationOrigin; // A translocator can be killed while translocation, so we save destination origin 
 	float medicInfluence;
 	float supportInfluence;
 	float adrenalineBaseSpeedBoost;
@@ -66,6 +70,7 @@ class cPlayer
         @this.reviver = null;
         @this.turret = null;
         @this.bomb = null;
+		@this.translocator = null;
         this.resetTimers();
 		
 		this.medicInfluenceScore = 0.0;
@@ -82,7 +87,7 @@ class cPlayer
         this.engineerBuildCooldownTime = 0;
         this.shellCooldownTime = 0;
         this.bombCooldownTime = 0;
-		this.blastCooldownTime = 0;
+		this.runnerAbilityCooldownTime = 0;
 		this.buyAmmoCooldownTime = 0;
 		this.adrenalineTime = 0;
         this.respawnTime = 0;
@@ -91,6 +96,8 @@ class cPlayer
 		this.hasReceivedAdrenaline = false;
 		this.hasPendingSupplyAmmoCommand = false;
 		this.hasPendingSupplyAdrenalineCommand = false;
+		this.isTranslocating = false;
+		this.hasJustTranslocated = false;
 		this.medicInfluence = 0.0f;
 		this.supportInfluence = 0.0f;
 		this.adrenalineBaseSpeedBoost = 0.0f;
@@ -161,6 +168,12 @@ class cPlayer
             frac = float( this.gruntCooldownTimeLeft() ) / float( CTFT_GRUNT_ABILITY_COOLDOWN );
             this.client.setHUDStat( STAT_PROGRESS_SELF, int( frac * 100 ) );
         }
+
+		if ( this.isRunnerAbilityCooldown() )
+		{
+			frac = float( this.runnerCooldownTimeLeft() ) / float( CTFT_RUNNER_ABILITY_COOLDOWN );
+            this.client.setHUDStat( STAT_PROGRESS_SELF, int( frac * 100 ) );
+		}
 
         if ( this.playerClass.tag == PLAYERCLASS_SNIPER && this.invisibilityLoad > 0 )
         {
@@ -511,6 +524,77 @@ class cPlayer
         }
         else
         {
+			if ( this.isTranslocating )
+			{
+				this.ent.respawnEffect();
+				G_Sound( this.ent, CHAN_MUZZLEFLASH, G_SoundIndex( "sounds/world/tele_in" ), 0.4f );
+
+				this.isTranslocating = false;
+				this.hasJustTranslocated = true;
+				return;
+			}
+
+			if ( this.hasJustTranslocated )
+			{
+				if ( ( this.ent.effects & EF_CARRIER ) != 0 )			
+					CTF_PlayerDropFlag( this.ent, false );
+
+				this.ent.unlinkEntity();
+
+				Vec3 originOffset( 0, 0, translocatorMins.z - playerBoxMins.z + 1.0f );
+				// translocator might have been pushed away during a frame,
+				// so use the stored translocation origin only if there is not translocator.
+				// (we have to show a player teleportation anyway, thats why we always modify player's origin).
+				if ( @this.translocator != null )
+					this.ent.origin = this.translocator.bodyEnt.origin + originOffset;
+				else
+					this.ent.origin = this.translocationOrigin + originOffset;			
+
+				this.ent.respawnEffect();
+				G_Sound( this.ent, CHAN_MUZZLEFLASH, G_SoundIndex( "sounds/world/tele_in" ), 0.4f );
+
+				// if the translocator has been killed during translocation
+				if ( @this.translocator == null )
+				{
+					client.printMessage( S_COLOR_RED + "Your translocator was destroyed!\n" );
+					this.ent.linkEntity();
+					// kill player
+					this.ent.sustainDamage( null, null, Vec3( 0, 0, 1 ), 9999.0f, 50.0f, 1000.0f, 0 );
+				}
+				// if the translocator is damaged	
+				else if ( this.translocator.bodyEnt.health < CTFT_TRANSLOCATOR_HEALTH )
+				{
+					client.printMessage( S_COLOR_RED + "Your translocator was damaged!\n" );
+					this.ent.linkEntity();
+					// kill player
+					this.ent.sustainDamage( null, null, Vec3( 0, 0, 1 ), 9999.0f, 50.0f, 1000.0f, 0 );
+					this.translocator.Free();
+				}
+				else
+				{
+					array<Entity @> @telefraggableEntities = @this.translocator.getPlayerBoxTelefraggableEntities();
+					// looks like the destination is in solid					
+					if ( @telefraggableEntities == null )
+					{
+						this.returnTranslocator();
+					}
+					else
+					{
+						// kill all entities that should be telefragged
+						for ( uint i = 0; i < telefraggableEntities.size(); ++i )
+						{
+							Entity @ent = telefraggableEntities[i];
+							ent.sustainDamage( this.ent, this.ent, Vec3( 0, 0, 1 ), 9999.0f, 50.0f, 1000.0f, 0 ); 
+						}
+						this.translocator.Free();
+					}
+					this.ent.linkEntity();
+				}
+
+				this.hasJustTranslocated = false;
+				return;
+			}
+
             this.client.pmoveDashSpeed = this.playerClass.dashSpeed;
             this.client.pmoveMaxSpeed = this.playerClass.maxSpeed;
             this.client.pmoveJumpSpeed = this.playerClass.jumpSpeed;
@@ -929,15 +1013,23 @@ class cPlayer
         return int( this.engineerBuildCooldownTime - levelTime );
     }
 
-	void setBlastCooldown()
+	void setRunnerAbilityCooldown()
 	{
-		this.blastCooldownTime = levelTime + CTFT_BLAST_COOLDOWN;
+		this.runnerAbilityCooldownTime = levelTime + CTFT_RUNNER_ABILITY_COOLDOWN;
 	}
 
-	bool isBlastCooldown()
+	bool isRunnerAbilityCooldown()
 	{
-		return this.blastCooldownTime > levelTime;
+		return this.runnerAbilityCooldownTime > levelTime;
 	}
+
+	int runnerCooldownTimeLeft()
+    {
+        if ( this.runnerAbilityCooldownTime <= levelTime )
+            return 0;
+
+        return int( this.runnerAbilityCooldownTime - levelTime );
+    }
 
     void setGruntCooldown()
     {
@@ -1106,6 +1198,128 @@ class cPlayer
 			client.inventorySetCount( AMMO_BOLTS, 10 );
 			client.inventorySetCount( AMMO_BULLETS, 100 );
 		}
+	}
+
+	void throwTranslocator()
+	{
+		if ( this.playerClass.tag != PLAYERCLASS_RUNNER )
+		{
+			client.printMessage( "This action is not available for your class\n" );
+			return;
+		}
+
+		if ( this.isTranslocating || this.hasJustTranslocated )
+			return;
+
+		if ( @this.translocator != null )
+		{
+			// Perform an auto-return
+			if ( !this.isRunnerAbilityCooldown() )
+			{
+				this.returnTranslocator();
+			}
+			else
+			{
+				client.printMessage( "You cannot throw another translocator yet\n" );
+				return;
+			}
+		}
+
+		if ( client.armor < CTFT_TRANSLOCATOR_AP_COST )
+		{
+			client.printMessage( "You do not have enough armor to throw a translocator\n" );
+			return;
+		}
+
+		@this.translocator = @ClientThrowTranslocator( client );
+		if ( @this.translocator == null )
+			return;
+		
+		client.armor -= CTFT_TRANSLOCATOR_AP_COST;
+		this.setRunnerAbilityCooldown();
+		
+		G_Sound( this.ent, CHAN_MUZZLEFLASH, G_SoundIndex( "sounds/weapons/grenlaunch_strong" ), 0.4f );
+	}
+
+	void checkTranslocator()
+	{
+		if ( this.playerClass.tag != PLAYERCLASS_RUNNER )
+		{
+			client.printMessage( "This action is not available for your class\n" );
+			return;
+		}
+
+		if ( this.isTranslocating || this.hasJustTranslocated )
+			return;
+
+		if ( @this.translocator == null )
+			return;
+
+		if ( this.translocator.bodyEnt.health < CTFT_TRANSLOCATOR_HEALTH )
+		{
+			client.printMessage( S_COLOR_YELLOW + "Your translocator was damaged!\n" );
+			this.returnTranslocator();
+			return;
+		}
+
+		if ( @this.translocator.getPlayerBoxTelefraggableEntities() == null )
+		{
+			this.returnTranslocator();
+			return;
+		}
+
+		G_LocalSound( this.client, CHAN_AUTO, G_SoundIndex( "sounds/menu/ok" ) );
+	}
+
+	void returnTranslocator()
+	{
+		if ( this.playerClass.tag != PLAYERCLASS_RUNNER )
+		{
+			client.printMessage( "This action is not available for your class\n" );
+			return;
+		}
+
+		if ( this.isTranslocating || this.hasJustTranslocated )
+			return;
+
+		if ( @this.translocator == null )
+			return;
+
+		this.translocator.Free();
+		@this.translocator = null;
+	}
+
+	void useTranslocator()
+	{
+		if ( this.playerClass.tag != PLAYERCLASS_RUNNER )
+		{
+			client.printMessage( "This action is not available for your class\n" );
+			return;
+		}
+
+		if ( this.isTranslocating || this.hasJustTranslocated )
+			return;
+
+		if ( @this.translocator == null )
+			return;
+
+		if ( @this.translocator.getPlayerBoxTelefraggableEntities() == null )
+		{
+			this.returnTranslocator();
+			return;
+		};
+
+		this.isTranslocating = true;
+		this.translocationOrigin = this.translocator.bodyEnt.origin;
+	}
+
+	void translocatorHasBeenReturned()
+	{
+		G_LocalSound( this.client, CHAN_AUTO, G_SoundIndex( "sounds/menu/back" ) );
+		client.printMessage( S_COLOR_CYAN + "Your translocator has been returned\n" );
+		@this.translocator = null;
+		if ( !this.hasJustTranslocated )
+			client.armor += CTFT_TRANSLOCATOR_AP_COST;
 	}
 }
 
