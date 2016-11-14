@@ -604,7 +604,14 @@ class cTurret
 		}
 
 		Vec3 predictedTarget;
-		PredictProjectileNoClip( this.gunEnt.origin, this.rocketSpeed, this.enemy.origin, this.enemy.velocity, predictedTarget );
+		if ( !AdjustTargetUsingGravity( this.gunEnt.origin, this.enemy, this.rocketSpeed, predictedTarget ) )
+		{
+			// Fall back to the basic firing
+			Vec3 toTarget = this.enemy.origin - this.gunEnt.origin;
+			G_FireRocket( this.gunEnt.origin, toTarget.toAngles(), this.rocketSpeed, this.rocketSplash, this.rocketDamage, this.rocketKnockback, this.rocketStun, this.bodyEnt );
+			return true;
+		}
+
 		Vec3 fireTarget = predictionStrength * predictedTarget + ( 1.0f - predictionStrength ) * this.enemy.origin;
 		
 		Trace trace;	
@@ -787,5 +794,105 @@ bool PredictProjectileNoClip(const Vec3 &in fireOrigin, float projectileSpeed, c
 
 	predictedTarget = target + t * targetVelocity;
     return true;
+}
+
+bool AdjustTargetUsingGravity( const Vec3 &in fireOrigin, Entity @enemy, float projectileSpeed, Vec3 &out adjustedTarget )
+{
+	// Aside from solving quite complicated system of equations that involve acceleration,
+    // we have to predict target collision with map environment.
+    // To solve it, we approximate target trajectory as a polyline
+    // that consists of linear segments plus an end ray from last segment point to infinity.
+    // We assume that target velocity is constant withing bounds of a segment.
+
+    const float TIME_STEP = 0.15f; // Time is in seconds
+	const float GRAVITY = 850.0f;
+
+    float currTime = 0.0f;
+    float nextTime = TIME_STEP;
+
+	const int entNum = enemy.entNum;
+	const Vec3 enemyOrigin( enemy.origin );
+	const Vec3 enemyVelocity( enemy.velocity );
+
+	Vec3 currPoint( enemyOrigin );
+
+    Trace trace;
+    for ( int i = 0; i < 3; ++i )
+    {
+        Vec3 nextPoint
+		(
+        	enemyVelocity.x * nextTime,
+            enemyVelocity.y * nextTime,
+            enemyVelocity.z * nextTime - 0.5f * GRAVITY * nextTime * nextTime
+		);
+		nextPoint += enemyOrigin;
+
+        // We assume that target has the same velocity as currPoint on a [currPoint, nextPoint] segment
+        Vec3 currTargetVelocity( enemyVelocity.x, enemyVelocity.y, enemyVelocity.z - GRAVITY * currTime );
+
+        // TODO: Projectile speed used in PredictProjectileNoClip() needs correction
+        // We can't offset fire origin since we do not know direction to target yet
+        // Instead, increase projectile speed used in calculations according to currTime
+        // Exact formula is to be proven yet
+        Vec3 predictedTarget;
+        if ( !PredictProjectileNoClip( fireOrigin, projectileSpeed, currPoint, currTargetVelocity, predictedTarget ) )
+            return false;
+
+        // Check whether predictedTarget is within [currPoint, nextPoint]
+        // where extrapolation that use currTargetVelocity is assumed to be valid.
+        Vec3 currToNextVec = nextPoint - currPoint;
+        Vec3 predictedTargetToNextVec = nextPoint - predictedTarget;
+        Vec3 predictedTargetToCurrVec = currPoint - predictedTarget;
+
+        if ( currToNextVec * predictedTargetToNextVec >= 0 && currToNextVec * predictedTargetToCurrVec <= 0 )
+        {
+            // Trace from the segment start (currPoint) to the predictedTarget
+            trace.doTrace( currPoint, vec3Origin, vec3Origin, predictedTarget, entNum, MASK_PLAYERSOLID );
+            if ( trace.fraction == 1.0f )
+            {
+				// Target may be hit in air
+				adjustedTarget = predictedTarget;
+            }
+            else
+            {
+                // Segment from currPoint to predictedTarget hits solid, use trace end as a predicted target
+                adjustedTarget = trace.endPos;
+            }
+            return true;
+        }
+        else
+        {
+            // Trace from the segment start (currPoint) to the segment end (nextPoint)
+            trace.doTrace( currPoint, vec3Origin, vec3Origin, nextPoint, entNum, MASK_PLAYERSOLID );
+            if ( trace.fraction != 1.0f )
+            {
+                // Trajectory segment hits solid, use trace end as a predicted target point and return
+                adjustedTarget = trace.endPos;
+                return true;
+            }
+        }
+
+        // Test next segment
+        currTime = nextTime;
+        nextTime += TIME_STEP;
+        currPoint = nextPoint;
+    }
+
+    // We have tested all segments up to maxSegments and have not found an impact point yet.
+    // Approximate the rest of the trajectory as a ray.
+
+    Vec3 currTargetVelocity( enemyVelocity.x, enemyVelocity.y, enemyVelocity.z - GRAVITY * currTime );
+
+    Vec3 predictedTarget;
+    if ( !PredictProjectileNoClip( fireOrigin, projectileSpeed, currPoint, currTargetVelocity, predictedTarget ) )
+        return false;
+
+    trace.doTrace( currPoint, vec3Origin, vec3Origin, predictedTarget, entNum, MASK_PLAYERSOLID );
+    if ( trace.fraction == 1.0f )
+        adjustedTarget = predictedTarget;
+    else
+        adjustedTarget = trace.endPos;
+
+	return true;
 }
 
