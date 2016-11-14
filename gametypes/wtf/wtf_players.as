@@ -588,6 +588,7 @@ class cPlayer
 	void refreshSupportInfluenceEmission()
 	{
 		Trace trace;
+		int numAffectedTeammates = 0;
 		array<Entity @> @inradius = G_FindInRadius( this.ent.origin, CTFT_SUPPORT_INFLUENCE_RADIUS );
 		for ( uint i = 0; i < inradius.size(); ++i )
 		{
@@ -606,20 +607,29 @@ class cPlayer
 			
 			cPlayer @player = GetPlayer( entity.client );
 			player.supportInfluence += influence; 
-			
+			numAffectedTeammates++;
+
 			// Add score only when a player needs refilling armor
 			if ( entity.client.armor < player.playerClass.maxArmor )
 			{
 				this.isHealingTeammates = true;
 				this.supportInfluenceScore += 0.00045 * influence * frameTime;
 			}
-			
+
 			if ( this.hasPendingSupplyCommand )
 				player.hasReceivedAmmo = true;
 		}
 
-		this.hasReceivedAmmo = this.hasPendingSupplyCommand;
-		this.hasPendingSupplyCommand = false;
+		if ( this.hasPendingSupplyCommand )
+		{
+			// Some teammates might have already full load of ammo but we don't care
+			if ( numAffectedTeammates > 0 )
+				this.client.stats.addScore( numAffectedTeammates );
+
+			// Give ammo yourself
+			this.hasReceivedAmmo = true;
+			this.hasPendingSupplyCommand = false;
+		}
 	}
 
 	void refreshInfluenceAbsorption()
