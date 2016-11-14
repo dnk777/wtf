@@ -690,9 +690,9 @@ void GT_PlayerRespawn( Entity @ent, int old_team, int new_team )
         client.inventoryGiveItem( WEAP_ROCKETLAUNCHER );
         client.inventoryGiveItem( WEAP_ELECTROBOLT );
 
-        G_PrintMsg( ent , "You're spawned as ^3RUNNER^7. This is the fastest offensive class\n" );
-		G_PrintMsg( ent , "Command `^6blast^7`: Fire a powerful energy blast that hits enemies and stuns turret\n" );
-		G_PrintMsg( ent , "Consider setting cg_particles 1 to make the blast clearly visible\n" );	
+        G_PrintMsg( ent , "You're spawned as ^3RUNNER^7. This is the fastest offensive class.\n" );
+		G_PrintMsg( ent , "Command ^6altattack^7: Fire a powerful energy blast that hits enemies and stuns turrets\n" );
+		G_PrintMsg( ent , "Consider setting cg_particles 1 to make the blast clearly visible\n" );
     }
     // Medic
     else if ( player.playerClass.tag == PLAYERCLASS_MEDIC )
@@ -701,9 +701,7 @@ void GT_PlayerRespawn( Entity @ent, int old_team, int new_team )
         client.inventoryGiveItem( WEAP_PLASMAGUN );
         client.inventoryGiveItem( WEAP_MACHINEGUN );
 
-        G_PrintMsg( ent , "You're spawned as ^2MEDIC^7.\n");
-		// TODO: Provide extended class description
-        // TODO: Print actions to the client
+        G_PrintMsg( ent , "You're spawned as ^2MEDIC^7. This is a supportive class with health regeneration and ability to heal teammates in your aura. You can also revive dead team mates by walking over their respawner marker.\n" );
     }
     // Grunt
     else if ( player.playerClass.tag == PLAYERCLASS_GRUNT )
@@ -713,9 +711,9 @@ void GT_PlayerRespawn( Entity @ent, int old_team, int new_team )
         client.inventoryGiveItem( WEAP_LASERGUN );
         client.inventoryGiveItem( WEAP_GRENADELAUNCHER );
 		
-        G_PrintMsg( ent , "You're spawned as ^1GRUNT^7.\n");
-        // TODO: Provide extended class description
-		// TODO: Print actions to the client
+        G_PrintMsg( ent , "You're spawned as ^1GRUNT^7. This is a tank class with slow movement, strong armor and strong weapons.\n");
+        G_PrintMsg( ent , "Command ^6altattack^7: Throw a cluster grenade\n" );
+		G_PrintMsg( ent , "Command ^6protect^7: Use a protection Warshell\n" );
     }
     // Engineer
     else if ( player.playerClass.tag == PLAYERCLASS_ENGINEER )
@@ -725,9 +723,9 @@ void GT_PlayerRespawn( Entity @ent, int old_team, int new_team )
         client.inventoryGiveItem( WEAP_PLASMAGUN );
         client.inventoryGiveItem( WEAP_RIOTGUN );
 
-        G_PrintMsg( ent , "You're spawned as ^4ENGINEER^7. This is a defencive class with an ability to build entities\n");
-		G_PrintMsg( ent , "Command `^6build turret^7`: Spawn a turret\n");
-		G_PrintMsg( ent , "Command `^6destroy turret^7`: Destroy a turret\n");
+        G_PrintMsg( ent , "You're spawned as ^4ENGINEER^7. This is a defencive class with an ability to build entities.\n" );
+		G_PrintMsg( ent , "Command ^6build turret^7: Spawn a turret\n" );
+		G_PrintMsg( ent , "Command ^6destroy turret^7: Destroy a turret\n" );
     }
 	else if ( player.playerClass.tag == PLAYERCLASS_SUPPORT )
 	{
@@ -735,9 +733,8 @@ void GT_PlayerRespawn( Entity @ent, int old_team, int new_team )
 		client.inventoryGiveItem( WEAP_LASERGUN );
 		client.inventoryGiveItem( WEAP_RIOTGUN );
 
-		G_PrintMsg( ent, "You're spawned as ^8SUPPORT^7.\n");
-		// TODO: Provide extended class description
-		// TODO: Print actions to the client
+		G_PrintMsg( ent, "You're spawned as ^8SUPPORT^7. This is a supportive class with armor regeneration and an ability to repair armor of teammates in your aura.\n" );
+		G_PrintMsg( ent, "Command ^6supply^7: Give ammo yourself and teammates in your aura\n" );
 	}
 	else if ( player.playerClass.tag == PLAYERCLASS_SNIPER )
 	{
@@ -750,9 +747,9 @@ void GT_PlayerRespawn( Entity @ent, int old_team, int new_team )
 		// Remove IG ammo
 		client.inventorySetCount( AMMO_INSTAS, 0 );
 		
-		G_PrintMsg( ent, "You're spawned as ^5SNIPER^7.\n");
-		// TODO: Provide extended class description
-		// TODO: Print actions to the client
+		G_PrintMsg( ent, "You're spawned as ^5SNIPER^7. This is a defencive class with best weapons for far-range fights.\n" );
+		G_PrintMsg( ent, "Command ^6protect^7: Toggle invisibility\n" );
+		G_PrintMsg( ent, "Command ^6supply^7: Buy an instagun shot\n" );
 	}
 
 	player.loadAmmo();
