@@ -676,7 +676,7 @@ void GT_PlayerRespawn( Entity @ent, int old_team, int new_team )
         // Armor
         client.inventoryGiveItem( ARMOR_GA );
 
-        G_PrintMsg( ent , "You're spawned as ^5RUNNER^7.\n");
+        G_PrintMsg( ent , "You're spawned as ^3RUNNER^7.\n");
 		// TODO: Provide extended class description       	
 		// TODO: Print actions to the client		
     }
@@ -727,7 +727,7 @@ void GT_PlayerRespawn( Entity @ent, int old_team, int new_team )
 		client.inventoryGiveItem( AMMO_PLASMA );
 		client.inventoryGiveItem( AMMO_SHELLS );
 
-        G_PrintMsg( ent , "You're spawned as ^8ENGINEER^7.\n");
+        G_PrintMsg( ent , "You're spawned as ^4ENGINEER^7.\n");
 		// TODO: Provide extended class description
 		// TODO: Print actions to the client
     }
@@ -739,7 +739,7 @@ void GT_PlayerRespawn( Entity @ent, int old_team, int new_team )
 		 // Enable gunblade blast
     	client.inventorySetCount( AMMO_GUNBLADE, 1 );
 
-		G_PrintMsg( ent, "You're spawned as ^4TECH^7.\n");
+		G_PrintMsg( ent, "You're spawned as ^8TECH^7.\n");
 		// TODO: Provide extended class description
 		// TODO: Print actions to the client	
 	}
@@ -757,7 +757,7 @@ void GT_PlayerRespawn( Entity @ent, int old_team, int new_team )
 		client.inventorySetCount( AMMO_BOLTS, 10 );
 		client.inventorySetCount( AMMO_BULLETS, 100 );
 		
-		G_PrintMsg( ent, "You're spawned as ^3SNIPER^7.\n");
+		G_PrintMsg( ent, "You're spawned as ^5SNIPER^7.\n");
 		// TODO: Provide extended class description
 		// TODO: Print actions to the client
 	}

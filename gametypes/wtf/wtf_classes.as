@@ -175,7 +175,7 @@ void GENERIC_InitPlayerClasses()
 		265,                        // speed
 		330,                        // dash speed
 		true,                       // can be stunned
-		"gfx/hud/playerclass/wtf_tech",
+		"gfx/hud/icons/playerclass/wtf_tech",
 		null,
 		null
 	);
