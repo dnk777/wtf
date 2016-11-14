@@ -25,6 +25,7 @@ class cPlayer
     Client @client;
     Entity @ent;
     cReviver @reviver;
+    cTurret @turret;    
     cBomb @bomb;
 
     uint medicCooldownTime;
@@ -53,6 +54,7 @@ class cPlayer
         // initialize all as grunt
         @this.playerClass = @cPlayerClassInfos[PLAYERCLASS_GRUNT];
         @this.reviver = null;
+        @this.turret = null;
         @this.bomb = null;
         this.resetTimers();
     }

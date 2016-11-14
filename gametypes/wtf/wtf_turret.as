@@ -326,6 +326,13 @@ class cTurret
             this.bodyEnt.splashDamage( this.bodyEnt, 200, 100, 70, 0, MOD_EXPLOSIVE );
         }
 
+        if ( @this.client != null )
+        {
+            cPlayer @player = GetPlayer( this.client );
+            if ( @player != null )
+                @player.turret = null;
+        }
+
         this.Free();
     }
 
@@ -696,81 +703,6 @@ cTurret @ClientDropTurret( Client @client )
     turret.bodyEnt.linkEntity();
 
     return @turret;
-}
-
-// spawn a turret from the map
-void misc_turret( Entity @ent )
-{
-    // drop to floor
-
-    Trace tr;
-    Vec3 start, end;
-
-    end = start = ent.origin;
-    end.z -= 1024;
-    start.z += 16;
-
-    // check for starting inside solid
-    tr.doTrace( start, turretMins, turretMaxs, start, ent.entNum, MASK_DEADSOLID );
-    if ( tr.startSolid || tr.allSolid )
-    {
-        G_Print( ent.classname + " starts inside solid. Inhibited\n" );
-        ent.freeEntity();
-        return;
-    }
-
-    if ( ( ent.spawnFlags & 1 ) == 0 ) // do not drop if having the float flag
-    {
-        if ( tr.doTrace( start, turretMins, turretMaxs, end, ent.entNum, MASK_DEADSOLID ) )
-        {
-            start = tr.endPos + tr.planeNormal;
-            ent.origin = start;
-            ent.origin2 = start;
-        }
-    }
-
-    // once positioned, spawn a turret object, and release the originating entity
-    cTurret @turret = null;
-
-    // find an unused turret slot
-    for ( int i = 0; i < MAX_TURRETS; i++ )
-    {
-        if ( gtTurrets[i].inuse == false )
-        {
-            @turret = @gtTurrets[i];
-            break;
-        }
-    }
-
-    if ( @turret == null )
-        G_Print( "GT: misc_turret: MAX_TURRETS reached. Can't spawn turret.\n" );
-    else
-    {
-        int team = G_SpawnTempValue( "gameteam" ).toInt();
-
-        // try spawning the turret
-        if ( turret.Spawn( ent.origin, ent.angles.y, team ) )
-        {
-            // set up with some values assigned from the map
-            if ( ent.health > 0 )
-                turret.bodyEnt.health = ent.health;
-
-            if ( ent.mass > 0 )
-                turret.bodyEnt.mass = ent.mass;
-
-            if ( ent.damage > 0 )
-                turret.damage = ent.damage;
-
-            if ( ent.delay > 0.0f )
-                turret.refireDelay = uint( ent.delay * 1000 );
-
-            if ( ent.style > 0 )
-                turret.fireMode = ent.style;
-        }
-    }
-
-    // free the original entity. It won't be used anymore
-    ent.freeEntity();
 }
 
 

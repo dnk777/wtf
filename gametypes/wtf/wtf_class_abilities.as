@@ -117,15 +117,18 @@ void CTFT_DropTurret( Client @client, int ammoType )
 
 	cPlayer @player = @GetPlayer( client );
 
-    if ( CTFT_IsMaxTurretsReached ( client.team ) )
+    if ( player.playerClass.tag != PLAYERCLASS_ENGINEER )
+        return;
+
+    if ( @player.turret != null )
     {
-        client.printMessage( "Your team already has reached maximum turret count of " + CTFT_MAXTURRETS_PER_TEAM + " turrets\n" );
+        client.printMessage( "You have already spawned a turret\n" );
         return;
     }
 
     if ( player.isEngineerCooldown() )
     {
-        client.printMessage( "You can't build yet\n" );
+        client.printMessage( "You cannot spawn a turret yet\n" );
         return;
     }
 
@@ -133,7 +136,7 @@ void CTFT_DropTurret( Client @client, int ammoType )
 	{
 		if( flagBase.owner.origin.distance( client.getEnt().origin ) < CTFT_BUILD_RADIUS )
 		{
-			client.printMessage( "Too close to the flag, cannot build.\n" );
+			client.printMessage( "Too close to the flag, cannot spawn a turret.\n" );
 			return;
 		}
 	}
@@ -160,10 +163,11 @@ void CTFT_DropTurret( Client @client, int ammoType )
                 @turret.client = @client;
                 client.armor = client.armor - CTFT_TURRET_AP_COST;
 
+                @player.turret = @turret;
                 // have a delay before being able to build again
                 player.setEngineerCooldown();
-				
-				client.stats.addScore( 2 );
+    				
+                client.stats.addScore( 2 );
             }
         }
     }
