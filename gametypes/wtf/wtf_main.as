@@ -198,6 +198,14 @@ bool GT_Command( Client @client, const String &cmdString, const String &argsStri
             GetPlayer( client ).setPlayerClassCommand( argsString );
         return true;
     }
+	else if ( cmdString == "build" )
+	{
+		CTFT_BuildCommand( client, argsString, argc );
+	}
+	else if ( cmdString == "destroy" )
+	{
+		CTFT_DestroyCommand( client, argsString, argc );
+	}
     // example of registered command
     else if ( cmdString == "gametype" )
     {
@@ -727,9 +735,9 @@ void GT_PlayerRespawn( Entity @ent, int old_team, int new_team )
 		client.inventoryGiveItem( AMMO_PLASMA );
 		client.inventoryGiveItem( AMMO_SHELLS );
 
-        G_PrintMsg( ent , "You're spawned as ^4ENGINEER^7.\n");
-		// TODO: Provide extended class description
-		// TODO: Print actions to the client
+        G_PrintMsg( ent , "You're spawned as ^4ENGINEER^7. This is a defencive class with an ability to build entities\n");
+		G_PrintMsg( ent , "Command `^6build turret^7`: Spawn a turret\n");
+		G_PrintMsg( ent , "Command `^6destroy turret^7`: Destroy a turret\n");
     }
 	else if ( player.playerClass.tag == PLAYERCLASS_SUPPORT )
 	{
@@ -741,7 +749,7 @@ void GT_PlayerRespawn( Entity @ent, int old_team, int new_team )
 
 		G_PrintMsg( ent, "You're spawned as ^8SUPPORT^7.\n");
 		// TODO: Provide extended class description
-		// TODO: Print actions to the client	
+		// TODO: Print actions to the client
 	}
 	else if ( player.playerClass.tag == PLAYERCLASS_SNIPER )
 	{
@@ -1106,8 +1114,8 @@ void GT_InitGametype()
     G_RegisterCommand( "gametype" );
     G_RegisterCommand( "gametypemenu" );
     G_RegisterCommand( "class" );
-    G_RegisterCommand( "classAction1" );
-    G_RegisterCommand( "classAction2" );
+    G_RegisterCommand( "build" );
+    G_RegisterCommand( "destroy" );
 
     // Make turret models pure
     G_ModelIndex( "models/objects/turret/base.md3", true );

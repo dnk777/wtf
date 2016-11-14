@@ -17,7 +17,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
-void CTFT_DropTurret( Client @client )
+void CTFT_BuildCommand( Client @client, const String &argsString, int argc )
 {
 	if( @client == null )
 		return;
@@ -28,7 +28,64 @@ void CTFT_DropTurret( Client @client )
 	cPlayer @player = @GetPlayer( client );
 
     if ( player.playerClass.tag != PLAYERCLASS_ENGINEER )
+    {
+		client.printMessage( "This command is not available for your class\n" );
+		return;
+	}
+
+	if ( argc != 1 )
+	{
+		client.printMessage( "Illegal command usage (a single argument is expected)\n" );
+		return;
+	}
+
+	String token = argsString.getToken( 0 );
+
+	if ( token == "turret" )
+	{
+		CTFT_BuildTurret( client );
+		return;
+	}
+
+	client.printMessage( "Illegal command usage. Available arguments: `turret`" );
+}
+
+void CTFT_DestroyCommand( Client @client, const String &argsString, int argc )
+{
+	if( @client == null )
+		return;
+
+    if ( client.getEnt().isGhosting() )
         return;
+
+	cPlayer @player = @GetPlayer( client );
+
+    if ( player.playerClass.tag != PLAYERCLASS_ENGINEER )
+    {
+		client.printMessage( "This command is not available for your class\n" );
+		return;
+	}
+
+	if ( argc != 1 )
+	{
+		client.printMessage( "Illegal command usage (a single argument is expected)\n" );
+		return;
+	}
+
+	String token = argsString.getToken( 0 );
+
+	if ( token == "turret" )
+	{
+		CTFT_DestroyTurret( client );
+		return;
+	}
+
+	client.printMessage( "Illegal command usage. Available arguments: `turret`" );
+}
+
+void CTFT_BuildTurret( Client @client )
+{
+	cPlayer @player = @GetPlayer( client );
 
     if ( @player.turret != null )
     {
@@ -71,9 +128,27 @@ void CTFT_DropTurret( Client @client )
         @player.turret = @turret;
         // have a delay before being able to build again
         player.setEngineerCooldown();
-			
-        client.stats.addScore( 2 );
+		
+		// Disabled since the ability to destroy a turret is added 
+		// (otherwise an engineer can gain scores by building a turret and immediately destroying it)
+        // client.stats.addScore( 2 );
     }
+}
+
+void CTFT_DestroyTurret( Client @client )
+{
+	cPlayer @player = @GetPlayer( client );
+	
+	if ( @player.turret == null )
+	{
+		client.printMessage( "There is no your turret\n" );
+		return;
+	}
+
+	player.turret.die( null, null );
+	@player.turret = null;
+	player.engineerBuildCooldownTime = 0;
+	client.armor += CTFT_TURRET_AP_COST;
 }
 
 // KIKI WAnts BIG BOOM!!
