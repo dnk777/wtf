@@ -1027,6 +1027,15 @@ void CTFT_SetUpMatch()
 			{
 				player.medicInfluenceScore = 0.0f;
 				player.supportInfluenceScore = 0.0f;
+
+				// Return a translocator if it is thrown
+				if ( @player.translocator != null )
+				{
+					player.returnTranslocator();
+					// Prevent gaining extra armor at spawn when a translocator is returned
+					if ( ent.client.armor >= player.playerClass.armor )
+						ent.client.armor = player.playerClass.armor;
+				}
 			}
         }
     }
