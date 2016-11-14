@@ -102,7 +102,7 @@ class cTranslocator
         this.bodyEnt.team = this.player.ent.team;
         this.bodyEnt.ownerNum = this.player.client.playerNum;
         this.bodyEnt.origin = origin;
-        this.bodyEnt.solid = SOLID_TRIGGER;
+        this.bodyEnt.solid = SOLID_YES;
         this.bodyEnt.clipMask = MASK_PLAYERSOLID;
         this.bodyEnt.moveType = MOVETYPE_TOSS;
         this.bodyEnt.svflags &= ~SVF_NOCLIENT;
