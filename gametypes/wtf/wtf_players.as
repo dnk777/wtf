@@ -662,9 +662,14 @@ class cPlayer
 
 	void refreshMedicInfluenceEmission()
 	{
+		float radius = CTFT_MEDIC_INFLUENCE_BASE_RADIUS;
+		float speed = this.ent.velocity.length();
+		if ( speed > this.playerClass.dashSpeed )
+			radius += 0.75f * ( speed - this.playerClass.dashSpeed );
+
 		Trace trace;
 		int numAffectedTeammates = 0;
-		array<Entity @> @inradius = G_FindInRadius( this.ent.origin, CTFT_MEDIC_INFLUENCE_RADIUS );
+		array<Entity @> @inradius = G_FindInRadius( this.ent.origin, radius );
 		for ( uint i = 0; i < inradius.size(); ++i )
 		{
 			Entity @entity = inradius[i];
@@ -678,13 +683,13 @@ class cPlayer
 				continue;
 
 			float distance = this.ent.origin.distance( entity.origin );
-			float influence = 1.0f - 0.5f * distance / CTFT_MEDIC_INFLUENCE_RADIUS;
+			float influence = 1.0f - 0.5f * distance / radius;
 			
 			cPlayer @player = GetPlayer( entity.client );
 			player.medicInfluence += influence;
 
 			// Add score only when a player needs health
-			if ( entity.health < entity.maxHealth )	
+			if ( entity.health < entity.maxHealth )
 			{
 				this.isHealingTeammates = true;
 				this.medicInfluenceScore += 0.00035 * influence * frameTime;
@@ -707,9 +712,14 @@ class cPlayer
 
 	void refreshSupportInfluenceEmission()
 	{
+		float radius = CTFT_SUPPORT_INFLUENCE_BASE_RADIUS;
+		float speed = this.ent.velocity.length();
+		if ( speed > this.playerClass.dashSpeed )
+			radius += 0.75f * ( speed - this.playerClass.dashSpeed );
+
 		Trace trace;
 		int numAffectedTeammates = 0;
-		array<Entity @> @inradius = G_FindInRadius( this.ent.origin, CTFT_SUPPORT_INFLUENCE_RADIUS );
+		array<Entity @> @inradius = G_FindInRadius( this.ent.origin, radius );
 		for ( uint i = 0; i < inradius.size(); ++i )
 		{
 			Entity @entity = inradius[i];
@@ -723,7 +733,7 @@ class cPlayer
 				continue;
 
 			float distance = this.ent.origin.distance( entity.origin );
-			float influence = 1.0f - 0.5f * distance / CTFT_SUPPORT_INFLUENCE_RADIUS;
+			float influence = 1.0f - 0.5f * distance / radius;
 			
 			cPlayer @player = GetPlayer( entity.client );
 			player.supportInfluence += influence; 
