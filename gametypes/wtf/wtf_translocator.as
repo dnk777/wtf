@@ -153,9 +153,11 @@ class cTranslocator
 		if ( !this.inuse || @this.bodyEnt == null || @this.player == null )
 			return null;
 		
-		float heightOffset = translocatorMins.z - playerBoxMins.z + 1.0f;
-		Vec3 mins( playerBoxMins.x, playerBoxMins.y, playerBoxMins.z + heightOffset );
-		Vec3 maxs( playerBoxMaxs.x, playerBoxMaxs.y, playerBoxMaxs.z + heightOffset );
+		float playerMinsOffset = translocatorMins.z - playerBoxMins.z;
+		// We teleport a player 1 unit above the ground and 1 unit below the ceiling (if they are present).
+		// Actual min Z of a teleported player is translocatorOrigin.z + playerMinsOffset + 1.0f;
+		Vec3 mins( playerBoxMins.x, playerBoxMins.y, playerBoxMins.z + playerMinsOffset );
+		Vec3 maxs( playerBoxMaxs.x, playerBoxMaxs.y, playerBoxMaxs.z + playerMinsOffset + 2.0f );
 
 		// Based on the native KillBox() (g_utils.cpp).
 
