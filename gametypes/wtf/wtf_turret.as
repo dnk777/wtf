@@ -199,6 +199,7 @@ class cTurret
 		@this.bodyEnt.think = turret_body_think;
 		@this.bodyEnt.die = turret_body_die;
 		@this.bodyEnt.pain = turret_body_pain;
+		@this.bodyEnt.touch = turret_body_touch;
         this.bodyEnt.type = ET_GENERIC;
         this.bodyEnt.modelindex = G_ModelIndex( "models/objects/turret/base.md3", true );
         this.bodyEnt.setSize( turretMins, turretMaxs );
@@ -638,6 +639,50 @@ void turret_body_think( Entity @self )
 {
     if ( self.count >= 0 && self.count < MAX_TURRETS )
         gtTurrets[self.count].think();
+}
+
+void turret_body_touch( Entity @self, Entity @other, const Vec3 planeNormal, int surfFlags )
+{
+	if ( @other == null )
+		return;
+
+    if ( @other.client == null )
+        return;
+
+	if( self.team == other.team )
+		return;
+
+	if( self.count < 0 || self.count >= maxClients )
+		return;
+
+	cTurret @turret = gtTurrets[self.count];
+		
+	// Do not set turret owner to the client, just set new team
+    // (only engineers can be turret owners and a player of any class can touch a turret).
+	
+	turret.bodyEnt.team = other.team;
+	turret.gunEnt.team = other.team;
+	turret.flashEnt.team = other.team;
+
+	// Also prevent destroying it by the old owner 
+	Client @oldOwner = turret.client;
+	@turret.client = null;
+
+	// Reset turret's enemy
+	@turret.enemy = null;
+	@turret.invisibleEnemy = null;
+	turret.targetLocationTime = levelTime + 1000;
+	
+	other.client.addAward( S_COLOR_MAGENTA + "Hacker!" );
+	other.client.stats.addScore( 10 );
+
+	if ( @oldOwner != null )
+	{
+		@GetPlayer( oldOwner ).turret = null;
+		G_CenterPrintMsg( oldOwner.getEnt(), S_COLOR_RED + "Your turret has been hacked!\n" );
+	}
+
+	G_Sound( self, CHAN_AUTO, G_SoundIndex( "sounds/misc/timer_bip_bip" ), 0.8f );
 }
 
 void turret_body_die( Entity @self, Entity @inflictor, Entity @attacker )
