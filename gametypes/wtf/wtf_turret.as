@@ -582,27 +582,14 @@ class cTurret
 			if ( distanceToEnemy > 250 && distanceToEnemy < 2500 )
 			{
 				// Its too easy to mock a turret with dodging, so do full prediction only on close range
-				float predictionStrength = 0.0f;
-				if ( distanceToEnemy < 400.0f )
-					predictionStrength = 1.0f;
-				else if ( distanceToEnemy < 1000.0f )
-					predictionStrength = ( distanceToEnemy - 400.0f ) / 600.0f; 
-				if ( this.tryFireRocket( predictionStrength, distanceToEnemy ) )
+				if ( this.tryFireRocket() )
 					this.lastRocketFireTime = levelTime;
 			}
 		}
 	}
 
-	bool tryFireRocket( float predictionStrength, float distanceToEnemy )
+	bool tryFireRocket()
 	{
-		if ( predictionStrength == 0.0f )
-		{
-			// Save CPU cycles
-			Vec3 toTarget = this.enemy.origin - this.gunEnt.origin;
-			G_FireRocket( this.gunEnt.origin, toTarget.toAngles(), this.rocketSpeed, this.rocketSplash, this.rocketDamage, this.rocketKnockback, this.rocketStun, this.bodyEnt );
-			return true;
-		}
-
 		Vec3 predictedTarget;
 		if ( !AdjustTargetUsingGravity( this.gunEnt.origin, this.enemy, this.rocketSpeed, predictedTarget ) )
 		{
@@ -611,9 +598,8 @@ class cTurret
 			G_FireRocket( this.gunEnt.origin, toTarget.toAngles(), this.rocketSpeed, this.rocketSplash, this.rocketDamage, this.rocketKnockback, this.rocketStun, this.bodyEnt );
 			return true;
 		}
+		Vec3 fireTarget( predictedTarget.x, predictedTarget.y, predictedTarget.z - 10.0f );
 
-		Vec3 fireTarget = predictionStrength * predictedTarget + ( 1.0f - predictionStrength ) * this.enemy.origin;
-		
 		Trace trace;	
 		trace.doTrace( this.gunEnt.origin, vec3Origin, vec3Origin, fireTarget, this.bodyEnt.entNum, MASK_PLAYERSOLID );
 		if ( trace.fraction != 1.0f )
