@@ -702,6 +702,7 @@ void GT_PlayerRespawn( Entity @ent, int old_team, int new_team )
         client.inventoryGiveItem( WEAP_MACHINEGUN );
 
         G_PrintMsg( ent , "You're spawned as ^2MEDIC^7. This is a supportive class with health regeneration and ability to heal teammates in your aura. You can also revive dead team mates by walking over their respawner marker.\n" );
+		G_PrintMsg( ent, "Command ^6supply^7: Give an adrenaline yourself and teammates in your aura. The adrenaline boosts teammates speed for a couple of seconds.\n" );
     }
     // Grunt
     else if ( player.playerClass.tag == PLAYERCLASS_GRUNT )
@@ -809,7 +810,14 @@ void GT_ThinkRules()
 
 	for ( int i = 0; i < maxClients; i++ )
 	{
-		GetPlayer( i ).clearInfluence();
+		cPlayer @player = GetPlayer( i );
+		player.clearInfluence();
+		if ( player.client.state() == CS_SPAWNED && player.ent.isGhosting() )
+		{
+			// Prevent applying these commands after respawn
+			player.hasPendingSupplyAmmoCommand = false;
+			player.hasPendingSupplyAdrenalineCommand = false;
+		}
 	}
 
 	for ( int i = 0; i < maxClients; i++ )

@@ -260,6 +260,12 @@ void CTFT_SupplyCommand( Client @client, const String &argsString, int argc )
 
 	cPlayer @player = @GetPlayer( client );
 
+	if ( player.playerClass.tag == PLAYERCLASS_MEDIC )
+	{
+		CTFT_SupplyAdrenaline( client, player );
+		return;
+	}
+
 	if ( player.playerClass.tag == PLAYERCLASS_SUPPORT )
 	{
 		CTFT_SupplyAmmo( client, player );
@@ -283,8 +289,27 @@ void CTFT_SupplyAmmo( Client @client, cPlayer @player )
 		return;
 	}
 
-	player.hasPendingSupplyCommand = true;
+	player.hasPendingSupplyAmmoCommand = true;
 	client.armor -= 85;
+}
+
+void CTFT_SupplyAdrenaline( Client @client, cPlayer @player )
+{
+	if ( client.armor < 50 )
+	{
+		client.printMessage( "You do not have enough armor to supply adrenaline\n" );
+		return;
+	}
+
+	if ( player.ent.health < 75 )
+	{
+		client.printMessage( "You do not have enough health to supply adrenaline\n" );
+		return;
+	}
+
+	player.hasPendingSupplyAdrenalineCommand = true;
+	client.armor -= 50;
+	player.ent.health -= 50;
 }
 
 void CTFT_BuyInstaShot( Client @client, cPlayer @player )

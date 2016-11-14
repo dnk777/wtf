@@ -36,12 +36,17 @@ class cPlayer
     uint bombCooldownTime;
 	uint blastCooldownTime;
 	uint buyAmmoCooldownTime;
+	uint adrenalineTime;
     uint respawnTime;
 	bool isHealingTeammates;
 	bool hasReceivedAmmo;
-	bool hasPendingSupplyCommand;
+	bool hasReceivedAdrenaline;
+	bool hasPendingSupplyAmmoCommand;
+	bool hasPendingSupplyAdrenalineCommand;
 	float medicInfluence;
 	float supportInfluence;
+	float adrenalineBaseSpeedBoost;
+	float adrenalineDashSpeedBoost;
     bool invisibilityEnabled;
     float invisibilityLoad;
     int invisibilityWasUsingWeapon;
@@ -79,12 +84,17 @@ class cPlayer
         this.bombCooldownTime = 0;
 		this.blastCooldownTime = 0;
 		this.buyAmmoCooldownTime = 0;
+		this.adrenalineTime = 0;
         this.respawnTime = 0;
 		this.isHealingTeammates = false;
 		this.hasReceivedAmmo = false;
-		this.hasPendingSupplyCommand = false;
+		this.hasReceivedAdrenaline = false;
+		this.hasPendingSupplyAmmoCommand = false;
+		this.hasPendingSupplyAdrenalineCommand = false;
 		this.medicInfluence = 0.0f;
 		this.supportInfluence = 0.0f;
+		this.adrenalineBaseSpeedBoost = 0.0f;
+		this.adrenalineDashSpeedBoost = 0.0f;
         this.invisibilityEnabled = false;
         this.invisibilityLoad = 0;
         this.invisibilityCooldownTime = 0;
@@ -507,11 +517,28 @@ class cPlayer
         }
         else
         {
-            // set class values
             this.client.pmoveDashSpeed = this.playerClass.dashSpeed;
             this.client.pmoveMaxSpeed = this.playerClass.maxSpeed;
             this.client.pmoveJumpSpeed = this.playerClass.jumpSpeed;
-            this.ent.mass = 200;
+
+			if ( this.adrenalineTime > levelTime )
+			{
+				if ( this.playerClass.tag != PLAYERCLASS_RUNNER )
+				{
+					// restore defaults
+					this.client.pmoveDashSpeed = -1;
+            		this.client.pmoveMaxSpeed = -1;
+            		this.client.pmoveJumpSpeed = -1;
+				}
+				else
+				{
+					// the Runner's values are greater than default ones
+					this.client.pmoveDashSpeed = this.playerClass.dashSpeed + 20;
+					this.client.pmoveMaxSpeed = this.playerClass.maxSpeed + 10;
+				}
+			}
+
+			this.ent.mass = 200;
 
             // there used to be a grunt Warshell slowdown code
 			// the Grunt is very slow anyway, do not make him even slower
@@ -535,6 +562,7 @@ class cPlayer
 		this.supportInfluence = 0.0f;
 		this.isHealingTeammates = false;
 		this.hasReceivedAmmo = false;
+		this.hasReceivedAdrenaline = false;
 	}
 
 	void refreshInfluenceEmission()
@@ -557,6 +585,7 @@ class cPlayer
 	void refreshMedicInfluenceEmission()
 	{
 		Trace trace;
+		int numAffectedTeammates = 0;
 		array<Entity @> @inradius = G_FindInRadius( this.ent.origin, CTFT_MEDIC_INFLUENCE_RADIUS );
 		for ( uint i = 0; i < inradius.size(); ++i )
 		{
@@ -582,6 +611,19 @@ class cPlayer
 				this.isHealingTeammates = true;
 				this.medicInfluenceScore += 0.00035 * influence * frameTime;
 			}
+
+			player.hasReceivedAdrenaline = this.hasPendingSupplyAdrenalineCommand;
+		}
+
+		if ( this.hasPendingSupplyAdrenalineCommand )
+		{
+			if ( numAffectedTeammates > 0 )
+				this.client.stats.addScore( numAffectedTeammates );
+
+			// Give some adrenaline itself
+			this.hasReceivedAdrenaline = true;
+			// Reset this later to skip printing a message to itself
+			// this.hasPendingSupplyAdrenalineCommand = false;
 		}
 	}
 
@@ -616,19 +658,19 @@ class cPlayer
 				this.supportInfluenceScore += 0.00045 * influence * frameTime;
 			}
 
-			if ( this.hasPendingSupplyCommand )
-				player.hasReceivedAmmo = true;
+			player.hasReceivedAmmo = this.hasPendingSupplyAmmoCommand;
 		}
 
-		if ( this.hasPendingSupplyCommand )
+		if ( this.hasPendingSupplyAmmoCommand )
 		{
 			// Some teammates might have already full load of ammo but we don't care
 			if ( numAffectedTeammates > 0 )
 				this.client.stats.addScore( numAffectedTeammates );
 
-			// Give ammo yourself
+			// Give some ammo itself
 			this.hasReceivedAmmo = true;
-			this.hasPendingSupplyCommand = false;
+			// Reset this later to skip printing a message to itself
+			// this.hasPendingSupplyAmmoCommand = false;
 		}
 	}
 
@@ -649,6 +691,30 @@ class cPlayer
 			this.ent.effects |= EF_QUAD;
 		else
 			this.ent.effects &= ~EF_QUAD;
+
+		if ( this.hasReceivedAmmo )
+		{
+			this.loadAmmo();
+			// loadAmmo() does not play this sound because it might be confusing on respawn when it is called too			
+			G_Sound( this.ent, CHAN_AUTO, G_SoundIndex( "sounds/items/weapon_pickup" ), 0.4f );
+			this.hasReceivedAmmo = false;
+
+			if ( !this.hasPendingSupplyAmmoCommand )
+				this.client.printMessage( "A teammate gave you some ammo!\n" );
+		}
+
+		if ( this.hasReceivedAdrenaline )
+		{
+			this.adrenalineTime = levelTime + 1500;
+			G_Sound( this.ent, CHAN_AUTO, G_SoundIndex( "sounds/items/regen_pickup" ), 0.4f );					
+			this.hasReceivedAdrenaline = false;
+
+			if ( !this.hasPendingSupplyAdrenalineCommand )
+				this.client.printMessage( "A teammate gave you some adrenaline!\n" );
+		}
+
+		this.hasPendingSupplyAmmoCommand = false;
+		this.hasPendingSupplyAdrenalineCommand = false;
 	}
 
     void refreshRegeneration()
@@ -753,14 +819,6 @@ class cPlayer
 			// fix possible rounding errors			
 			if ( this.client.armor < this.playerClass.maxArmor ) 
 				this.client.armor = this.playerClass.maxArmor;
-		}
-
-		if ( this.hasReceivedAmmo )
-		{
-			this.loadAmmo();
-			// loadAmmo() does not play this sound because it might be confusing on respawn when it is called too			
-			G_Sound( this.ent, CHAN_AUTO, G_SoundIndex( "sounds/items/weapon_pickup" ), 0.4f );
-			this.hasReceivedAmmo = false;
 		}
     }
 
