@@ -21,7 +21,7 @@ const int MAX_TRANSLOCATORS = 32;
 
 cTranslocator[] gtTranslocators( MAX_TRANSLOCATORS );
 
-const Vec3 playerBoxMins( -16, -16, -16 );
+const Vec3 playerBoxMins( -16, -16, -24 );
 const Vec3 playerBoxMaxs( +16, +16, +40 );
 
 // Width and depth should match player box ones.
@@ -97,7 +97,7 @@ class cTranslocator
 		@this.bodyEnt.die = translocator_body_die;
 		@this.bodyEnt.think = translocator_body_think;
         this.bodyEnt.type = ET_GENERIC;
-        this.bodyEnt.modelindex = G_ModelIndex( "models/objects/wtf/translocator_body_normal.md3", false );
+        this.bodyEnt.modelindex = G_ModelIndex( "models/wtf/translocator_body_normal.md3", true );
         this.bodyEnt.setSize( translocatorMins, translocatorMaxs );
         this.bodyEnt.team = this.player.ent.team;
         this.bodyEnt.ownerNum = this.player.client.playerNum;
@@ -125,7 +125,7 @@ class cTranslocator
             }
         }
 
-		this.returnTime = levelTime + CTFT_RUNNER_ABILITY_COOLDOWN + 1500;
+		this.returnTime = levelTime + CTFT_RUNNER_ABILITY_COOLDOWN + 15000;
         @this.player = @player;
         this.bodyEnt.count = index;
         this.inuse = true;
@@ -135,7 +135,7 @@ class cTranslocator
 
 	void pain( Entity @other, float kick, float damage )
 	{
-		this.bodyEnt.modelindex = G_ModelIndex( "models/objects/wtf/translocator_body_damaged.md3", false );
+		this.bodyEnt.modelindex = G_ModelIndex( "models/wtf/translocator_body_damaged.md3", true );
 	}
 
     void die( Entity @inflictor, Entity @attacker )

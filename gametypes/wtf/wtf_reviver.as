@@ -38,8 +38,8 @@ class cReviver
         // set up with default values
         this.inuse = false;
         this.triggered = false;
-        this.decalindex = G_ImageIndex( "gfx/indicators/radar_decal" );
-        this.modelindex = G_ModelIndex( "models/objects/reviver/reviver.md3" );
+        this.decalindex = G_ImageIndex( "gfx/wtf/reviver_decal" );
+        this.modelindex = G_ModelIndex( "models/wtf/reviver.md3" );
         this.duration = CTFT_BASE_RESPAWN_TIME - 250;
         @this.player = null;
     }

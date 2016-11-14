@@ -45,8 +45,8 @@ int CTFT_BATTLESUIT_GRUNT_TIME = 4;		// in seconds
 uint CTFT_GRUNT_ABILITY_COOLDOWN = 20000;
 int CTFT_MEDIC_COOLDOWN = 1200;
 int CTFT_SUPPORT_COOLDOWN = 1200;
-int CTFT_RUNNER_ABILITY_COOLDOWN = 2000;
-int CTFT_BLAST_AP_COST = 15;
+int CTFT_RUNNER_ABILITY_COOLDOWN = 1250;
+int CTFT_BLAST_AP_COST = 5;
 int CTFT_TRANSLOCATOR_AP_COST = 20;
 float CTFT_TRANSLOCATOR_HEALTH = 99;
 float CTFT_RESPAWN_RADIUS = 384.0f;
@@ -624,12 +624,21 @@ void GT_ScoreEvent( Client @client, const String &score_event, const String &arg
         if ( match.getState() == MATCH_STATE_PLAYTIME )
             targetPlayer.spawnReviver();
 
+        if ( targetPlayer.playerClass.tag == PLAYERCLASS_SUPPORT )
+            CTFT_DeathDrop( ent.client, "Green Armor" );
+
+        if ( targetPlayer.playerClass.tag == PLAYERCLASS_ENGINEER )
+            CTFT_DeathDrop( ent.client, "Green Armor" );
+
+        if ( targetPlayer.playerClass.tag == PLAYERCLASS_SNIPER )
+            CTFT_DeathDrop( ent.client, "Green Armor" );
+
         if ( targetPlayer.playerClass.tag == PLAYERCLASS_MEDIC )
-            CTFT_DeathDrop( ent.client, "5 Health" );
+            CTFT_DeathDrop( ent.client, "50 Health" );
 
         if ( targetPlayer.playerClass.tag == PLAYERCLASS_GRUNT )
         {
-            CTFT_DeathDrop( ent.client, "Armor Shard" );
+            CTFT_DeathDrop( ent.client, "Yellow Armor" );
 
             // Explode all cluster bombs belonging to this grunt when dying
             cBomb @bomb = null;
@@ -711,7 +720,7 @@ void GT_PlayerRespawn( Entity @ent, int old_team, int new_team )
     {
         // Weapons
         client.inventoryGiveItem( WEAP_ROCKETLAUNCHER );
-        client.inventoryGiveItem( WEAP_ELECTROBOLT );
+        client.inventoryGiveItem( WEAP_RIOTGUN );
 
         G_PrintMsg( ent, "You're spawned as ^3RUNNER^7. This is the fastest offensive class.\n" );
 		G_PrintMsg( ent, "Command ^6altattack^7: Fire a powerful energy blast that hits enemies and stuns turrets\n" );
@@ -1173,6 +1182,32 @@ void GT_InitGametype()
     G_ModelIndex( "models/objects/turret/base.md3", true );
     G_ModelIndex( "models/objects/turret/gun.md3", true );
     G_ModelIndex( "models/objects/turret/flash.md3", true );
+
+	// Make WTF assets pure
+
+    G_ModelIndex( "scripts/wtf_gfx.shader", true );
+
+    // Class Icons
+    G_ImageIndex( "gfx/wtf/wtf_engineer" );
+    G_ImageIndex( "gfx/wtf/wtf_medic" );
+    G_ImageIndex( "gfx/wtf/wtf_runner" );
+    G_ImageIndex( "gfx/wtf/wtf_support" );
+    G_ImageIndex( "gfx/wtf/wtf_sniper" );
+
+    // Reviver
+    G_ModelIndex( "models/wtf/reviver.md3", true );
+    G_ImageIndex( "models/wtf/reviver" );
+    G_ImageIndex( "models/wtf/reviver_outline" );
+    G_ImageIndex( "gfx/wtf/reviver_decal" );
+
+    // Translocator
+    G_ModelIndex( "models/objects/wtf/translocator_body_normal.md3", true );
+    G_ModelIndex( "models/objects/wtf/translocator_body_damaged.md3", true );
+    G_ImageIndex( "models/wtf/translocator_body_damaged" );
+    G_ImageIndex( "models/wtf/translocator_body_normal" );
+    G_ImageIndex( "models/wtf/translocator_light" );
+    G_ImageIndex( "models/wtf/translocator_body_normal_colorpass" );
+    G_ImageIndex( "models/wtf/translocator_body_normal_emit" );
 
     InitPlayers();
     G_RegisterCallvote( "ctf_powerup_drop", "1 or 0", "bool", "Enables or disables the dropping of powerups at dying" );

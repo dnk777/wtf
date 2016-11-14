@@ -115,9 +115,9 @@ void GENERIC_InitPlayerClasses()
         250,						// speed
         330,						// dash speed
         true,						// can be stunned
-        "gfx/hud/icons/playerclass/wtf_grunt",
-        "gfx/hud/icons/classactions/grunt1",
-        "gfx/hud/icons/classactions/grunt2"
+        "gfx/wtf/wtf_grunt",
+        "gfx/wtf/wtf_grunt1",
+        "gfx/wtf/wtf_grunt2"
     );
 
     cPlayerClassInfos[ PLAYERCLASS_MEDIC ].setup(
@@ -130,8 +130,8 @@ void GENERIC_InitPlayerClasses()
         305,						// speed
         400,						// dash speed
         true,						// can be stunned
-        "gfx/hud/icons/playerclass/wtf_medic",
-        "gfx/hud/icons/classactions/medic1",
+        "gfx/wtf/wtf_medic",
+        "gfx/wtf/medic1",
         null
     );
 
@@ -145,9 +145,9 @@ void GENERIC_InitPlayerClasses()
         350,						// speed
         450,						// dash speed
         false,						// can be stunned
-        "gfx/hud/icons/playerclass/wtf_runner",
-        "gfx/hud/icons/classactions/runner1",
-        "gfx/hud/icons/classactions/runner2"
+        "gfx/wtf/wtf_runner",
+        "gfx/wtf/runner1",
+        "gfx/wtf/runner2"
     );
 
     cPlayerClassInfos[ PLAYERCLASS_ENGINEER ].setup(
@@ -160,9 +160,9 @@ void GENERIC_InitPlayerClasses()
         280,						// speed
         330,						// dash speed
         true,						// can be stunned
-        "gfx/hud/icons/playerclass/wtf_engineer",
-        "gfx/hud/icons/classactions/engineer1",
-        "gfx/hud/icons/classactions/engineer2"
+        "gfx/wtf/wtf_engineer",
+        "gfx/wtf/engineer1",
+        "gfx/wtf/engineer2"
     );
 
 	cPlayerClassInfos[ PLAYERCLASS_SUPPORT ].setup(
@@ -175,7 +175,7 @@ void GENERIC_InitPlayerClasses()
 		290,                        // speed
 		400,                        // dash speed
 		true,                       // can be stunned
-		"gfx/hud/icons/playerclass/wtf_support",
+		"gfx/wtf/wtf_support",
 		null,
 		null
 	);
@@ -190,7 +190,7 @@ void GENERIC_InitPlayerClasses()
 		240,                          // speed
 		330,                          // dash speed
 		true,                         // can be stunned
-		"gfx/hud/icons/playerclass/wtf_sniper",
+		"gfx/wtf/wtf_sniper",
 		null,
 		null	
 	);

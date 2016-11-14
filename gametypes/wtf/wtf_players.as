@@ -1165,7 +1165,7 @@ class cPlayer
 		    // Enable gunblade blast
 			client.inventorySetCount( AMMO_GUNBLADE, 1 );
 			client.inventorySetCount( AMMO_ROCKETS, 7 );
-			client.inventorySetCount( AMMO_BOLTS, 7 );
+			client.inventorySetCount( AMMO_SHELLS, 7 );
 		}
 		else if ( this.playerClass.tag == PLAYERCLASS_MEDIC )
 		{

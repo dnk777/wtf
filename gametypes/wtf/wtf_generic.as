@@ -113,31 +113,21 @@ void CTFT_DeathDrop( Client @client, String type )
 		return;
 	}
 
-	int randombubbles = int( brandom( 2, 4 ) );
-
-	for ( int i = 0 ; i < randombubbles ; i++ )
+	@dropped = @client.getEnt().dropItem( item.tag );
+	if ( @dropped == null )
 	{
-		@dropped = @client.getEnt().dropItem( item.tag );
-		if ( @dropped == null )
-		{
-			client.printMessage( "Couldn't drop a " + item.name + "\n" );
-		}
-		else
-		{
-			float z = brandom(150,270);
-			float x = brandom(1,359);
-			float y = brandom(1,359);
-
-			Vec3 velocity;
-			velocity = dropped.velocity;
-			velocity.z = 0;
-			velocity.normalize();
-			velocity *= 400;
-			velocity.z = z;
-			velocity.x = x;
-			velocity.y = y;
-			dropped.velocity = velocity;
-		}
+		client.printMessage( "Couldn't drop a " + item.name + "\n" );
+	}
+	else
+	{
+		Vec3 velocity(dropped.velocity);
+		velocity.z = 0;
+		velocity.normalize();
+		velocity *= 400;
+		velocity.z = brandom( 150, 270 );
+		velocity.x = brandom( 1, 359 );
+		velocity.y = brandom( 1, 359 );
+		dropped.velocity = velocity;
 	}
 }
 
