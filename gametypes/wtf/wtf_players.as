@@ -629,7 +629,6 @@ class cPlayer
             {
                 this.client.selectWeapon( WEAP_NONE );
                 this.client.pmoveFeatures = this.client.pmoveFeatures & ~PMFEAT_WEAPONSWITCH;
-                this.ent.effects |= EF_PLAYER_HIDENAME;
             }
         }
     }

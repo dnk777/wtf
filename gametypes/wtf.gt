@@ -19,6 +19,7 @@ wtf/wtf_turret.as;
 wtf/wtf_reviver.as;
 wtf/wtf_bomb.as;
 wtf/wtf_translocator.as;
+wtf/wtf_smoke_grenade.as;
 
 legacy/quake1.as;
 

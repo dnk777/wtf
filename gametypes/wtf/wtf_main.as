@@ -44,7 +44,7 @@ int CTFT_BATTLESUIT_AP_COST = 75;
 int CTFT_BATTLESUIT_GRUNT_TIME = 4;		// in seconds
 uint CTFT_GRUNT_ABILITY_COOLDOWN = 20000;
 int CTFT_MEDIC_COOLDOWN = 1200;
-int CTFT_SUPPORT_COOLDOWN = 1200;
+int CTFT_SUPPORT_COOLDOWN = 1750;
 int CTFT_RUNNER_ABILITY_COOLDOWN = 1250;
 int CTFT_BLAST_AP_COST = 5;
 int CTFT_TRANSLOCATOR_AP_COST = 20;
@@ -791,8 +791,9 @@ void GT_PlayerRespawn( Entity @ent, int old_team, int new_team )
 
 		G_PrintMsg( ent, "You're spawned as ^8SUPPORT^7. This is a supportive class with armor regeneration.\n" );
 		G_PrintMsg( ent, "^9You repair teammates armor in 192 units of your aura\n" );
+		G_PrintMsg( ent, "Command ^6protect^7: Throw a smoke grenade\n" );
 		G_PrintMsg( ent, "Command ^6supply^7: Give ammo yourself and teammates in your aura\n" );
-		G_PrintMsg( ent, "Generic command ^8classaction1^7: Same as ^6supply^7\n" ); 
+		G_PrintMsg( ent, "Generic command ^8classaction1^7: Same as ^6protect^7\n" ); 
 		G_PrintMsg( ent, "Generic command ^8classaction2^7: Same as ^6supply^7\n" );
 	}
 	else if ( player.playerClass.tag == PLAYERCLASS_SNIPER )
@@ -843,6 +844,63 @@ void GT_PlayerRespawn( Entity @ent, int old_team, int new_team )
         player.resetTimers();
 
     player.removeReviver();
+}
+
+void CTFT_UpdateHidenameEffects()
+{
+	// First clear the hidename effect for regular players and set the hidename effect for invisible players
+	for ( int i = 0; i < maxClients; i++ )
+	{
+		cPlayer @player = GetPlayer( i );
+		if ( player.client.state() < CS_SPAWNED )
+			continue;
+
+		if ( player.invisibilityEnabled )
+			player.ent.effects |= EF_PLAYER_HIDENAME;
+		else
+			player.ent.effects &= ~EF_PLAYER_HIDENAME;
+	}
+
+	// Find all smoke emitters
+	array<Entity @> @smokeEmitters = @G_FindByClassname( "smoke_emitter" );
+
+	// We can't disable showing names of entities behind the smoke cloud.
+	// It should be handled on engine level as this thing is tightly coupled with PVS stuff.
+	// Best thing we can to is applying hidename effect to entities inside the cloud
+	// and hope that clients are fair enough to have cg_showPlayerNames_zfar low.
+
+	// For each smoke emitter
+	for ( uint i = 0; i < smokeEmitters.size(); ++i )
+	{
+		// Find entities in the smoke cloud
+		Entity @emitter = smokeEmitters[i];
+		float radius = 32.0f;
+		// The cloud is growing, so we need to adjust the radius
+		if ( emitter.nextThink > levelTime )
+		{
+			// Ensure that the division below yields a float result
+			float timeToNextThink = emitter.nextThink - levelTime;
+			// If emitter has not finished emission yet ( count == 0 )
+			if ( emitter.count == 0 )
+				radius += 512.0f * ( 1.0f - timeToNextThink / CTFT_SMOKE_EMITTER_EMISSION_TIME );
+			else
+				radius += 512.0f + 384.0f * ( 1.0f - timeToNextThink / CTFT_SMOKE_EMITTER_DECAY_TIME );
+		}
+
+		array<Entity @> @inradius = @G_FindInRadius( smokeEmitters[i].origin, radius );
+		for ( uint j = 0; j < inradius.size(); ++j )
+		{
+			Entity @ent = inradius[j];
+			if ( @ent.client == null )
+				continue;
+			if ( ent.client.state() < CS_SPAWNED )
+				continue;
+			if ( ent.isGhosting() )
+				continue;
+
+			ent.effects |= EF_PLAYER_HIDENAME;
+		}
+	}
 }
 
 // Thinking function. Called each frame
@@ -910,6 +968,8 @@ void GT_ThinkRules()
         player.watchShell();
         player.updateHUDstats();
     }
+
+	CTFT_UpdateHidenameEffects();
 }
 
 // The game has detected the end of the match state, but it
@@ -1208,6 +1268,9 @@ void GT_InitGametype()
     G_ImageIndex( "models/wtf/reviver" );
     G_ImageIndex( "models/wtf/reviver_outline" );
     G_ImageIndex( "gfx/wtf/reviver_decal" );
+
+	// Smoke
+	G_ImageIndex( "gfx/wtf/wtf_smoke" );
 
     // Translocator
     G_ModelIndex( "models/objects/wtf/translocator_body_normal.md3", true );

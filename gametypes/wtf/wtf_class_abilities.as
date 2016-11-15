@@ -203,6 +203,35 @@ void CTFT_ThrowClusterGrenade( Client @client, cPlayer @player )
     }
 }
 
+void CTFT_ThrowSmokeGrenade( Client @client, cPlayer @player )
+{
+	if ( player.playerClass.tag != PLAYERCLASS_SUPPORT )
+	{
+		client.printMessage( "This command is not available for your class\n" );
+		return;
+	}
+
+    if ( player.isSupportCooldown() )
+    {
+        client.printMessage( "You can't throw a smoke grenade yet\n" );
+        return;
+    }
+
+    if ( client.armor < player.playerClass.maxArmor )
+    {
+        client.printMessage( "You don't have enough armor to throw a grenade\n" );
+    }
+    else
+    {
+        Entity @grenade = ClientThrowSmokeGrenade( client );
+        if ( @grenade != null )
+        {
+            client.armor = 0;
+			player.setSupportCooldown();
+        }
+    }
+}
+
 void CTFT_Blast( Client @client, cPlayer @player )
 {
 	if ( player.isRunnerAbilityCooldown() )
@@ -240,6 +269,12 @@ void CTFT_ProtectCommand( Client @client, const String &argsString, int argc )
 	if ( player.playerClass.tag == PLAYERCLASS_GRUNT )
 	{
 		player.activateShell();
+		return;
+	}
+
+	if ( player.playerClass.tag == PLAYERCLASS_SUPPORT )
+	{
+		CTFT_ThrowSmokeGrenade( client, player );
 		return;
 	}
 
@@ -416,7 +451,7 @@ void CTFT_Classaction1Command( Client @client )
 			CTFT_BuildTurret( client, player );
 			break;
 		case PLAYERCLASS_SUPPORT:
-			CTFT_SupplyAmmo( client, player );
+			CTFT_ThrowSmokeGrenade( client, player );
 			break;
 		case PLAYERCLASS_SNIPER:
 			player.activateInvisibility();
