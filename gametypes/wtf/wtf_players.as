@@ -833,10 +833,16 @@ class cPlayer
                 // Medic regens health
                 if ( this.ent.health < 100 ) 
 				{
+					float healthGain = 0.0f;
 					if ( this.isHealingTeammates )
-						this.ent.health += ( frameTime * 0.006f );
+						healthGain = frameTime * 0.006f;
 					else          	
-						this.ent.health += ( frameTime * 0.019f );
+						healthGain = frameTime * 0.019f;
+
+					if ( ( this.ent.effects & EF_CARRIER ) != 0 )
+						healthGain *= 0.55f;
+
+					this.ent.health += healthGain;		
 				}
             }
 		}
@@ -868,6 +874,9 @@ class cPlayer
 					else
 						armorGain = frameTime * 0.0015f;
 				}
+
+				if ( ( this.ent.effects & EF_CARRIER ) != 0 )
+					armorGain *= 0.55f;
 
 				this.client.armor += armorGain;
 			}
