@@ -171,7 +171,7 @@ void GENERIC_InitPlayerClasses()
 		"$models/players/padpork",  // player model
 		100,                        // initial health
 		0,                          // initial armor
-		100,                        // max armor
+		75,                         // max armor
 		290,                        // speed
 		400,                        // dash speed
 		true,                       // can be stunned

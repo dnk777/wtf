@@ -320,14 +320,14 @@ void CTFT_SupplyCommand( Client @client, const String &argsString, int argc )
 
 void CTFT_SupplyAmmo( Client @client, cPlayer @player )
 {
-	if ( client.armor < 85 )
+	if ( client.armor < player.playerClass.maxArmor )
 	{
 		client.printMessage( "You do not have enough armor to supply ammo\n" );
 		return;
 	}
 
 	player.hasPendingSupplyAmmoCommand = true;
-	client.armor -= 85;
+	client.armor = 0;
 }
 
 void CTFT_SupplyAdrenaline( Client @client, cPlayer @player )

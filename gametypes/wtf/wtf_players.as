@@ -820,7 +820,7 @@ class cPlayer
 		if ( this.supportInfluence > 0 )
 		{
 			if ( this.client.armor < this.playerClass.maxArmor )
-				this.client.armor += ( frameTime * this.supportInfluence * 0.017f );
+				this.client.armor += ( frameTime * this.supportInfluence * 0.014f );
 		}
 
 		// Then, check class-specific regeneration
@@ -847,17 +847,27 @@ class cPlayer
 			{
 				int maxArmor = this.playerClass.maxArmor;
 				float armorGain = 0.0f;
-				if ( this.client.armor < ( maxArmor - 25 ) )
+				if ( this.client.armor < ( maxArmor / 3.0f ) )
 				{
-					armorGain = frameTime * 0.012f;
+					if ( this.isHealingTeammates )
+						armorGain = frameTime * 0.005f;
+					else
+						armorGain = frameTime * 0.010f;
 				}
-				else if ( ( this.client.armor >= ( maxArmor - 25 ) ) && this.client.armor < maxArmor )
+				else if ( this.client.armor < 2.0f * ( maxArmor / 3.0f ) )
 				{
-					armorGain = frameTime * 0.007f;
+					if ( this.isHealingTeammates )
+						armorGain = frameTime * 0.003f;
+					else
+						armorGain = frameTime * 0.004f;
 				}
-
-				if ( this.isHealingTeammates )
-					armorGain *= 0.35f;
+				else if ( this.client.armor < maxArmor )
+				{
+					if ( this.isHealingTeammates )
+						armorGain = frameTime * 0.0009f;
+					else
+						armorGain = frameTime * 0.0015f;
+				}
 
 				this.client.armor += armorGain;
 			}
