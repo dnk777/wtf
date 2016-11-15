@@ -138,6 +138,10 @@ class cBomb
 	{
 		G_Sound( this.bombEnt, CHAN_VOICE, this.bombAlarmSoundIndex, 0.25f );
 		this.explodeTime = levelTime + BOMB_EXPLODE_DELAY;
+
+		// Jump to explode in air
+		if ( @this.bombEnt.groundEntity != null )
+			this.bombEnt.velocity = this.bombEnt.velocity + Vec3( 0, 0, 650 );
 	}
 
     void die( Entity @inflictor, Entity @attacker )
