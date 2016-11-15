@@ -615,6 +615,26 @@ void team_CTF_flag_touch( Entity @ent, Entity @other, const Vec3 planeNormal, in
 
     if ( @flagBase != null )
         flagBase.touch( other );
+
+	if ( @other == null )
+		return;
+
+	if ( @other.client == null )
+		return;
+
+	if ( other.team != ent.team )
+		return;
+
+	cPlayer @player = GetPlayer( other.client );
+	if ( player.flagDispenserCooldownTime > levelTime )
+		return;
+
+	// Load only minimum amount of ammo
+	player.loadAmmo( false );
+	// loadAmmo() does not play this sound because it might be confusing on respawn when it is called too			
+	G_Sound( ent, CHAN_AUTO, G_SoundIndex( "sounds/items/weapon_pickup" ), 0.4f );
+
+	player.flagDispenserCooldownTime = levelTime + CTFT_FLAG_DISPENSER_COOLDOWN_TIME;
 }
 
 void team_CTF_flag_think( Entity @ent )

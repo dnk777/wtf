@@ -37,6 +37,7 @@ class cPlayer
     uint bombCooldownTime;
 	uint runnerAbilityCooldownTime;
 	uint buyAmmoCooldownTime;
+	uint flagDispenserCooldownTime;
 	uint adrenalineTime;
     uint respawnTime;
 	bool isHealingTeammates;
@@ -89,6 +90,7 @@ class cPlayer
         this.bombCooldownTime = 0;
 		this.runnerAbilityCooldownTime = 0;
 		this.buyAmmoCooldownTime = 0;
+		this.flagDispenserCooldownTime = 0;
 		this.adrenalineTime = 0;
         this.respawnTime = 0;
 		this.isHealingTeammates = false;
@@ -1186,45 +1188,101 @@ class cPlayer
         }
     }
 
-	void loadAmmo()
+	void checkAndLoadAmmo( int ammoTag, int minCount )
+	{
+		if ( client.inventoryCount( ammoTag ) < minCount )
+			client.inventorySetCount( ammoTag, minCount );
+	}
+
+	void loadAmmo( bool fullLoad = true )
 	{
 		if ( this.playerClass.tag == PLAYERCLASS_RUNNER )
 		{
 		    // Enable gunblade blast
 			client.inventorySetCount( AMMO_GUNBLADE, 1 );
-			client.inventorySetCount( AMMO_ROCKETS, 7 );
-			client.inventorySetCount( AMMO_SHELLS, 7 );
+			if ( fullLoad )
+			{
+				client.inventorySetCount( AMMO_ROCKETS, 7 );
+				client.inventorySetCount( AMMO_SHELLS, 7 );
+			}
+			else
+			{
+				this.checkAndLoadAmmo( AMMO_ROCKETS, 3 );
+				this.checkAndLoadAmmo( AMMO_SHELLS, 3 );
+			}
 		}
 		else if ( this.playerClass.tag == PLAYERCLASS_MEDIC )
 		{
 		   	// Enable gunblade blast
 			client.inventorySetCount( AMMO_GUNBLADE, 1 );
-		    client.inventorySetCount( AMMO_PLASMA, 100 );
-			client.inventorySetCount( AMMO_BULLETS, 100 );
+			if ( fullLoad )
+			{
+		    	client.inventorySetCount( AMMO_PLASMA, 100 );
+				client.inventorySetCount( AMMO_BULLETS, 100 );
+			}
+			else
+			{
+				this.checkAndLoadAmmo( AMMO_PLASMA, 50 );
+				this.checkAndLoadAmmo( AMMO_BULLETS, 50 );
+			}
 		}
 		else if ( this.playerClass.tag == PLAYERCLASS_GRUNT )
 		{
-		    client.inventorySetCount( AMMO_ROCKETS, 10 );
-			client.inventorySetCount( AMMO_LASERS, 100 );
-			client.inventorySetCount( AMMO_GRENADES, 10 );
+			if ( fullLoad )
+			{
+		    	client.inventorySetCount( AMMO_ROCKETS, 10 );
+				client.inventorySetCount( AMMO_LASERS, 100 );
+				client.inventorySetCount( AMMO_GRENADES, 10 );
+			}
+			else
+			{
+				this.checkAndLoadAmmo( AMMO_ROCKETS, 3 );
+				this.checkAndLoadAmmo( AMMO_LASERS, 50 );
+				this.checkAndLoadAmmo( AMMO_GRENADES, 5 );
+			}
 		}
 		else if ( this.playerClass.tag == PLAYERCLASS_ENGINEER )
 		{
-			client.inventorySetCount( AMMO_ROCKETS, 10 );
-			client.inventorySetCount( AMMO_PLASMA, 100 );
-			client.inventorySetCount( AMMO_SHELLS, 15 );
+			if ( fullLoad )
+			{
+				client.inventorySetCount( AMMO_ROCKETS, 10 );
+				client.inventorySetCount( AMMO_PLASMA, 100 );
+				client.inventorySetCount( AMMO_SHELLS, 15 );
+			}
+			else
+			{
+				this.checkAndLoadAmmo( AMMO_ROCKETS, 3 );
+				this.checkAndLoadAmmo( AMMO_PLASMA, 50 );
+				this.checkAndLoadAmmo( AMMO_SHELLS, 5 );
+			}
 		}
 		else if ( this.playerClass.tag == PLAYERCLASS_SUPPORT )
 		{
 			// Enable gunblade blast
 			client.inventorySetCount( AMMO_GUNBLADE, 1 );
-			client.inventorySetCount( AMMO_LASERS, 100 );
-			client.inventorySetCount( AMMO_SHELLS, 10 );
+			if ( fullLoad )
+			{
+				client.inventorySetCount( AMMO_LASERS, 100 );
+				client.inventorySetCount( AMMO_SHELLS, 10 );
+			}
+			else
+			{
+				this.checkAndLoadAmmo( AMMO_LASERS, 50 );
+				this.checkAndLoadAmmo( AMMO_SHELLS, 5 );
+			}
 		}
 		else if ( this.playerClass.tag == PLAYERCLASS_SNIPER )
 		{
-			client.inventorySetCount( AMMO_BOLTS, 10 );
-			client.inventorySetCount( AMMO_BULLETS, 100 );
+			if ( fullLoad )
+			{
+				client.inventorySetCount( AMMO_BOLTS, 10 );
+				client.inventorySetCount( AMMO_BULLETS, 100 );
+			}
+			else
+			{
+				this.checkAndLoadAmmo( AMMO_BOLTS, 3 );
+				this.checkAndLoadAmmo( AMMO_BULLETS, 50 );
+			}
 		}
 	}
 
