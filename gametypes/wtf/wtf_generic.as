@@ -71,6 +71,24 @@ void CTFT_RemoveBombs()
     }
 }
 
+void CTFT_RemoveTranslocators()
+{
+	for ( int i = 0; i < MAX_TRANSLOCATORS; i++ )
+	{
+		if ( gtTranslocators[i].inuse )
+		{
+			gtTranslocators[i].Free();
+		}
+	}
+}
+
+void CTFT_RemoveSmokeGrenades()
+{
+	array<Entity @> @ents = G_FindByClassname( "smoke_emitter" );
+	for ( uint i = 0; i < ents.size(); ++i )
+		ents[i].freeEntity();
+}
+
 bool CTFT_RemoveItemsByName( String type )
 {
 	Item @tmp = G_GetItemByName( type );

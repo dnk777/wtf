@@ -1057,6 +1057,8 @@ void CTFT_SetUpMatch()
     CTFT_ResetRespawnQueue();
     CTFT_RemoveTurrets();
     CTFT_RemoveBombs();
+	CTFT_RemoveTranslocators();
+	CTFT_RemoveSmokeGrenades();
     CTFT_RemoveItemsByName("25 Health");
     CTFT_RemoveItemsByName("Yellow Armor");
     CTFT_RemoveItemsByName("5 Health");
