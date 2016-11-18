@@ -601,24 +601,24 @@ class cPlayer
 			}
 
             this.client.pmoveDashSpeed = this.playerClass.dashSpeed;
-            this.client.pmoveMaxSpeed = this.playerClass.maxSpeed;
             this.client.pmoveJumpSpeed = this.playerClass.jumpSpeed;
 
-			if ( this.adrenalineTime > levelTime )
+			// No adrenaline (the most common case)
+			if ( this.adrenalineTime <= levelTime )
 			{
-				if ( this.playerClass.tag != PLAYERCLASS_RUNNER )
-				{
-					// restore defaults
-					this.client.pmoveDashSpeed = -1;
-            		this.client.pmoveMaxSpeed = -1;
-            		this.client.pmoveJumpSpeed = -1;
-				}
+				// Apply the hack described in classes definition
+				if ( @this.ent.groundEntity == null )
+					this.client.pmoveMaxSpeed = this.playerClass.pmoveMaxSpeedInAir;
 				else
-				{
-					// the Runner's values are greater than default ones
-					this.client.pmoveDashSpeed = this.playerClass.dashSpeed + 20;
-					this.client.pmoveMaxSpeed = this.playerClass.maxSpeed + 10;
-				}
+					this.client.pmoveMaxSpeed = this.playerClass.pmoveMaxSpeedOnGround;
+			}
+			else
+			{
+				// Choose the best speed and add some bonus value
+				if ( this.playerClass.pmoveMaxSpeedInAir < this.playerClass.pmoveMaxSpeedOnGround )
+					this.client.pmoveMaxSpeed = this.playerClass.pmoveMaxSpeedOnGround + 10;
+				else
+					this.client.pmoveMaxSpeed = this.playerClass.pmoveMaxSpeedInAir + 10;
 			}
 
 			this.ent.mass = 200;

@@ -35,7 +35,18 @@ class cPlayerClass
     int maxHealth;
 	int armor;
 	int maxArmor;
-    int maxSpeed;
+	// HACK! We want:
+	// 1) Reduce strafejumping acceleration for some classes
+	// 2) Keep reasonably high speed on ground to avoid player frustration caused by ruined dodging
+	// 3) Be compatible with vanilla Warsow 2.1 binaries
+	// Ideally we should be able to set strafejumping acceleration from the script, 
+	// but is is absent in the mentioned binaries. We use the following hack:
+	// If a player is in air, this.client.pmoveMaxSpeed is set to this.pmoveMaxSpeedInAir 
+	// If a player is on ground, this.client.pmoveMaxSpeed is set to this.pmoveMaxSpeedOnGround
+	// These values should not differ significantly to avoid prediction errors.
+
+	int pmoveMaxSpeedInAir;
+	int pmoveMaxSpeedOnGround;
     int dashSpeed;
     int jumpSpeed;
     bool takeStun;
@@ -48,7 +59,8 @@ class cPlayerClass
 
     cPlayerClass()
     {
-        this.maxSpeed = -1;
+		this.pmoveMaxSpeedInAir = -1;
+		this.pmoveMaxSpeedOnGround = -1;
         this.dashSpeed = -1;
         this.jumpSpeed = -1;
         this.maxHealth = 100;
@@ -64,8 +76,9 @@ class cPlayerClass
 
     ~cPlayerClass() {}
 
-    void setup( String &class_name, int tag, String &model, int health, int armor, int maxArmor, int maxSpeed, int dashSpeed, bool stun,
-        const String &icon, const String @action1Icon, const String @action2Icon )
+	void setup( String &class_name, int tag, String &model, int health, int armor, int maxArmor, 
+				int maxSpeedInAir, int maxSpeedOnGround, int dashSpeed, bool stun, 
+				const String &icon, const String @action1Icon, const String @action2Icon )
     {
         this.name = class_name;
         this.playerModel = model;
@@ -73,7 +86,8 @@ class cPlayerClass
 		this.armor = armor;
 		this.maxArmor = maxArmor;
         this.dashSpeed = dashSpeed;
-        this.maxSpeed = maxSpeed;
+        this.pmoveMaxSpeedInAir = maxSpeedInAir;
+		this.pmoveMaxSpeedOnGround = maxSpeedOnGround;
         this.takeStun = stun;
 
         if ( tag < 0 || tag >= PLAYERCLASS_TOTAL )
@@ -95,6 +109,19 @@ class cPlayerClass
 
 cPlayerClass[] cPlayerClassInfos( PLAYERCLASS_TOTAL );
 
+// All classes (with an exception to the Runner that stands alone)
+// can be divided in two these groups by movement parameters.
+
+// "Slow" classes (the Grunt and the Sniper)
+const int SLOW_MAX_SPEED_IN_AIR = 230;
+const int SLOW_MAX_SPEED_ON_GROUND = 300;
+const int SLOW_DASH_SPEED = 370;
+
+// "Fast" classes (the Medic, the Support and the Engineer)
+const int FAST_MAX_SPEED_IN_AIR = 270;
+const int FAST_MAX_SPEED_ON_GROUND = 320;
+const int FAST_DASH_SPEED = 430;
+
 // Initialize player classes
 
 void GENERIC_InitPlayerClasses()
@@ -112,8 +139,9 @@ void GENERIC_InitPlayerClasses()
         100,						// initial health
         25,						    // initial armor
 		125,                        // max armor
-        265,						// speed
-        350,						// dash speed
+        SLOW_MAX_SPEED_IN_AIR,
+		SLOW_MAX_SPEED_ON_GROUND,
+		SLOW_DASH_SPEED,
         true,						// can be stunned
         "gfx/wtf/wtf_grunt",
         "gfx/wtf/wtf_grunt1",
@@ -127,8 +155,9 @@ void GENERIC_InitPlayerClasses()
         100,						// initial health
         0,						    // initial armor
 		75,                         // max armor
-        305,						// speed
-        400,						// dash speed
+        FAST_MAX_SPEED_IN_AIR,
+		FAST_MAX_SPEED_ON_GROUND,
+		FAST_DASH_SPEED,
         true,						// can be stunned
         "gfx/wtf/wtf_medic",
         "gfx/wtf/medic1",
@@ -142,7 +171,8 @@ void GENERIC_InitPlayerClasses()
         100,						// initial health
         25,						    // initial armor
 		50,                         // max armor
-        350,						// speed
+        350,						// pmoveMaxSpeedInAir
+		350,                        // pmoveMaxSpeedOnGround
         450,						// dash speed
         false,						// can be stunned
         "gfx/wtf/wtf_runner",
@@ -157,8 +187,9 @@ void GENERIC_InitPlayerClasses()
         100,						// initial health
         50,						    // initial armor
 		75,                         // max armor
-        280,						// speed
-        350,						// dash speed
+        FAST_MAX_SPEED_IN_AIR,
+		FAST_MAX_SPEED_ON_GROUND,
+		FAST_DASH_SPEED,
         true,						// can be stunned
         "gfx/wtf/wtf_engineer",
         "gfx/wtf/engineer1",
@@ -172,8 +203,9 @@ void GENERIC_InitPlayerClasses()
 		100,                        // initial health
 		0,                          // initial armor
 		75,                         // max armor
-		290,                        // speed
-		400,                        // dash speed
+		FAST_MAX_SPEED_IN_AIR,
+		FAST_MAX_SPEED_ON_GROUND,
+		FAST_DASH_SPEED,
 		true,                       // can be stunned
 		"gfx/wtf/wtf_support",
 		null,
@@ -187,8 +219,9 @@ void GENERIC_InitPlayerClasses()
 		100,                          // initial health
 		50,                           // initial armor
 		50,                           // max armor
-		250,                          // speed
-		350,                          // dash speed
+		SLOW_MAX_SPEED_IN_AIR,
+		SLOW_MAX_SPEED_ON_GROUND,
+		SLOW_DASH_SPEED,
 		true,                         // can be stunned
 		"gfx/wtf/wtf_sniper",
 		null,
