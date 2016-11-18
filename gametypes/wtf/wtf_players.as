@@ -1241,14 +1241,14 @@ class cPlayer
 		{
 			if ( fullLoad )
 			{
-				client.inventorySetCount( AMMO_ROCKETS, 10 );
-				client.inventorySetCount( AMMO_PLASMA, 100 );
+				client.inventorySetCount( AMMO_GRENADES, 10 );
+				client.inventorySetCount( AMMO_PLASMA, 125 );
 				client.inventorySetCount( AMMO_SHELLS, 15 );
 			}
 			else
 			{
-				this.checkAndLoadAmmo( AMMO_ROCKETS, 3 );
-				this.checkAndLoadAmmo( AMMO_PLASMA, 50 );
+				this.checkAndLoadAmmo( AMMO_GRENADES, 5 );
+				this.checkAndLoadAmmo( AMMO_PLASMA, 75 );
 				this.checkAndLoadAmmo( AMMO_SHELLS, 5 );
 			}
 		}
