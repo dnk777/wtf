@@ -137,7 +137,7 @@ void GENERIC_InitPlayerClasses()
         PLAYERCLASS_GRUNT,
         "$models/players/bigvic",	// player model
         100,						// initial health
-        25,						    // initial armor
+        75,						    // initial armor
 		125,                        // max armor
         SLOW_MAX_SPEED_IN_AIR,
 		SLOW_MAX_SPEED_ON_GROUND,

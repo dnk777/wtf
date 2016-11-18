@@ -231,7 +231,7 @@ void CTFT_ThrowClusterGrenade( Client @client, cPlayer @player )
         return;
     }
 
-    if ( client.armor < ( CTFT_TURRET_AP_COST ) )
+    if ( client.armor < player.playerClass.armor + 5 )
     {
         client.printMessage( "You don't have enough armor to throw a grenade\n" );
     }
@@ -240,7 +240,7 @@ void CTFT_ThrowClusterGrenade( Client @client, cPlayer @player )
         cBomb @bomb = ClientDropBomb( client );
         if ( @bomb != null )
         {
-            client.armor = client.armor - ( CTFT_TURRET_AP_COST ); // Costs the same as turret
+            client.armor -= ( player.playerClass.armor + 5 );
 			player.setGruntCooldown();
 			@player.bomb = bomb;
         }
@@ -261,7 +261,7 @@ void CTFT_ThrowSmokeGrenade( Client @client, cPlayer @player )
         return;
     }
 
-    if ( client.armor < player.playerClass.maxArmor )
+    if ( client.armor < player.playerClass.maxArmor - 10 )
     {
         client.printMessage( "You don't have enough armor to throw a grenade\n" );
     }
@@ -270,7 +270,7 @@ void CTFT_ThrowSmokeGrenade( Client @client, cPlayer @player )
         Entity @grenade = ClientThrowSmokeGrenade( client );
         if ( @grenade != null )
         {
-            client.armor = 0;
+            client.armor -= ( player.playerClass.maxArmor - 10 );
 			player.setSupportCooldown();
         }
     }
@@ -364,14 +364,14 @@ void CTFT_SupplyCommand( Client @client, const String &argsString, int argc )
 
 void CTFT_SupplyAmmo( Client @client, cPlayer @player )
 {
-	if ( client.armor < player.playerClass.maxArmor )
+	if ( client.armor < player.playerClass.maxArmor - 5 )
 	{
 		client.printMessage( "You do not have enough armor to supply ammo\n" );
 		return;
 	}
 
 	player.hasPendingSupplyAmmoCommand = true;
-	client.armor = 0;
+	client.armor -= ( player.playerClass.maxArmor - 5 );
 }
 
 void CTFT_SupplyAdrenaline( Client @client, cPlayer @player )

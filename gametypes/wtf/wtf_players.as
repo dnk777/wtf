@@ -1156,13 +1156,13 @@ class cPlayer
             return;
         }
 
-        if ( this.client.armor < CTFT_BATTLESUIT_AP_COST )
+        if ( this.client.armor < this.playerClass.armor + 5 )
         {
             this.printMessage( "You don't have enough armor to spawn a Warshell\n" );
         }
         else
         {
-            this.client.armor -= CTFT_TURRET_AP_COST;
+            this.client.armor -= ( this.playerClass.armor + 5 );
             this.client.inventorySetCount( POWERUP_SHELL, CTFT_BATTLESUIT_GRUNT_TIME );
             this.setGruntCooldown();
 
