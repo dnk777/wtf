@@ -18,7 +18,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
 const uint CTFT_SMOKE_EMITTER_EMISSION_TIME = 500;
-const uint CTFT_SMOKE_EMITTER_DECAY_TIME = 2500;
+const uint CTFT_SMOKE_EMITTER_DECAY_TIME = 5000;
 
 Entity @ClientThrowSmokeGrenade( Client @client )
 {
@@ -75,12 +75,12 @@ void smoke_grenade_think( Entity @grenade )
 	Entity @emitter = @G_SpawnEntity( "smoke_emitter" );
     emitter.type = ET_PARTICLES;
     emitter.origin = grenade.origin;
-    emitter.particlesSpeed = 180;
+    emitter.particlesSpeed = 120;
     emitter.particlesShaderIndex = G_ImageIndex( "gfx/wtf/smoke" );
     emitter.particlesSpread = 250;
-    emitter.particlesSize = 100;
-    emitter.particlesTime = 4;
-    emitter.particlesFrequency = 500;
+    emitter.particlesSize = 90;
+    emitter.particlesTime = ( CTFT_SMOKE_EMITTER_EMISSION_TIME + CTFT_SMOKE_EMITTER_DECAY_TIME ) / 1000;
+    emitter.particlesFrequency = 350;
     emitter.particlesSpherical = true;
     emitter.particlesBounce = true;
     emitter.particlesGravity = true;
