@@ -165,7 +165,7 @@ class cBomb
         this.bombEnt.splashDamage( this.player.ent, 225, 180, 125, 0, MOD_EXPLOSIVE );
 
 		float angularStep = 360.0f / NUM_WARHEADS;
-		float speedDelta = 50;
+		int speedDelta = 50;
 		Vec3 angles( -50.0f, -180.0f, 0 );
         for ( int i = 0; i < NUM_WARHEADS; i++ )
         {
@@ -174,7 +174,7 @@ class cBomb
             {
                 nade.modelindex = G_ModelIndex( "models/objects/projectile/glauncher/grenadeweak.md3", false );
                 // make nades explode after 750..1250 millis
-                nade.nextThink = levelTime + 750 + 500 * random();
+                nade.nextThink = levelTime + 750 + uint(500 * random());
             }
 			angles.y += angularStep;
 			speedDelta = -speedDelta;
