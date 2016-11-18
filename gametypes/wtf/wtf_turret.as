@@ -210,7 +210,7 @@ class cTurret
         this.bodyEnt.clipMask = MASK_PLAYERSOLID;
         this.bodyEnt.moveType = MOVETYPE_TOSS;
         this.bodyEnt.svflags &= ~SVF_NOCLIENT;
-        this.bodyEnt.health = 400;
+        this.bodyEnt.health = CTFT_TURRET_HEALTH;
         this.bodyEnt.mass = 450;
         this.bodyEnt.takeDamage = 1;
         this.bodyEnt.nextThink = levelTime + 1;

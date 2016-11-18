@@ -32,6 +32,9 @@ const float CTF_FLAG_RECOVERY_BONUS_DISTANCE = 512.0f;
 const float CTF_CARRIER_KILL_BONUS_DISTANCE = 512.0f;
 const float CTF_OBJECT_DEFENSE_BONUS_DISTANCE = 512.0f;
 
+const int CTFT_TURRET_HEALTH = 400;
+const int CTFT_BOUNCE_PAD_HEALTH = 50;
+
 int CTFT_BASE_RESPAWN_TIME = 10000;
 int CTFT_DISABLED_REVIVER_RESPAWN_PENALTY = 5000;
 int CTFT_TURRET_AP_COST = 50;
@@ -789,6 +792,7 @@ void GT_PlayerRespawn( Entity @ent, int old_team, int new_team )
 		G_PrintMsg( ent, "Command ^6destroy turret^7: Destroy a turret\n" );
 		G_PrintMsg( ent, "Command ^6build pad^7: Build a bounce pad\n" );
 		G_PrintMsg( ent, "Command ^6destroy pad^7: Destroy a bounce pad\n" );
+		G_PrintMsg( ent, "Commands ^6build status^7, ^6destroy status^7: Print a status of built entities\n" );
 		G_PrintMsg( ent, "Generic command ^8classaction1^7: Builds a turret, then a bounce pad\n" ); 
 		G_PrintMsg( ent, "Generic command ^8classaction2^7: Destroys a bounce pad, then a turret\n" );
     }

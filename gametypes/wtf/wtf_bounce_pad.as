@@ -153,7 +153,7 @@ class cBouncePad
         this.bodyEnt.clipMask = MASK_PLAYERSOLID;
         this.bodyEnt.moveType = MOVETYPE_NONE;
         this.bodyEnt.svflags &= ~SVF_NOCLIENT;
-        this.bodyEnt.health = 50;
+        this.bodyEnt.health = CTFT_BOUNCE_PAD_HEALTH;
         this.bodyEnt.mass = 99999;
         this.bodyEnt.takeDamage = 1;
 		this.bodyEnt.nextThink = levelTime + 1;

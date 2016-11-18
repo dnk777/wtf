@@ -39,6 +39,15 @@ void CTFT_BuildCommand( Client @client, const String &argsString, int argc )
 		return;
 	}
 
+	String token = argsString.getToken( 0 );
+
+	// hack for entities status
+	if ( token == "status" )
+	{
+		CTFT_PrintBuiltEntitiesStatus( client, player );
+		return;
+	}
+
 	if ( player.isEngineerCooldown() )
     {
         client.printMessage( "You cannot build yet\n" );
@@ -60,7 +69,6 @@ void CTFT_BuildCommand( Client @client, const String &argsString, int argc )
 		return;
     }
 
-	String token = argsString.getToken( 0 );
 
 	if ( token == "turret" )
 	{
@@ -74,7 +82,7 @@ void CTFT_BuildCommand( Client @client, const String &argsString, int argc )
 		return;
 	}
 
-	client.printMessage( "Illegal command usage. Available arguments: ^6turret^7, ^6pad^7.\n" );
+	client.printMessage( "Illegal command usage. Available arguments: ^6turret^7, ^6pad^7, ^6status^7.\n" );
 }
 
 void CTFT_DestroyCommand( Client @client, const String &argsString, int argc )
@@ -101,6 +109,13 @@ void CTFT_DestroyCommand( Client @client, const String &argsString, int argc )
 
 	String token = argsString.getToken( 0 );
 
+	// hack for entities status
+	if ( token == "status" )
+	{
+		CTFT_PrintBuiltEntitiesStatus( client, player );
+		return;
+	}
+
 	if ( token == "turret" )
 	{
 		CTFT_DestroyTurret( client, player );
@@ -113,7 +128,7 @@ void CTFT_DestroyCommand( Client @client, const String &argsString, int argc )
 		return;
 	}
 
-	client.printMessage( "Illegal command usage. Available arguments: ^6turret^7, ^6pad^7.\n" );
+	client.printMessage( "Illegal command usage. Available arguments: ^6turret^7, ^6pad^7, ^6status^7.\n" );
 }
 
 void CTFT_BuildTurret( Client @client, cPlayer @player )
@@ -189,6 +204,46 @@ void CTFT_DestroyBouncePad( Client @client, cPlayer @player )
 	@player.bouncePad = null;
 	player.engineerBuildCooldownTime = 0;
 	client.armor += CTFT_TURRET_AP_COST;
+}
+
+void CTFT_PrintBuiltEntitiesStatus( Client @client, cPlayer @player )
+{
+	String message = "Built entites status: turret ";
+	if ( @player.turret != null && @player.turret.bodyEnt != null )
+	{
+		int health = int( player.turret.bodyEnt.health );
+		if ( health >= ( 2 * CTFT_TURRET_HEALTH ) / 3 )
+			message += "^2";
+		else if ( health > CTFT_TURRET_HEALTH / 3 )
+			message += "^3";
+		else
+			message += "^1";
+		message += health;
+		message += "^7/";
+		message += CTFT_TURRET_HEALTH;
+	}
+	else
+		message += "not built";
+
+	message += ", bounce pad ";
+	if ( @player.bouncePad != null && @player.bouncePad.bodyEnt != null )
+	{
+		int health = int( player.bouncePad.bodyEnt.health );
+		if ( health >= ( 2 * CTFT_BOUNCE_PAD_HEALTH ) / 3 )
+			message += "^2";
+		else if ( health > CTFT_BOUNCE_PAD_HEALTH / 3 )
+			message += "^3";
+		else
+			message += "^1";
+		message += health;
+		message += "^7/";
+		message += CTFT_BOUNCE_PAD_HEALTH;
+	}
+	else
+		message += "not built";
+
+	message += "\n";
+	client.printMessage( message );
 }
 
 void CTFT_AltAttackCommand( Client @client, const String &argsString, int argc )
@@ -496,6 +551,7 @@ void CTFT_Classaction1Command( Client @client )
 				CTFT_BuildCommand( client, "turret", 1 );
 			else
 				CTFT_BuildCommand( client, "pad", 1 );
+			CTFT_BuildCommand( client, "status", 1 );
 			break;
 		case PLAYERCLASS_SUPPORT:
 			CTFT_ThrowSmokeGrenade( client, player );
@@ -532,6 +588,7 @@ void CTFT_Classaction2Command( Client @client )
 				CTFT_DestroyCommand( client, "pad", 1 );
 			else
 				CTFT_DestroyCommand( client, "turret", 1 );
+			CTFT_DestroyCommand( client, "status", 1 );
 			break;
 		case PLAYERCLASS_SUPPORT:
 			CTFT_SupplyAmmo( client, player );
