@@ -112,8 +112,8 @@ void GENERIC_InitPlayerClasses()
         100,						// initial health
         25,						    // initial armor
 		125,                        // max armor
-        250,						// speed
-        330,						// dash speed
+        265,						// speed
+        350,						// dash speed
         true,						// can be stunned
         "gfx/wtf/wtf_grunt",
         "gfx/wtf/wtf_grunt1",
@@ -158,7 +158,7 @@ void GENERIC_InitPlayerClasses()
         50,						    // initial armor
 		75,                         // max armor
         280,						// speed
-        330,						// dash speed
+        350,						// dash speed
         true,						// can be stunned
         "gfx/wtf/wtf_engineer",
         "gfx/wtf/engineer1",
@@ -187,8 +187,8 @@ void GENERIC_InitPlayerClasses()
 		100,                          // initial health
 		50,                           // initial armor
 		50,                           // max armor
-		240,                          // speed
-		330,                          // dash speed
+		250,                          // speed
+		350,                          // dash speed
 		true,                         // can be stunned
 		"gfx/wtf/wtf_sniper",
 		null,
