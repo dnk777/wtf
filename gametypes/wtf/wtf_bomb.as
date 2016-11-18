@@ -20,6 +20,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 const int MAX_BOMBS = 16;
 const uint BOMB_EXPLODE_DELAY = 300;
 const uint BOMB_EXPIRE_TIME = 2000; 
+const int NUM_WARHEADS = 9;
 
 cBomb[] gtBombs( MAX_BOMBS );
 
@@ -141,7 +142,7 @@ class cBomb
 
 		// Jump to explode in air
 		if ( @this.bombEnt.groundEntity != null )
-			this.bombEnt.velocity = this.bombEnt.velocity + Vec3( 0, 0, 650 );
+			this.bombEnt.velocity = this.bombEnt.velocity + Vec3( 0, 0, 350 );
 	}
 
     void die( Entity @inflictor, Entity @attacker )
@@ -163,18 +164,20 @@ class cBomb
         this.bombEnt.explosionEffect( 500 );
         this.bombEnt.splashDamage( this.player.ent, 225, 180, 125, 0, MOD_EXPLOSIVE );
 
-        for (int i = 0; i < 6; i++)
+		float angularStep = 360.0f / NUM_WARHEADS;
+		float speedDelta = 50;
+		Vec3 angles( -50.0f, -180.0f, 0 );
+        for ( int i = 0; i < NUM_WARHEADS; i++ )
         {
-            Vec3 dir;
-            dir.set(-1 + random()*2, -1 + random()*2, random());
-            dir = dir.toAngles();
-            Entity @nade = @G_FireGrenade( bombOrigin, dir, 350, 225, 70, 100, 1, player.client.getEnt() );
+            Entity @nade = @G_FireGrenade( bombOrigin, angles, 325 + speedDelta, 150, 70, 100, 500, player.client.getEnt() );
             if ( @nade != null )
             {
                 nade.modelindex = G_ModelIndex( "models/objects/projectile/glauncher/grenadeweak.md3", false );
-                // make nades explode after 1sec
-                nade.nextThink = levelTime + 1000;
+                // make nades explode after 750..1250 millis
+                nade.nextThink = levelTime + 750 + 500 * random();
             }
+			angles.y += angularStep;
+			speedDelta = -speedDelta;
         }
 
         this.Free();
