@@ -1203,8 +1203,8 @@ class cPlayer
 			}
 			else
 			{
-				this.checkAndLoadAmmo( AMMO_ROCKETS, 3 );
-				this.checkAndLoadAmmo( AMMO_SHELLS, 3 );
+				this.checkAndLoadAmmo( AMMO_ROCKETS, 4 );
+				this.checkAndLoadAmmo( AMMO_SHELLS, 4 );
 			}
 		}
 		else if ( this.playerClass.tag == PLAYERCLASS_MEDIC )
@@ -1214,12 +1214,12 @@ class cPlayer
 			if ( fullLoad )
 			{
 		    	client.inventorySetCount( AMMO_PLASMA, 100 );
-				client.inventorySetCount( AMMO_BULLETS, 100 );
+				client.inventorySetCount( AMMO_BULLETS, 125 );
 			}
 			else
 			{
 				this.checkAndLoadAmmo( AMMO_PLASMA, 50 );
-				this.checkAndLoadAmmo( AMMO_BULLETS, 50 );
+				this.checkAndLoadAmmo( AMMO_BULLETS, 75 );
 			}
 		}
 		else if ( this.playerClass.tag == PLAYERCLASS_GRUNT )
@@ -1232,7 +1232,7 @@ class cPlayer
 			}
 			else
 			{
-				this.checkAndLoadAmmo( AMMO_ROCKETS, 3 );
+				this.checkAndLoadAmmo( AMMO_ROCKETS, 5 );
 				this.checkAndLoadAmmo( AMMO_LASERS, 50 );
 				this.checkAndLoadAmmo( AMMO_GRENADES, 5 );
 			}
@@ -1276,8 +1276,8 @@ class cPlayer
 			}
 			else
 			{
-				this.checkAndLoadAmmo( AMMO_BOLTS, 3 );
-				this.checkAndLoadAmmo( AMMO_BULLETS, 50 );
+				this.checkAndLoadAmmo( AMMO_BOLTS, 5 );
+				this.checkAndLoadAmmo( AMMO_BULLETS, 75 );
 			}
 		}
 	}
