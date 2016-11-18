@@ -25,7 +25,8 @@ class cPlayer
     Client @client;
     Entity @ent;
     cReviver @reviver;
-    cTurret @turret;    
+    cTurret @turret;
+	cBouncePad @bouncePad;   
     cBomb @bomb;
 	cTranslocator @translocator;
 
@@ -70,6 +71,7 @@ class cPlayer
         @this.playerClass = @cPlayerClassInfos[PLAYERCLASS_GRUNT];
         @this.reviver = null;
         @this.turret = null;
+		@this.bouncePad = null;
         @this.bomb = null;
 		@this.translocator = null;
         this.resetTimers();
@@ -309,13 +311,14 @@ class cPlayer
 
 		if ( @oldClass != null )
 		{
-			// Destroy an Engineer's turret
+			// Destroy entities build by an engineer
 			if ( oldClass.tag == PLAYERCLASS_ENGINEER && this.playerClass.tag != PLAYERCLASS_ENGINEER )
 			{
 				if ( @this.turret != null )
-				{
 					this.turret.die( null, null );
-				}
+
+				if ( @this.bouncePad != null )
+					this.bouncePad.die( null, null );
 			}
 		}
 
@@ -1406,6 +1409,15 @@ class cPlayer
 		@this.translocator = null;
 		if ( !this.hasJustTranslocated )
 			client.armor += CTFT_TRANSLOCATOR_AP_COST;
+	}
+
+	void bouncePadSpawningHasFailed()
+	{
+		@this.bouncePad = null;
+		client.printMessage( "Can't spawn a bounce pad here\n" );
+		this.engineerBuildCooldownTime = 0;
+		// Return armor spent on throwing a bounce pad spawner
+		client.armor += CTFT_TURRET_AP_COST;
 	}
 }
 

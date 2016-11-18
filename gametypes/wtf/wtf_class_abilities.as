@@ -39,6 +39,27 @@ void CTFT_BuildCommand( Client @client, const String &argsString, int argc )
 		return;
 	}
 
+	if ( player.isEngineerCooldown() )
+    {
+        client.printMessage( "You cannot build yet\n" );
+        return;
+    }
+
+	for ( cFlagBase @flagBase = @fbHead; @flagBase != null; @flagBase = @flagBase.next )
+	{
+		if( flagBase.owner.origin.distance( client.getEnt().origin ) < CTFT_BUILD_RADIUS )
+		{
+			client.printMessage( "Too close to the flag, cannot build here\n" );
+			return;
+		}
+	}
+
+    if ( client.armor < CTFT_TURRET_AP_COST )
+    {
+        client.printMessage( "You don't have enough armor to build\n" );
+		return;
+    }
+
 	String token = argsString.getToken( 0 );
 
 	if ( token == "turret" )
@@ -47,7 +68,13 @@ void CTFT_BuildCommand( Client @client, const String &argsString, int argc )
 		return;
 	}
 
-	client.printMessage( "Illegal command usage. Available arguments: ^6turret^7.\n" );
+	if ( token == "pad" )
+	{
+		CTFT_BuildBouncePad( client, player );
+		return;
+	}
+
+	client.printMessage( "Illegal command usage. Available arguments: ^6turret^7, ^6pad^7.\n" );
 }
 
 void CTFT_DestroyCommand( Client @client, const String &argsString, int argc )
@@ -80,57 +107,60 @@ void CTFT_DestroyCommand( Client @client, const String &argsString, int argc )
 		return;
 	}
 
-	client.printMessage( "Illegal command usage. Available arguments: ^6turret^7.\n" );
+	if ( token == "pad" )
+	{
+		CTFT_DestroyBouncePad( client, player );
+		return;
+	}
+
+	client.printMessage( "Illegal command usage. Available arguments: ^6turret^7, ^6pad^7.\n" );
 }
 
 void CTFT_BuildTurret( Client @client, cPlayer @player )
 {
     if ( @player.turret != null )
     {
-        client.printMessage( "You have already spawned a turret\n" );
+        client.printMessage( "You have already built a turret\n" );
         return;
     }
 
-    if ( player.isEngineerCooldown() )
-    {
-        client.printMessage( "You cannot spawn a turret yet\n" );
-        return;
-    }
+    cTurret @turret = ClientDropTurret( client );
+	if ( @turret == null )
+		return;
 
-	for ( cFlagBase @flagBase = @fbHead; @flagBase != null; @flagBase = @flagBase.next )
+    turret.refireDelay = 100;
+    turret.yawSpeed = 270.0f;
+    turret.pitchSpeed = 170.0f;
+    turret.gunOffset = 24;
+
+    @turret.client = @client;
+    client.armor = client.armor - CTFT_TURRET_AP_COST;
+
+    @player.turret = @turret;
+    // have a delay before being able to build again
+    player.setEngineerCooldown();
+
+	// Disabled since the ability to destroy a turret is added 
+	// (otherwise an engineer can gain scores by building a turret and immediately destroying it)
+    // client.stats.addScore( 2 );
+}
+
+void CTFT_BuildBouncePad( Client @client, cPlayer @player )
+{
+	if ( @player.bouncePad != null )
 	{
-		if( flagBase.owner.origin.distance( client.getEnt().origin ) < CTFT_BUILD_RADIUS )
-		{
-			client.printMessage( "Too close to the flag, cannot spawn a turret.\n" );
-			return;
-		}
+		client.printMessage( "You have already built a bounce pad\n" );
+		return;
 	}
 
-    if ( client.armor < CTFT_TURRET_AP_COST )
-    {
-        client.printMessage( "You don't have enough armor to spawn a turret\n" );
+	cBouncePad @bouncePad = ClientDropBouncePad( client );
+	if ( @bouncePad == null )
 		return;
-    }
-        
-    cTurret @turret = ClientDropTurret( client );
-    if ( @turret != null )
-    {
-        turret.refireDelay = 100;
-        turret.yawSpeed = 270.0f;
-        turret.pitchSpeed = 170.0f;
-        turret.gunOffset = 24;
-		
-        @turret.client = @client;
-        client.armor = client.armor - CTFT_TURRET_AP_COST;
 
-        @player.turret = @turret;
-        // have a delay before being able to build again
-        player.setEngineerCooldown();
-		
-		// Disabled since the ability to destroy a turret is added 
-		// (otherwise an engineer can gain scores by building a turret and immediately destroying it)
-        // client.stats.addScore( 2 );
-    }
+	client.armor -= CTFT_TURRET_AP_COST;
+
+	@player.bouncePad = bouncePad;
+	player.setEngineerCooldown();
 }
 
 void CTFT_DestroyTurret( Client @client, cPlayer @player )
@@ -143,6 +173,20 @@ void CTFT_DestroyTurret( Client @client, cPlayer @player )
 
 	player.turret.die( null, null );
 	@player.turret = null;
+	player.engineerBuildCooldownTime = 0;
+	client.armor += CTFT_TURRET_AP_COST;
+}
+
+void CTFT_DestroyBouncePad( Client @client, cPlayer @player )
+{
+	if ( @player.bouncePad == null )
+	{
+		client.printMessage( "There is no your bounce pad\n" );
+		return;
+	}
+
+	player.bouncePad.die( null, null );
+	@player.bouncePad = null;
 	player.engineerBuildCooldownTime = 0;
 	client.armor += CTFT_TURRET_AP_COST;
 }
@@ -448,7 +492,10 @@ void CTFT_Classaction1Command( Client @client )
 				player.useTranslocator();
 			break;
 		case PLAYERCLASS_ENGINEER:
-			CTFT_BuildTurret( client, player );
+			if ( @player.turret == null )
+				CTFT_BuildCommand( client, "turret", 1 );
+			else
+				CTFT_BuildCommand( client, "pad", 1 );
 			break;
 		case PLAYERCLASS_SUPPORT:
 			CTFT_ThrowSmokeGrenade( client, player );
@@ -481,7 +528,10 @@ void CTFT_Classaction2Command( Client @client )
 			CTFT_Blast( client, player );
 			break;
 		case PLAYERCLASS_ENGINEER:
-			CTFT_DestroyTurret( client, player );
+			if ( @player.bouncePad != null )
+				CTFT_DestroyCommand( client, "pad", 1 );
+			else
+				CTFT_DestroyCommand( client, "turret", 1 );
 			break;
 		case PLAYERCLASS_SUPPORT:
 			CTFT_SupplyAmmo( client, player );

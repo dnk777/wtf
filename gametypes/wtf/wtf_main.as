@@ -91,6 +91,11 @@ int prcAnnouncerFlagScoreTeam02;
 int prcAnnouncerFlagScoreEnemy01;
 int prcAnnouncerFlagScoreEnemy02;
 
+int prcBouncePadActivateSound;
+int prcBouncePadSpawnerModel;
+int prcBouncePadNormalModel;
+int prcBouncePadActivatedModel;
+
 bool firstSpawn = false;
 
 Cvar ctfAllowPowerupDrop( "ctf_powerupDrop", "0", CVAR_ARCHIVE );
@@ -779,10 +784,13 @@ void GT_PlayerRespawn( Entity @ent, int old_team, int new_team )
 		G_PrintMsg( ent, "^9Your turret gets destroyed when you switch to another class\n" );
 		G_PrintMsg( ent, "^9Be aware of your turret! It can be damaged, stunned or hacked.\n" );
 		G_PrintMsg( ent, "^9Destroy a turret and build a new one if your turret is heavily damaged\n" );
-		G_PrintMsg( ent, "Command ^6build turret^7: Spawn a turret\n" );
+		G_PrintMsg( ent, "^9You can buld a bounce pad that allows a player to bounce off it preserving his speed\n" );
+		G_PrintMsg( ent, "Command ^6build turret^7: Build a turret\n" );
 		G_PrintMsg( ent, "Command ^6destroy turret^7: Destroy a turret\n" );
-		G_PrintMsg( ent, "Generic command ^8classaction1^7: Same as ^6build turret^7\n" ); 
-		G_PrintMsg( ent, "Generic command ^8classaction2^7: Same as ^6destroy turret^7\n" );
+		G_PrintMsg( ent, "Command ^6build pad^7: Build a bounce pad\n" );
+		G_PrintMsg( ent, "Command ^6destroy pad^7: Destroy a bounce pad\n" );
+		G_PrintMsg( ent, "Generic command ^8classaction1^7: Builds a turret, then a bounce pad\n" ); 
+		G_PrintMsg( ent, "Generic command ^8classaction2^7: Destroys a bounce pad, then a turret\n" );
     }
 	else if ( player.playerClass.tag == PLAYERCLASS_SUPPORT )
 	{
@@ -1059,6 +1067,7 @@ void CTFT_SetUpMatch()
     CTFT_RemoveBombs();
 	CTFT_RemoveTranslocators();
 	CTFT_RemoveSmokeGrenades();
+	CTFT_RemoveBouncePads();
     CTFT_RemoveItemsByName("25 Health");
     CTFT_RemoveItemsByName("Yellow Armor");
     CTFT_RemoveItemsByName("5 Health");
@@ -1271,6 +1280,12 @@ void GT_InitGametype()
     G_ImageIndex( "models/wtf/reviver" );
     G_ImageIndex( "models/wtf/reviver_outline" );
     G_ImageIndex( "gfx/wtf/reviver_decal" );
+
+	// Bouncepad
+	prcBouncePadActivateSound = G_SoundIndex( "sounds/wtf/bouncepad", true );
+	prcBouncePadSpawnerModel = G_ModelIndex( "models/wtf/bouncepad_spawner.md3", true );
+	prcBouncePadNormalModel = G_ModelIndex( "models/wtf/bouncepad_normal.md3", true );
+	prcBouncePadActivatedModel = G_ModelIndex( "models/wtf/bouncepad_activated.md3", true );
 
 	// Smoke
 	G_ImageIndex( "gfx/wtf/wtf_smoke" );

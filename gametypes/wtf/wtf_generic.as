@@ -89,6 +89,21 @@ void CTFT_RemoveSmokeGrenades()
 		ents[i].freeEntity();
 }
 
+void CTFT_RemoveBouncePads()
+{
+	for ( int i = 0; i < MAX_BOUNCE_PADS; i++ )
+	{
+		if ( gtBouncePads[i].inuse )
+		{
+			if ( @gtBouncePads[i].player != null )
+			{
+				@gtBouncePads[i].player = null;
+			}
+			gtBouncePads[i].Free();
+		}
+	}
+}
+
 bool CTFT_RemoveItemsByName( String type )
 {
 	Item @tmp = G_GetItemByName( type );

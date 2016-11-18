@@ -365,7 +365,7 @@ class cTurret
 		// I'm not sure if it is the right approach to handle client left events
 		if ( @this.client != null )
 		{
-			if ( this.client.state() < CS_SPAWNED || this.client.getEnt().team < TEAM_ALPHA )
+			if ( this.client.state() < CS_SPAWNED || this.client.getEnt().team != this.bodyEnt.team )
 			{
 				cPlayer @player = GetPlayer( client );
 				if ( @player != null )
