@@ -216,9 +216,6 @@ class cReviver
 	void disable( Client @activator )
 	{
 		activator.printMessage( S_COLOR_CYAN + "You have disabled an enemy reviver!\n" );
-		// Disabling an enemy reviver hurts!
-		// Don't give a frag to the enemy (he was lame enough to get fragged).
-		activator.getEnt().sustainDamage( null, null, Vec3( 0, 0, -1 ), 75, 50, 500, 0 );
 		// Add respawn penalty delay for the dead player
 		this.player.respawnTime += CTFT_DISABLED_REVIVER_RESPAWN_PENALTY;
 		this.triggered = true;
