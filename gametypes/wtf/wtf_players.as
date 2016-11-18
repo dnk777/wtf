@@ -687,7 +687,7 @@ class cPlayer
 				continue;
 
 			float distance = this.ent.origin.distance( entity.origin );
-			float influence = 1.0f - 0.5f * distance / radius;
+			float influence = 1.0f - 0.3f * distance / radius;
 			
 			cPlayer @player = GetPlayer( entity.client );
 			player.medicInfluence += influence;
@@ -737,7 +737,7 @@ class cPlayer
 				continue;
 
 			float distance = this.ent.origin.distance( entity.origin );
-			float influence = 1.0f - 0.5f * distance / radius;
+			float influence = 1.0f - 0.3f * distance / radius;
 			
 			cPlayer @player = GetPlayer( entity.client );
 			player.supportInfluence += influence; 
@@ -819,13 +819,13 @@ class cPlayer
 		if ( this.medicInfluence > 0 )
 		{
 			if ( this.ent.health < this.ent.maxHealth )
-				this.ent.health += ( frameTime * this.medicInfluence * 0.017f );
+				this.ent.health += ( frameTime * this.medicInfluence * 0.021f );
 		}
 
 		if ( this.supportInfluence > 0 )
 		{
 			if ( this.client.armor < this.playerClass.maxArmor )
-				this.client.armor += ( frameTime * this.supportInfluence * 0.014f );
+				this.client.armor += ( frameTime * this.supportInfluence * 0.019f );
 		}
 
 		// Then, check class-specific regeneration
@@ -865,19 +865,12 @@ class cPlayer
 					else
 						armorGain = frameTime * 0.010f;
 				}
-				else if ( this.client.armor < 2.0f * ( maxArmor / 3.0f ) )
+				else if ( this.client.armor < maxArmor )
 				{
 					if ( this.isHealingTeammates )
 						armorGain = frameTime * 0.003f;
 					else
 						armorGain = frameTime * 0.004f;
-				}
-				else if ( this.client.armor < maxArmor )
-				{
-					if ( this.isHealingTeammates )
-						armorGain = frameTime * 0.0009f;
-					else
-						armorGain = frameTime * 0.0015f;
 				}
 
 				if ( ( this.ent.effects & EF_CARRIER ) != 0 )

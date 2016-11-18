@@ -53,8 +53,8 @@ float CTFT_TRANSLOCATOR_HEALTH = 99;
 float CTFT_RESPAWN_RADIUS = 384.0f;
 float CTFT_BUILD_RADIUS = 160.0f;
 float CTFT_BUILD_DESTROY_RADIUS = 96.0f;
-float CTFT_MEDIC_INFLUENCE_BASE_RADIUS = 168.0f;
-float CTFT_SUPPORT_INFLUENCE_BASE_RADIUS = 168.0f;
+float CTFT_MEDIC_INFLUENCE_BASE_RADIUS = 192.0f;
+float CTFT_SUPPORT_INFLUENCE_BASE_RADIUS = 192.0f;
 
 // More than the maximum damage the Runner can inflict in a single shot (he has a RL so it's 80).
 // We also want the blast to be a powerful weapon (because shots are rare) so add a bit more.
