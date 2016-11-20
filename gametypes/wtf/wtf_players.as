@@ -1156,14 +1156,14 @@ class cPlayer
             return;
         }
 
-        if ( this.client.armor < this.playerClass.armor + 5 )
+        if ( this.client.armor < ( this.playerClass.armor - 25 ) )
         {
             this.printMessage( "You don't have enough armor to spawn a Warshell\n" );
         }
         else
         {
-            this.client.armor -= ( this.playerClass.armor + 5 );
-            this.client.inventorySetCount( POWERUP_SHELL, CTFT_BATTLESUIT_GRUNT_TIME );
+            this.client.armor -= ( this.playerClass.armor - 25 );
+            this.client.inventorySetCount( POWERUP_SHELL, 4 );
             this.setGruntCooldown();
 
             G_Sound( this.ent, CHAN_MUZZLEFLASH, G_SoundIndex( "sounds/items/shell_spawn" ), 0.3f );

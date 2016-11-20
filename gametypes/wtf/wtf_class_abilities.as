@@ -286,7 +286,7 @@ void CTFT_ThrowClusterGrenade( Client @client, cPlayer @player )
         return;
     }
 
-    if ( client.armor < player.playerClass.armor + 5 )
+    if ( client.armor < ( player.playerClass.armor - 25 ) )
     {
         client.printMessage( "You don't have enough armor to throw a grenade\n" );
     }
@@ -295,7 +295,7 @@ void CTFT_ThrowClusterGrenade( Client @client, cPlayer @player )
         cBomb @bomb = ClientDropBomb( client );
         if ( @bomb != null )
         {
-            client.armor -= ( player.playerClass.armor + 5 );
+            client.armor -= ( player.playerClass.armor - 25 );
 			player.setGruntCooldown();
 			@player.bomb = bomb;
         }
