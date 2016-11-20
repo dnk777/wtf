@@ -616,9 +616,9 @@ class cPlayer
 			{
 				// Choose the best speed and add some bonus value
 				if ( this.playerClass.pmoveMaxSpeedInAir < this.playerClass.pmoveMaxSpeedOnGround )
-					this.client.pmoveMaxSpeed = this.playerClass.pmoveMaxSpeedOnGround + 10;
+					this.client.pmoveMaxSpeed = this.playerClass.pmoveMaxSpeedOnGround + 20;
 				else
-					this.client.pmoveMaxSpeed = this.playerClass.pmoveMaxSpeedInAir + 10;
+					this.client.pmoveMaxSpeed = this.playerClass.pmoveMaxSpeedInAir + 20;
 			}
 
 			this.ent.mass = 200;
