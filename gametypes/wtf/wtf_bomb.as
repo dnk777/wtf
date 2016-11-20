@@ -20,7 +20,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 const int MAX_BOMBS = 16;
 const uint BOMB_EXPLODE_DELAY = 300;
 const uint BOMB_EXPIRE_TIME = 2000; 
-const int NUM_WARHEADS = 9;
+const int NUM_WARHEADS = 13;
 
 cBomb[] gtBombs( MAX_BOMBS );
 
@@ -165,19 +165,24 @@ class cBomb
         this.bombEnt.splashDamage( this.player.ent, 225, 180, 125, 0, MOD_EXPLOSIVE );
 
 		float angularStep = 360.0f / NUM_WARHEADS;
-		int speedDelta = 50;
-		Vec3 angles( -50.0f, -180.0f, 0 );
+		int speedDelta = 75;
+		int pitchDelta = 10;
+		int thinkDelta = -150;
+		Vec3 angles( -50.0f + pitchDelta, -180.0f, 0 );
         for ( int i = 0; i < NUM_WARHEADS; i++ )
         {
-            Entity @nade = @G_FireGrenade( bombOrigin, angles, 325 + speedDelta, 150, 70, 100, 500, player.client.getEnt() );
+            Entity @nade = @G_FireGrenade( bombOrigin, angles, 325 + speedDelta, 150, 75, 100, 500, player.client.getEnt() );
             if ( @nade != null )
             {
                 nade.modelindex = G_ModelIndex( "models/objects/projectile/glauncher/grenadeweak.md3", false );
-                // make nades explode after 750..1250 millis
-                nade.nextThink = levelTime + 750 + uint(500 * random());
+				// Randomize explosion time a bit to prevent generating too many events per frame                
+				nade.nextThink = uint(levelTime + 600 + thinkDelta + 60 * random());
             }
 			angles.y += angularStep;
 			speedDelta = -speedDelta;
+			pitchDelta = -pitchDelta;
+			thinkDelta = -thinkDelta;
+			angles.x += pitchDelta;
         }
 
         this.Free();
