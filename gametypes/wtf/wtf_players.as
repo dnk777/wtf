@@ -1165,13 +1165,14 @@ class cPlayer
             return;
         }
 
-        if ( this.client.armor < ( this.playerClass.armor - 25 ) )
+		// Costs same as a cluster grenade
+        if ( this.client.armor < CTFT_CLUSTER_GRENADE_AP_COST )
         {
             this.printMessage( "You don't have enough armor to spawn a Warshell\n" );
         }
         else
         {
-            this.client.armor -= ( this.playerClass.armor - 25 );
+            this.client.armor -= CTFT_CLUSTER_GRENADE_AP_COST;
             this.client.inventorySetCount( POWERUP_SHELL, 4 );
             this.setGruntCooldown();
 
