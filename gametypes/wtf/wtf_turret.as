@@ -285,10 +285,12 @@ class cTurret
 
         if ( @this.client != null )
         {
-			G_CenterPrintMsg( this.client.getEnt(), S_COLOR_RED + "Your turret has been destroyed!\n" );
             cPlayer @player = GetPlayer( this.client );
             if ( @player != null )
+			{
+				player.centerPrintMessage( S_COLOR_RED + "Your turret has been destroyed!\n" );
                 @player.turret = null;
+			}
         }
 
         this.Free();
@@ -620,16 +622,16 @@ class cTurret
 		// Check for stunning blast
 		if ( @attacker.client != null && damage == CTFT_BLAST_DAMAGE )
 		{
-			cPlayer @player = GetPlayer( attacker.client );
-			if ( @player != null && player.playerClass.tag == PLAYERCLASS_SUPPORT )
+			cPlayer @attackerPlayer = GetPlayer( attacker.client );
+			if ( attackerPlayer.playerClass.tag == PLAYERCLASS_SUPPORT )
 			{
 				this.stunnedTimeoutAt = levelTime + CTFT_TURRET_STUN_TIME;
 				if ( !wasStunned && @this.client != null )
 				{
-        			if ( GetPlayer( this.client ).playerClass.tag == PLAYERCLASS_ENGINEER
-                		&& this.client.getEnt().team == this.bodyEnt.team )
+					cPlayer @ownerPlayer = GetPlayer( this.client );
+					if ( ownerPlayer.playerClass.tag == PLAYERCLASS_ENGINEER && ownerPlayer.ent.team == this.bodyEnt.team )
         			{
-            			G_CenterPrintMsg( client.getEnt(), S_COLOR_RED + "Your turret is stunned!" );
+						ownerPlayer.centerPrintMessage( S_COLOR_RED + "Your turret is stunned!" );
 						stunReported = true;
         			}
 				}
@@ -645,10 +647,10 @@ class cTurret
 
         if ( !stunReported && @this.client != null )
         {
-            if ( GetPlayer( this.client ).playerClass.tag == PLAYERCLASS_ENGINEER
-                    && this.client.getEnt().team == this.bodyEnt.team )
+			cPlayer @ownerPlayer = GetPlayer( this.client );
+            if ( ownerPlayer.playerClass.tag == PLAYERCLASS_ENGINEER && ownerPlayer.ent.team == this.bodyEnt.team )
             {
-                G_CenterPrintMsg( client.getEnt(), S_COLOR_RED + "Your turret is being damaged!" );
+                ownerPlayer.centerPrintMessage( S_COLOR_RED + "Your turret is being damaged!" );
             }
         }
     }
@@ -726,8 +728,9 @@ class cTurret
 
 		if ( @oldOwner != null )
 		{
-			@GetPlayer( oldOwner ).turret = null;
-			G_CenterPrintMsg( oldOwner.getEnt(), S_COLOR_RED + "Your turret has been hacked!" );
+			cPlayer @player = GetPlayer( oldOwner );
+			@player.turret = null;
+			player.centerPrintMessage( S_COLOR_RED + "Your turret has been hacked!" );
 		}
 
 		G_Sound( this.bodyEnt, CHAN_AUTO, G_SoundIndex( "sounds/misc/timer_bip_bip" ), 0.8f );

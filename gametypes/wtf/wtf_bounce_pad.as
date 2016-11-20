@@ -177,7 +177,7 @@ class cBouncePad
 			return;
 
 		if ( @this.player != null )
-			G_CenterPrintMsg( this.player.ent, S_COLOR_RED + "Your bounce pad has been destroyed\n" );
+			this.player.centerPrintMessage( S_COLOR_RED + "Your bounce pad has been destroyed\n" );
 
         this.Free();
     }

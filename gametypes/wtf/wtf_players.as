@@ -57,6 +57,8 @@ class cPlayer
     int invisibilityWasUsingWeapon;
     uint invisibilityCooldownTime;
     uint hudMessageTimeout;
+	uint nextTipDescriptionLine;
+	uint nextTipTime;
 
     cPlayer @deadcamMedic;
     uint deadcamMedicScanTime;
@@ -108,6 +110,8 @@ class cPlayer
         this.invisibilityLoad = 0;
         this.invisibilityCooldownTime = 0;
         this.hudMessageTimeout = 0;
+		this.nextTipDescriptionLine = 0;
+		this.nextTipTime = 0;
         this.deadcamMedicScanTime = 0;
 
         this.invisibilityWasUsingWeapon = -1;
@@ -117,6 +121,14 @@ class cPlayer
     {
         this.client.printMessage( string );
     }
+
+	// Should be used for printing important messages. Defers next tip (if any).
+	void centerPrintMessage( String &string )
+	{
+		G_CenterPrintMsg( this.ent, string );
+		if ( this.nextTipTime >= levelTime && levelTime - this.nextTipTime < 2500 )
+			this.nextTipTime = levelTime + 2500;
+	}
 
     void setHudMessage( String &message, int timeout, int placement )
     {
@@ -558,7 +570,7 @@ class cPlayer
 				// if the translocator has been killed during translocation
 				if ( @this.translocator == null )
 				{
-					G_CenterPrintMsg( this.ent, S_COLOR_RED + "Your translocator was destroyed!\n" );
+					this.centerPrintMessage( S_COLOR_RED + "Your translocator was destroyed!\n" );
 					this.ent.linkEntity();
 					// kill player
 					this.ent.sustainDamage( null, null, Vec3( 0, 0, 1 ), 9999.0f, 50.0f, 1000.0f, 0 );
@@ -566,7 +578,7 @@ class cPlayer
 				// if the translocator is damaged	
 				else if ( this.translocator.bodyEnt.health < CTFT_TRANSLOCATOR_HEALTH )
 				{
-					G_CenterPrintMsg( this.ent, S_COLOR_RED + "Your translocator was damaged!\n" );
+					this.centerPrintMessage( S_COLOR_RED + "Your translocator was damaged!\n" );
 					this.ent.linkEntity();
 					// kill player
 					this.ent.sustainDamage( null, null, Vec3( 0, 0, 1 ), 9999.0f, 50.0f, 1000.0f, 0 );
@@ -789,7 +801,7 @@ class cPlayer
 			this.hasReceivedAmmo = false;
 
 			if ( !this.hasPendingSupplyAmmoCommand )
-				G_CenterPrintMsg( this.ent, S_COLOR_CYAN + "A teammate gave you some ammo!\n" );
+				this.centerPrintMessage( S_COLOR_CYAN + "A teammate gave you some ammo!\n" );
 		}
 
 		if ( this.hasReceivedAdrenaline )
@@ -799,7 +811,7 @@ class cPlayer
 			this.hasReceivedAdrenaline = false;
 
 			if ( !this.hasPendingSupplyAdrenalineCommand )
-				G_CenterPrintMsg( this.ent, S_COLOR_MAGENTA + "You gained some adrenaline! Be quick!\n" );
+				this.centerPrintMessage( S_COLOR_MAGENTA + "You gained some adrenaline! Be quick!\n" );
 		}
 
 		this.hasPendingSupplyAmmoCommand = false;
@@ -1175,9 +1187,9 @@ class cPlayer
         if ( this.client.inventoryCount( POWERUP_SHELL ) > 0 )
         {
             if ( this.client.inventoryCount( POWERUP_SHELL ) == 1 )
-                G_CenterPrintMsg( this.ent, "Protection weared off" );
+                this.centerPrintMessage( "Protection weared off" );
             else
-                G_CenterPrintMsg( this.ent, "Warshell wearing off in " + this.client.inventoryCount( POWERUP_SHELL ) + " seconds" );
+                this.centerPrintMessage( "Warshell wearing off in " + this.client.inventoryCount( POWERUP_SHELL ) + " seconds" );
         }
     }
 
@@ -1410,6 +1422,32 @@ class cPlayer
 		this.engineerBuildCooldownTime = 0;
 		// Return armor spent on throwing a bounce pad spawner
 		client.armor += CTFT_TURRET_AP_COST;
+	}
+
+	void printDescription()
+	{
+		// Print all description lines to the players's console
+		for ( uint i = 0; i < this.playerClass.description.size(); ++i )
+			G_PrintMsg( this.ent, this.playerClass.description[i] );
+	}
+
+	void printNextTip()
+	{
+		if ( this.ent.isGhosting() )
+			return;
+
+		if ( match.getState() > MATCH_STATE_WARMUP )
+			return;
+
+		if ( this.nextTipTime > levelTime )
+			return;
+
+		if ( this.nextTipDescriptionLine >= this.playerClass.description.size() )
+			return;
+
+		G_CenterPrintMsg( this.ent, this.playerClass.description[this.nextTipDescriptionLine] );
+		this.nextTipDescriptionLine++;
+		this.nextTipTime = levelTime + 2400;
 	}
 }
 

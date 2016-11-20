@@ -57,6 +57,8 @@ class cPlayerClass
     int action1IconIndex;
     int action2IconIndex;
 
+	const String[] @description;
+
     cPlayerClass()
     {
 		this.pmoveMaxSpeedInAir = -1;
@@ -78,7 +80,8 @@ class cPlayerClass
 
 	void setup( String &class_name, int tag, String &model, int health, int armor, int maxArmor, 
 				int maxSpeedInAir, int maxSpeedOnGround, int dashSpeed, bool stun, 
-				const String &icon, const String @action1Icon, const String @action2Icon )
+				const String &icon, const String @action1Icon, const String @action2Icon, 
+			    const String[] @description )
     {
         this.name = class_name;
         this.playerModel = model;
@@ -103,6 +106,8 @@ class cPlayerClass
         if( @action2Icon != null )
             this.action2IconIndex = G_ImageIndex( action2Icon );
 
+		@this.description = description;
+
         this.initialized = true;
     }
 }
@@ -121,6 +126,82 @@ const int SLOW_DASH_SPEED = 380;
 const int FAST_MAX_SPEED_IN_AIR = 280;
 const int FAST_MAX_SPEED_ON_GROUND = 320;
 const int FAST_DASH_SPEED = 450;
+
+// AS does not have array literals, so we have to define descriptions separately
+
+const String[] gruntDescription =
+{
+	"You're spawned as ^1GRUNT^7. This is a tank class with slow movement, strong armor and weapons.\n",
+    "Command ^6altattack^7: Throw a cluster grenade\n",
+	"Command ^6protect^7: Use a protection Warshell\n",
+	"Generic command ^8classaction1^7: Same as ^6protect^7\n",
+	"Generic command ^8classaction2^7: Same as ^6altattack^7\n" 
+};
+
+const String[] medicDescription =
+{
+	"You're spawned as ^2MEDIC^7. This is a supportive class with health regenration\n",
+	"You heal teammates in your aura radius\n",
+	"You can revive dead teammates by walking over their reviver marker\n",
+	"You can disable enemy revivers by walking over their reviver marker\n",
+	"Command ^6supply^7: Give an adrenaline yourself and teammates in your aura\n",
+	"The adrenaline boosts teammates speed for a couple of seconds\n",
+	"Generic command ^8classaction1^7: Same as ^6supply^7\n",
+	"Generic command ^8classaction2^7: Same as ^6supply^7\n"
+};
+
+const String[] runnerDescription =
+{
+	"You're spawned as ^3RUNNER^7. This is the fastest offensive class.\n",
+	"Command ^6protect^7: Throw a smoke grenade\n",
+	"Command ^6trans throw^7: Throw (or return and throw) a translocator\n",
+	"Command ^6trans check^7: Check the translocator status\n",
+	"Command ^6trans return^7: Force returning a translocator\n",
+	"Command ^6trans use^7: Teleport to the translocator origin\n",
+	"A translocator gets returned automatically in a few seconds\n",
+	"When a translocator is returned, your armor points spent on throwing it are restored\n",
+	"Your translocator may be damaged. Consider checking it first before using it.\n",
+	"Generic command ^8classaction1^7: Throws your translocator, if it is thrown uses it\n",
+	"Generic command ^8classaction2^7: Same as ^6protect^7\n"
+};
+
+const String[] engineerDescription =
+{
+	"You're spawned as ^8ENGINEER^7. This is a defencive class with an ability to build entities.\n",
+	"You can build a single turret that fires bullets and rockets\n",
+	"Your turret gets destroyed when you switch to another class\n",
+	"Be aware of your turret! It can be damaged, stunned or hacked.\n",
+	"Destroy a turret and build a new one if your turret is heavily damaged\n",
+	"You can buld a bounce pad that allows a player to bounce off it preserving his speed\n",
+	"Command ^6build turret^7: Build a turret\n",
+	"Command ^6destroy turret^7: Destroy a turret\n",
+	"Command ^6build pad^7: Build a bounce pad\n",
+	"Command ^6destroy pad^7: Destroy a bounce pad\n",
+	"Commands ^6build status^7, ^6destroy status^7: Print a status of built entities\n",
+	"Generic command ^8classaction1^7: Builds a turret, then a bounce pad\n",
+	"Generic command ^8classaction2^7: Destroys a bounce pad, then a turret\n" 
+};
+
+const String[] supportDescription =
+{
+	"You're spawned as ^4SUPPORT^7. This is a supportive class with armor regeneration.\n",
+	"You repair teammates armor in your aura radius\n",
+	"Command ^6altattack^7: Fire a powerful energy blast that hurts enemies and stuns turrets\n",
+	"Consider setting ^2cg_particles 1^7 to make the blast clearly visible\n",
+	"Command ^6supply^7: Give ammo yourself and teammates in your aura\n",
+	"Generic command ^8classaction1^7: Same as ^6altattack^7\n",
+	"Generic command ^8classaction2^7: Same as ^6supply^7\n" 
+};
+
+const String[] sniperDescription =
+{
+	"You're spawned as ^5SNIPER^7. This is a defencive class with best weapons for far-range fights.\n",
+	"Command ^6protect^7: Toggle invisibility\n",
+	"Command ^6supply^7: Buy an instagun shot\n",
+	"You can't carry more than 3 instagun shots\n",
+	"Generic command ^8classaction1^7: Same as ^6protect^7\n", 
+	"Generic command ^8classaction2^7: Same as ^6supply^7\n" 
+};
 
 // Initialize player classes
 
@@ -145,7 +226,8 @@ void GENERIC_InitPlayerClasses()
         true,						// can be stunned
         "gfx/wtf/wtf_grunt",
         "gfx/wtf/wtf_grunt1",
-        "gfx/wtf/wtf_grunt2"
+        "gfx/wtf/wtf_grunt2",
+		gruntDescription
     );
 
     cPlayerClassInfos[ PLAYERCLASS_MEDIC ].setup(
@@ -161,7 +243,8 @@ void GENERIC_InitPlayerClasses()
         true,						// can be stunned
         "gfx/wtf/wtf_medic",
         "gfx/wtf/medic1",
-        null
+        null,
+		medicDescription
     );
 
     cPlayerClassInfos[ PLAYERCLASS_RUNNER ].setup(
@@ -177,7 +260,8 @@ void GENERIC_InitPlayerClasses()
         false,						// can be stunned
         "gfx/wtf/wtf_runner",
         "gfx/wtf/runner1",
-        "gfx/wtf/runner2"
+        "gfx/wtf/runner2",
+		runnerDescription
     );
 
     cPlayerClassInfos[ PLAYERCLASS_ENGINEER ].setup(
@@ -193,7 +277,8 @@ void GENERIC_InitPlayerClasses()
         true,						// can be stunned
         "gfx/wtf/wtf_engineer",
         "gfx/wtf/engineer1",
-        "gfx/wtf/engineer2"
+        "gfx/wtf/engineer2",
+		engineerDescription
     );
 
 	cPlayerClassInfos[ PLAYERCLASS_SUPPORT ].setup(
@@ -209,7 +294,8 @@ void GENERIC_InitPlayerClasses()
 		true,                       // can be stunned
 		"gfx/wtf/wtf_support",
 		null,
-		null
+		null,
+		supportDescription
 	);
 
 	cPlayerClassInfos[ PLAYERCLASS_SNIPER ].setup(
@@ -225,7 +311,8 @@ void GENERIC_InitPlayerClasses()
 		true,                         // can be stunned
 		"gfx/wtf/wtf_sniper",
 		null,
-		null	
+		null,
+		sniperDescription
 	);
 }
 
