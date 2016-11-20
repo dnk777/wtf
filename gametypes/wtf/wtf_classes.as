@@ -112,12 +112,12 @@ cPlayerClass[] cPlayerClassInfos( PLAYERCLASS_TOTAL );
 // All classes (with an exception to the Runner that stands alone)
 // can be divided in two these groups by movement parameters.
 
-// "Slow" classes (the Grunt and the Sniper)
+// "Slow" classes (the Grunt, the Engineer and the Sniper)
 const int SLOW_MAX_SPEED_IN_AIR = 240;
 const int SLOW_MAX_SPEED_ON_GROUND = 300;
 const int SLOW_DASH_SPEED = 380;
 
-// "Fast" classes (the Medic, the Support and the Engineer)
+// "Fast" classes (the Medic and the Support)
 const int FAST_MAX_SPEED_IN_AIR = 280;
 const int FAST_MAX_SPEED_ON_GROUND = 320;
 const int FAST_DASH_SPEED = 450;
@@ -187,9 +187,9 @@ void GENERIC_InitPlayerClasses()
         100,						// initial health
         50,						    // initial armor
 		75,                         // max armor
-        FAST_MAX_SPEED_IN_AIR,
-		FAST_MAX_SPEED_ON_GROUND,
-		FAST_DASH_SPEED,
+        SLOW_MAX_SPEED_IN_AIR,
+		SLOW_MAX_SPEED_ON_GROUND,
+		SLOW_DASH_SPEED,
         true,						// can be stunned
         "gfx/wtf/wtf_engineer",
         "gfx/wtf/engineer1",
