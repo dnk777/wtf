@@ -1215,11 +1215,13 @@ class cPlayer
 			{
 		    	client.inventorySetCount( AMMO_PLASMA, 100 );
 				client.inventorySetCount( AMMO_BULLETS, 125 );
+				client.inventorySetCount( AMMO_GRENADES, 7 );
 			}
 			else
 			{
 				this.checkAndLoadAmmo( AMMO_PLASMA, 50 );
 				this.checkAndLoadAmmo( AMMO_BULLETS, 75 );
+				this.checkAndLoadAmmo( AMMO_GRENADES, 4 );
 			}
 		}
 		else if ( this.playerClass.tag == PLAYERCLASS_GRUNT )

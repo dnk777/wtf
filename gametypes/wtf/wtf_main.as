@@ -748,6 +748,7 @@ void GT_PlayerRespawn( Entity @ent, int old_team, int new_team )
         // Weapons
         client.inventoryGiveItem( WEAP_PLASMAGUN );
         client.inventoryGiveItem( WEAP_MACHINEGUN );
+		client.inventoryGiveItem( WEAP_GRENADELAUNCHER );
 
         G_PrintMsg( ent, "You're spawned as ^2MEDIC^7. This is a supportive class with health regenration\n" );
 		G_PrintMsg( ent, "^9You heal teammates in 192 units of your aura\n" );
