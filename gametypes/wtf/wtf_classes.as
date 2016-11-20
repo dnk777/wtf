@@ -113,14 +113,14 @@ cPlayerClass[] cPlayerClassInfos( PLAYERCLASS_TOTAL );
 // can be divided in two these groups by movement parameters.
 
 // "Slow" classes (the Grunt and the Sniper)
-const int SLOW_MAX_SPEED_IN_AIR = 230;
+const int SLOW_MAX_SPEED_IN_AIR = 240;
 const int SLOW_MAX_SPEED_ON_GROUND = 300;
-const int SLOW_DASH_SPEED = 370;
+const int SLOW_DASH_SPEED = 380;
 
 // "Fast" classes (the Medic, the Support and the Engineer)
-const int FAST_MAX_SPEED_IN_AIR = 270;
+const int FAST_MAX_SPEED_IN_AIR = 280;
 const int FAST_MAX_SPEED_ON_GROUND = 320;
-const int FAST_DASH_SPEED = 430;
+const int FAST_DASH_SPEED = 450;
 
 // Initialize player classes
 
