@@ -43,6 +43,8 @@ cTurret[] gtTurrets( MAX_TURRETS );
 
 Vec3 turretMins( -16, -16, -16 ), turretMaxs( 16, 16, 40 );
 
+const uint CTFT_TURRET_HACK_MILLIS = 1150;
+
 class cTurret
 {
     bool inuse;
@@ -55,6 +57,7 @@ class cTurret
 
     Entity @enemy;	// located target
     Entity @invisibleEnemy;
+	Entity @hacker; // who is hacking the turret right now
     uint invisibleEnemySince;
     uint invisibleEnemyReactionTime;
     int invisibilityAlarmSoundIndex;
@@ -63,6 +66,9 @@ class cTurret
 	uint lastRocketFireTime;
 	uint rocketReloadTime;
 	uint stunnedTimeoutAt;
+	uint lastHackerTouchTime;
+	uint hackMillisAccumulated;
+	bool isBeingHacked;
 
     float gunOffset;	// height of the gun relative to the rotator
     int flashTime;		// duration of the muzzleflash
@@ -102,6 +108,7 @@ class cTurret
         @this.client = null;
         @this.enemy = null;
         @this.invisibleEnemy = null;
+		@this.hacker = null;
         this.invisibleEnemySince = 0;
         this.invisibleEnemyReactionTime = 125;
         this.invisibilityAlarmSoundIndex = G_SoundIndex( "sounds/misc/timer_bip_bip" );
@@ -110,6 +117,8 @@ class cTurret
 		this.lastRocketFireTime = 0;
 		this.rocketReloadTime = 800;
 		this.stunnedTimeoutAt = 0;
+		this.lastHackerTouchTime = 0;
+		this.hackMillisAccumulated = 0;
         this.gunOffset = 8;
         this.flashTime = 100;
         this.yawSpeed = 100.0f;
@@ -187,7 +196,7 @@ class cTurret
 
         // start aiming to the same angles the turret spawns
         this.idleAngles = Vec3( 0, yawAngle, 0 );
-        this.targetLocationTime = levelTime + 5000; // wait some time before start tracking
+        this.targetLocationTime = levelTime + 2000; // wait some time before start tracking
         this.firedTime = this.targetLocationTime;
         @this.enemy = null;
 
@@ -412,7 +421,14 @@ class cTurret
 		this.gunEnt.effects &= ~EF_GODMODE;
 		this.bodyEnt.effects &= ~EF_GODMODE;
 
-        // scan for targets
+		// if the turret has been just hacked return
+		if ( this.checkHacked() )
+		{
+			this.bodyEnt.nextThink = levelTime + 1;
+			return;
+		}
+
+        // scan for targets and hackers
         this.scan();
 
         if( @this.invisibleEnemy != null )
@@ -576,6 +592,24 @@ class cTurret
 		return true;
 	}
 
+	void touch( Entity @other )
+	{
+		if ( @other == null )
+			return;
+
+		if ( @other.client == null )
+			return;
+
+		if ( other.team == this.bodyEnt.team )
+			return;
+
+		if ( @this.client != null && levelTime - this.lastHackerTouchTime > 500 )
+			G_CenterPrintMsg( this.client.getEnt(), S_COLOR_RED + "Your turret is being hacked!" );			
+
+		@this.hacker = other;
+		this.lastHackerTouchTime = levelTime;
+	}
+
     void pain( Entity @attacker, float kick, float damage )
     {
         if ( !this.inuse || @this.bodyEnt == null )
@@ -618,6 +652,86 @@ class cTurret
             }
         }
     }
+
+	bool checkHacked()
+	{
+		// Prevent hacking by dead players
+		if ( @this.hacker == null || this.hacker.isGhosting() )
+		{
+			this.hackMillisAccumulated = 0;
+			@this.hacker == null;
+			return false;
+		}
+
+		// A hacker should have been touching the turret for CTFT_TURRET_HACK_MILLIS period
+
+		// We can't accumulate time in this.touch() because it gets called only on first touch 
+		// except when the turret body is a ground entity for the hacker 
+
+		// In case when the hacker stands on the turret body we can skip G_FindInRadius call
+		if ( @this.hacker.groundEntity == @this.bodyEnt )
+		{
+			this.hackMillisAccumulated += frameTime;
+		}
+		else
+		{
+			bool isHacking = false;
+			array<Entity @> @inradius = @G_FindInRadius( this.bodyEnt.origin, 64.0f );
+			for ( uint i = 0; i < inradius.size(); ++i )
+			{
+				if ( @inradius[i] == @this.hacker )
+				{
+					isHacking = true;
+					break;
+				}
+			}
+			if ( !isHacking )
+			{
+				this.hackMillisAccumulated = 0;
+				@this.hacker = null;
+				return false;
+			}
+			this.hackMillisAccumulated += frameTime;
+		}
+
+		if ( this.hackMillisAccumulated < CTFT_TURRET_HACK_MILLIS )
+			return false;
+
+		this.hackMillisAccumulated = 0;
+		this.hackedBy( this.hacker );
+		@this.hacker = null;
+		return true;
+	}
+
+	void hackedBy( Entity @hacker )
+	{
+		// Do not set turret owner to the client, just set new team
+		// (only engineers can be turret owners and a player of any class can touch a turret).
+
+		this.bodyEnt.team = hacker.team;
+		this.gunEnt.team = hacker.team;
+		this.flashEnt.team = hacker.team;
+
+		// Also prevent destroying it by the old owner
+		Client @oldOwner = this.client;
+		@this.client = null;
+
+		// Reset turret's enemy
+		@this.enemy = null;
+		@this.invisibleEnemy = null;
+		this.targetLocationTime = levelTime + 1000;
+
+		hacker.client.addAward( S_COLOR_MAGENTA + "Hacker!" );
+		hacker.client.stats.addScore( 10 );
+
+		if ( @oldOwner != null )
+		{
+			@GetPlayer( oldOwner ).turret = null;
+			G_CenterPrintMsg( oldOwner.getEnt(), S_COLOR_RED + "Your turret has been hacked!" );
+		}
+
+		G_Sound( this.bodyEnt, CHAN_AUTO, G_SoundIndex( "sounds/misc/timer_bip_bip" ), 0.8f );
+	}
 }
 
 // helper function.
@@ -643,46 +757,8 @@ void turret_body_think( Entity @self )
 
 void turret_body_touch( Entity @self, Entity @other, const Vec3 planeNormal, int surfFlags )
 {
-	if ( @other == null )
-		return;
-
-    if ( @other.client == null )
-        return;
-
-	if( self.team == other.team )
-		return;
-
-	if( self.count < 0 || self.count >= maxClients )
-		return;
-
-	cTurret @turret = gtTurrets[self.count];
-		
-	// Do not set turret owner to the client, just set new team
-    // (only engineers can be turret owners and a player of any class can touch a turret).
-	
-	turret.bodyEnt.team = other.team;
-	turret.gunEnt.team = other.team;
-	turret.flashEnt.team = other.team;
-
-	// Also prevent destroying it by the old owner 
-	Client @oldOwner = turret.client;
-	@turret.client = null;
-
-	// Reset turret's enemy
-	@turret.enemy = null;
-	@turret.invisibleEnemy = null;
-	turret.targetLocationTime = levelTime + 1000;
-	
-	other.client.addAward( S_COLOR_MAGENTA + "Hacker!" );
-	other.client.stats.addScore( 10 );
-
-	if ( @oldOwner != null )
-	{
-		@GetPlayer( oldOwner ).turret = null;
-		G_CenterPrintMsg( oldOwner.getEnt(), S_COLOR_RED + "Your turret has been hacked!\n" );
-	}
-
-	G_Sound( self, CHAN_AUTO, G_SoundIndex( "sounds/misc/timer_bip_bip" ), 0.8f );
+	if( self.count >= 0 || self.count < maxClients )
+		gtTurrets[self.count].touch( other );
 }
 
 void turret_body_die( Entity @self, Entity @inflictor, Entity @attacker )
