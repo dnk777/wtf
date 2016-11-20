@@ -46,10 +46,11 @@ uint CTFT_INVISIBILITY_COOLDOWN = 1000;
 uint CTFT_GRUNT_ABILITY_COOLDOWN = 8000;
 uint CTFT_FLAG_DISPENSER_COOLDOWN_TIME = 30000;
 int CTFT_MEDIC_COOLDOWN = 1200;
-int CTFT_SUPPORT_COOLDOWN = 1750;
+int CTFT_SUPPORT_COOLDOWN = 1250;
 int CTFT_RUNNER_ABILITY_COOLDOWN = 1250;
-int CTFT_BLAST_AP_COST = 5;
-int CTFT_TRANSLOCATOR_AP_COST = 20;
+int CTFT_BLAST_AP_COST = 15;
+int CTFT_TRANSLOCATOR_AP_COST = 15;
+int CTFT_SMOKE_GRENADE_AP_COST = 30;
 float CTFT_TRANSLOCATOR_HEALTH = 99;
 float CTFT_RESPAWN_RADIUS = 384.0f;
 float CTFT_BUILD_RADIUS = 160.0f;
@@ -730,8 +731,7 @@ void GT_PlayerRespawn( Entity @ent, int old_team, int new_team )
         client.inventoryGiveItem( WEAP_RIOTGUN );
 
         G_PrintMsg( ent, "You're spawned as ^3RUNNER^7. This is the fastest offensive class.\n" );
-		G_PrintMsg( ent, "Command ^6altattack^7: Fire a powerful energy blast that hits enemies and stuns turrets\n" );
-		G_PrintMsg( ent, "^9Consider setting ^2cg_particles 1^9 to make the blast clearly visible\n" );
+		G_PrintMsg( ent, "Command ^protect^7: Throw a smoke grenade\n" );
 		G_PrintMsg( ent, "Command ^6trans throw^7: Throw (or return and throw) a translocator\n" );
 		G_PrintMsg( ent, "Command ^6trans check^7: Check the translocator status\n" );
 		G_PrintMsg( ent, "Command ^6trans return^7: Force returning a translocator\n" );
@@ -740,7 +740,7 @@ void GT_PlayerRespawn( Entity @ent, int old_team, int new_team )
 		G_PrintMsg( ent, "^9When a translocator is returned, your armor points spent on throwing it are restored\n" );
 		G_PrintMsg( ent, "^9Your translocator may be damaged. Consider checking it first before using it.\n" );
 		G_PrintMsg( ent, "Generic command ^8classaction1^7: Throws your translocator, if it is thrown uses it\n" );
-		G_PrintMsg( ent, "Generic command ^8classaction2^7: Same as ^6altattack^7\n" ); 
+		G_PrintMsg( ent, "Generic command ^8classaction2^7: Same as ^6protect^7\n" );
     }
     // Medic
     else if ( player.playerClass.tag == PLAYERCLASS_MEDIC )
@@ -770,7 +770,7 @@ void GT_PlayerRespawn( Entity @ent, int old_team, int new_team )
         G_PrintMsg( ent, "You're spawned as ^1GRUNT^7. This is a tank class with slow movement, strong armor and weapons.\n");
         G_PrintMsg( ent, "Command ^6altattack^7: Throw a cluster grenade\n" );
 		G_PrintMsg( ent, "Command ^6protect^7: Use a protection Warshell\n" );
-		G_PrintMsg( ent, "Generic command ^8classaction1^7: Same as ^6protect^7\n" ); 
+		G_PrintMsg( ent, "Generic command ^8classaction1^7: Same as ^6protect^7\n" );
 		G_PrintMsg( ent, "Generic command ^8classaction2^7: Same as ^6altattack^7\n" );
     }
     // Engineer
@@ -803,9 +803,10 @@ void GT_PlayerRespawn( Entity @ent, int old_team, int new_team )
 
 		G_PrintMsg( ent, "You're spawned as ^8SUPPORT^7. This is a supportive class with armor regeneration.\n" );
 		G_PrintMsg( ent, "^9You repair teammates armor in 192 units of your aura\n" );
-		G_PrintMsg( ent, "Command ^6protect^7: Throw a smoke grenade\n" );
+		G_PrintMsg( ent, "Command ^6altattack^7: Fire a powerful energy blast that hurts enemies and stuns turrets\n" );
+		G_PrintMsg( ent, "^9Consider setting ^2cg_particles 1^9 to make the blast clearly visible\n" );
 		G_PrintMsg( ent, "Command ^6supply^7: Give ammo yourself and teammates in your aura\n" );
-		G_PrintMsg( ent, "Generic command ^8classaction1^7: Same as ^6protect^7\n" ); 
+		G_PrintMsg( ent, "Generic command ^8classaction1^7: Same as ^6altattack^7\n" );
 		G_PrintMsg( ent, "Generic command ^8classaction2^7: Same as ^6supply^7\n" );
 	}
 	else if ( player.playerClass.tag == PLAYERCLASS_SNIPER )

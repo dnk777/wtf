@@ -173,12 +173,6 @@ class cPlayer
             this.client.setHUDStat( STAT_PROGRESS_SELF, int( frac * 100 ) );
         }
 
-		if ( this.isRunnerAbilityCooldown() )
-		{
-			frac = float( this.runnerCooldownTimeLeft() ) / float( CTFT_RUNNER_ABILITY_COOLDOWN );
-            this.client.setHUDStat( STAT_PROGRESS_SELF, int( frac * 100 ) );
-		}
-
         if ( this.playerClass.tag == PLAYERCLASS_SNIPER && this.invisibilityLoad > 0 )
         {
             frac = this.invisibilityLoad / CTFT_SNIPER_INVISIBILITY_MAXLOAD;

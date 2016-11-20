@@ -262,7 +262,7 @@ void CTFT_AltAttackCommand( Client @client, const String &argsString, int argc )
 		return;
 	}
 
-	if ( player.playerClass.tag == PLAYERCLASS_RUNNER )
+	if ( player.playerClass.tag == PLAYERCLASS_SUPPORT )
 	{
 		CTFT_Blast( client, player );
 		return;
@@ -304,19 +304,13 @@ void CTFT_ThrowClusterGrenade( Client @client, cPlayer @player )
 
 void CTFT_ThrowSmokeGrenade( Client @client, cPlayer @player )
 {
-	if ( player.playerClass.tag != PLAYERCLASS_SUPPORT )
+	if ( player.playerClass.tag != PLAYERCLASS_RUNNER )
 	{
 		client.printMessage( "This command is not available for your class\n" );
 		return;
 	}
 
-    if ( player.isSupportCooldown() )
-    {
-        client.printMessage( "You can't throw a smoke grenade yet\n" );
-        return;
-    }
-
-    if ( client.armor < player.playerClass.maxArmor - 10 )
+    if ( client.armor < CTFT_SMOKE_GRENADE_AP_COST )
     {
         client.printMessage( "You don't have enough armor to throw a grenade\n" );
     }
@@ -324,16 +318,15 @@ void CTFT_ThrowSmokeGrenade( Client @client, cPlayer @player )
     {
         Entity @grenade = ClientThrowSmokeGrenade( client );
         if ( @grenade != null )
-        {
-            client.armor -= ( player.playerClass.maxArmor - 10 );
-			player.setSupportCooldown();
+		{
+            client.armor -= CTFT_SMOKE_GRENADE_AP_COST;
         }
     }
 }
 
 void CTFT_Blast( Client @client, cPlayer @player )
 {
-	if ( player.isRunnerAbilityCooldown() )
+	if ( player.isSupportCooldown() )
 	{
 		client.printMessage( "You can't fire a blast yet\n" );
 		return;
@@ -350,7 +343,7 @@ void CTFT_Blast( Client @client, cPlayer @player )
 	fireOrigin.z += ent.viewHeight;
 	if ( @G_FireWeakBolt( fireOrigin, ent.angles, 8000, CTFT_BLAST_DAMAGE, 100, 1000, ent ) != null )
 	{
-		player.setRunnerAbilityCooldown();
+		player.setSupportCooldown();
 		client.armor -= CTFT_BLAST_AP_COST;
 	}
 }
@@ -371,7 +364,7 @@ void CTFT_ProtectCommand( Client @client, const String &argsString, int argc )
 		return;
 	}
 
-	if ( player.playerClass.tag == PLAYERCLASS_SUPPORT )
+	if ( player.playerClass.tag == PLAYERCLASS_RUNNER )
 	{
 		CTFT_ThrowSmokeGrenade( client, player );
 		return;
@@ -554,7 +547,7 @@ void CTFT_Classaction1Command( Client @client )
 			CTFT_BuildCommand( client, "status", 1 );
 			break;
 		case PLAYERCLASS_SUPPORT:
-			CTFT_ThrowSmokeGrenade( client, player );
+			CTFT_Blast( client, player );
 			break;
 		case PLAYERCLASS_SNIPER:
 			player.activateInvisibility();
@@ -581,7 +574,7 @@ void CTFT_Classaction2Command( Client @client )
 			CTFT_SupplyAdrenaline( client, player );
 			break;
 		case PLAYERCLASS_RUNNER:
-			CTFT_Blast( client, player );
+			CTFT_ThrowSmokeGrenade( client, player );
 			break;
 		case PLAYERCLASS_ENGINEER:
 			if ( @player.bouncePad != null )

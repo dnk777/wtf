@@ -621,7 +621,7 @@ class cTurret
 		if ( @attacker.client != null && damage == CTFT_BLAST_DAMAGE )
 		{
 			cPlayer @player = GetPlayer( attacker.client );
-			if ( @player != null && player.playerClass.tag == PLAYERCLASS_RUNNER )
+			if ( @player != null && player.playerClass.tag == PLAYERCLASS_SUPPORT )
 			{
 				this.stunnedTimeoutAt = levelTime + CTFT_TURRET_STUN_TIME;
 				if ( !wasStunned && @this.client != null )

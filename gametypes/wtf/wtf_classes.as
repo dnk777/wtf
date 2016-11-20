@@ -169,7 +169,7 @@ void GENERIC_InitPlayerClasses()
         PLAYERCLASS_RUNNER,
         "$models/players/viciious",	// player model
         100,						// initial health
-        25,						    // initial armor
+        30,						    // initial armor
 		50,                         // max armor
         350,						// pmoveMaxSpeedInAir
 		350,                        // pmoveMaxSpeedOnGround
