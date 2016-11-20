@@ -874,12 +874,19 @@ class cPlayer
 					else
 						armorGain = frameTime * 0.010f;
 				}
+				else if ( this.client.armor < 2 * ( maxArmor / 3.0f ) )
+				{
+					if ( this.isHealingTeammates )
+						armorGain = frameTime * 0.0035f;
+					else
+						armorGain = frameTime * 0.0045f;
+				}
 				else if ( this.client.armor < maxArmor )
 				{
 					if ( this.isHealingTeammates )
-						armorGain = frameTime * 0.003f;
+						armorGain = frameTime * 0.0012f;
 					else
-						armorGain = frameTime * 0.004f;
+						armorGain = frameTime * 0.0021f;
 				}
 
 				if ( ( this.ent.effects & EF_CARRIER ) != 0 )
@@ -988,7 +995,7 @@ class cPlayer
 
 	void setSupportCooldown()
 	{
-		if ( this.playerClass.tag != PLAYERCLASS_GRUNT )
+		if ( this.playerClass.tag != PLAYERCLASS_SUPPORT )
 			return;
 
 		this.supportCooldownTime = levelTime + CTFT_SUPPORT_COOLDOWN;
