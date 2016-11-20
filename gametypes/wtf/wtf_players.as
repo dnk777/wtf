@@ -818,7 +818,8 @@ class cPlayer
 
 		if ( this.hasReceivedAdrenaline )
 		{
-			this.adrenalineTime = levelTime + 1500;
+			this.adrenalineTime = levelTime + 1750;
+			this.ent.health += 50;
 			G_Sound( this.ent, CHAN_AUTO, G_SoundIndex( "sounds/items/regen_pickup" ), 0.4f );					
 			this.hasReceivedAdrenaline = false;
 

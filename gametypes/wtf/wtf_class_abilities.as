@@ -425,15 +425,8 @@ void CTFT_SupplyAdrenaline( Client @client, cPlayer @player )
 		return;
 	}
 
-	if ( player.ent.health < 75 )
-	{
-		client.printMessage( "You do not have enough health to supply adrenaline\n" );
-		return;
-	}
-
 	player.hasPendingSupplyAdrenalineCommand = true;
 	client.armor -= 50;
-	player.ent.health -= 50;
 }
 
 void CTFT_BuyInstaShot( Client @client, cPlayer @player )

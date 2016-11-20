@@ -145,7 +145,7 @@ const String[] medicDescription =
 	"You can revive dead teammates by walking over their reviver marker\n",
 	"You can disable enemy revivers by walking over their reviver marker\n",
 	"Command ^6supply^7: Give an adrenaline yourself and teammates in your aura\n",
-	"The adrenaline boosts teammates speed for a couple of seconds\n",
+	"The adrenaline boosts teammates speed for a couple of seconds and gives some health\n",
 	"Generic command ^8classaction1^7: Same as ^6supply^7\n",
 	"Generic command ^8classaction2^7: Same as ^6supply^7\n"
 };
