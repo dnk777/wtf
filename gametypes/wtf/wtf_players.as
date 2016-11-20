@@ -183,6 +183,18 @@ class cPlayer
             this.client.setHUDStat( STAT_PROGRESS_SELF, int( frac * 100 ) );
         }
 
+		if ( this.isMedicCooldown() )
+        {
+            frac = float( this.medicCooldownTimeLeft() ) / float( CTFT_MEDIC_COOLDOWN );
+            this.client.setHUDStat( STAT_PROGRESS_SELF, int( frac * 100 ) );
+        }
+
+		if ( this.isSupportCooldown() )
+        {
+            frac = float( this.supportCooldownTimeLeft() ) / float( CTFT_SUPPORT_COOLDOWN );
+            this.client.setHUDStat( STAT_PROGRESS_SELF, int( frac * 100 ) );
+        }
+
         if ( this.playerClass.tag == PLAYERCLASS_SNIPER && this.invisibilityLoad > 0 )
         {
             frac = this.invisibilityLoad / CTFT_SNIPER_INVISIBILITY_MAXLOAD;
