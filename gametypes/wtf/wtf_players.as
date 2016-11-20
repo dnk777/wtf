@@ -501,7 +501,12 @@ class cPlayer
         }
         else
         {
-            this.ent.setupModel( this.playerClass.playerModel );
+			// Player models differ and clients apply fullbright skins only if they can override a model first.
+			// Thus forcing fullbright models on the server side is the only option, isn't it?
+			if ( wtfForceFullbrightSkins.boolean )
+				this.ent.setupModel( this.playerClass.playerModel, "fullbright" );
+			else
+				this.ent.setupModel( this.playerClass.playerModel );
 
             if ( this.invisibilityEnabled )
             {

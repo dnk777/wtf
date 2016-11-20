@@ -101,6 +101,7 @@ int prcBouncePadActivatedModel;
 bool firstSpawn = false;
 
 Cvar ctfAllowPowerupDrop( "ctf_powerupDrop", "0", CVAR_ARCHIVE );
+Cvar wtfForceFullbrightSkins( "wtf_forceFullbrightSkins", "0", CVAR_ARCHIVE );
 
 const String SELECT_CLASS_COMMAND = 
 	"mecu \"Select class\"" 
@@ -306,6 +307,37 @@ bool GT_Command( Client @client, const String &cmdString, const String &argsStri
             return true;
         }
 
+		if ( votename == "wtf_force_fullbright_skins" )
+        {
+            String voteArg = argsString.getToken( 1 );
+            if ( voteArg.len() < 1 )
+            {
+                client.printMessage( "Callvote " + votename + " requires at least one argument\n" );
+                return false;
+            }
+
+            int value = voteArg.toInt();
+            if ( voteArg != "0" && voteArg != "1" )
+            {
+                client.printMessage( "Callvote " + votename + " expects a 1 or a 0 as argument\n" );
+                return false;
+            }
+
+            if ( voteArg == "0" && !wtfForceFullbrightSkins.boolean )
+            {
+                client.printMessage( "Forcing fullbright skins is already disallowed\n" );
+                return false;
+            }
+
+            if ( voteArg == "1" && wtfForceFullbrightSkins.boolean )
+            {
+                client.printMessage( "Forcing fullbright skins is already allowed\n" );
+                return false;
+            }
+
+            return true;
+        }
+
         client.printMessage( "Unknown callvote " + votename + "\n" );
         return false;
     }
@@ -319,6 +351,13 @@ bool GT_Command( Client @client, const String &cmdString, const String &argsStri
                 ctfAllowPowerupDrop.set( 1 );
             else
                 ctfAllowPowerupDrop.set( 0 );
+        }
+		else if ( votename == "wtf_force_fullbright_skins" )
+        {
+            if ( argsString.getToken( 1 ).toInt() > 0 )
+                wtfForceFullbrightSkins.set( 1 );
+            else
+                wtfForceFullbrightSkins.set( 0 );
         }
 
         return true;
@@ -1307,6 +1346,7 @@ void GT_InitGametype()
 
     InitPlayers();
     G_RegisterCallvote( "ctf_powerup_drop", "1 or 0", "bool", "Enables or disables the dropping of powerups at dying" );
+	G_RegisterCallvote( "wtf_force_fullbright_skins", "1 or 0", "bool", "Enables or disables forcing of fullbright skins for players" );
 
     G_Print( "Gametype '" + gametype.title + "' initialized\n" );
 }
