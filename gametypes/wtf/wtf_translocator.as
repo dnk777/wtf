@@ -24,10 +24,10 @@ cTranslocator[] gtTranslocators( MAX_TRANSLOCATORS );
 const Vec3 playerBoxMins( -16, -16, -24 );
 const Vec3 playerBoxMaxs( +16, +16, +40 );
 
-// Width and depth should match player box ones.
+// Width and depth should match player box ones (plus-minus some delta).
 // (if a translocator is fit in the enviornment, player should fit too if there is enough height) 
-const Vec3 translocatorMins( playerBoxMins.x, playerBoxMins.y, -4 );
-const Vec3 translocatorMaxs( playerBoxMaxs.x, playerBoxMaxs.y, +4 );
+const Vec3 translocatorMins( playerBoxMins.x - 0.5f, playerBoxMins.y - 0.5f, -4 );
+const Vec3 translocatorMaxs( playerBoxMaxs.x + 0.5f, playerBoxMaxs.y + 0.5f, +4 );
 
 class cTranslocator
 {
