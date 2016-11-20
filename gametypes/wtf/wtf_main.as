@@ -946,6 +946,8 @@ void GT_ThinkRules()
 		player.clearInfluence();
 		if ( player.client.state() == CS_SPAWNED && player.ent.isGhosting() )
 		{
+			if ( @player.translocator != null )
+				player.returnTranslocator();
 			// Prevent applying these commands after respawn
 			player.hasPendingSupplyAmmoCommand = false;
 			player.hasPendingSupplyAdrenalineCommand = false;
