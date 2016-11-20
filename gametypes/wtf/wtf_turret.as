@@ -119,14 +119,14 @@ class cTurret
 		this.stunnedTimeoutAt = 0;
 		this.lastHackerTouchTime = 0;
 		this.hackMillisAccumulated = 0;
-        this.gunOffset = 8;
+        this.gunOffset = 24;
         this.flashTime = 100;
-        this.yawSpeed = 100.0f;
-        this.pitchSpeed = 24.0f;
+        this.yawSpeed = 180.0f;
+        this.pitchSpeed = 170.0f;
         this.scanDelay = 500;
         this.range = 2000;
         this.spread = 75;
-        this.damage = 8;
+        this.damage = 4;
         this.knockback = 7;
         this.stun = 0;
 		this.rocketSpeed = 1150;
@@ -134,7 +134,7 @@ class cTurret
 		this.rocketDamage = 80;
 		this.rocketKnockback = 100;
 		this.rocketStun = 1250;
-        this.refireDelay = 200;
+        this.refireDelay = 80;
         this.minPITCH = -45;
         this.fireMode = AMMO_BULLETS;
         this.fireSoundIndex = G_SoundIndex( "sounds/weapons/machinegun_fire" );

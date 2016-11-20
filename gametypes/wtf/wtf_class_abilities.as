@@ -143,11 +143,6 @@ void CTFT_BuildTurret( Client @client, cPlayer @player )
 	if ( @turret == null )
 		return;
 
-    turret.refireDelay = 100;
-    turret.yawSpeed = 270.0f;
-    turret.pitchSpeed = 170.0f;
-    turret.gunOffset = 24;
-
     @turret.client = @client;
     client.armor = client.armor - CTFT_TURRET_AP_COST;
 
