@@ -275,7 +275,7 @@ class cFlagBase
         }
 
         Entity @flag;
-        Vec3 mins( -16.0, -16.0, -16.0 ), maxs( 16.0, 16.0, 40.0 );
+        Vec3 mins( -24.0, -24.0, -16.0 ), maxs( 24.0, 24.0, 40.0 );
 
         @flag = @G_SpawnEntity( "ctf_flag" );
 		@flag.die = ctf_flag_die;
