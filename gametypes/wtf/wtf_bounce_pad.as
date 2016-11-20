@@ -27,8 +27,8 @@ const Vec3 bouncePadTriggerMins( -40, -40, -40 );
 const Vec3 bouncePadTriggerMaxs( +40, +40, +40 );
 
 // Use smaller box for body than for trigger (otherwise one will hit it instead of the trigger)
-const Vec3 bouncePadBodyMins( -32, -32, -32 );
-const Vec3 bouncePadBodyMaxs( -32, +32, +32 );
+const Vec3 bouncePadBodyMins( -16, -16, -16 );
+const Vec3 bouncePadBodyMaxs( +16, +16, +16 );
 
 const Vec3 bouncePadSpawnerMins( -1, -1, -1 );
 const Vec3 bouncePadSpawnerMaxs( +1, +1, +1 );
