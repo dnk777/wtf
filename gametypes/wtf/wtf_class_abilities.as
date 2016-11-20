@@ -448,12 +448,6 @@ void CTFT_BuyInstaShot( Client @client, cPlayer @player )
 		client.printMessage( "You do not have enough armor to buy an insta shot\n");
 		return;
 	}
-	
-	if ( player.buyAmmoCooldownTime > levelTime )
-	{
-		client.printMessage( "You can't buy an insta shot yet\n" );
-		return;
-	}
 
 	int instaAmmoCount = client.inventoryCount( AMMO_INSTAS );
 	if ( instaAmmoCount >= 3 )
@@ -464,7 +458,6 @@ void CTFT_BuyInstaShot( Client @client, cPlayer @player )
 
 	client.armor -= 45;
 	client.inventorySetCount( AMMO_INSTAS, instaAmmoCount + 1 );
-	player.buyAmmoCooldownTime = levelTime + 3000 + 5000 * instaAmmoCount;
 }
 
 void CTFT_TransCommand( Client @client, String &argsString, int argc )

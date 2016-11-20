@@ -37,7 +37,6 @@ class cPlayer
     uint shellCooldownTime;
     uint bombCooldownTime;
 	uint runnerAbilityCooldownTime;
-	uint buyAmmoCooldownTime;
 	uint flagDispenserCooldownTime;
 	uint adrenalineTime;
     uint respawnTime;
@@ -91,7 +90,6 @@ class cPlayer
         this.shellCooldownTime = 0;
         this.bombCooldownTime = 0;
 		this.runnerAbilityCooldownTime = 0;
-		this.buyAmmoCooldownTime = 0;
 		this.flagDispenserCooldownTime = 0;
 		this.adrenalineTime = 0;
         this.respawnTime = 0;
