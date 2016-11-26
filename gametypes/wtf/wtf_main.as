@@ -40,15 +40,16 @@ int CTFT_DISABLED_REVIVER_RESPAWN_PENALTY = 4000;
 int CTFT_TURRET_AP_COST = 50;
 int CTFT_TURRET_STRONG_AP_COST = 125;
 int CTFT_CLUSTER_GRENADE_AP_COST = 50;
-uint CTFT_ENGINEER_BUILD_COOLDOWN_TIME = 15000;
+uint CTFT_ENGINEER_BUILD_COOLDOWN_TIME = 1500;
 float CTFT_SNIPER_INVISIBILITY_MINLOAD = 20;
 float CTFT_SNIPER_INVISIBILITY_MAXLOAD = 100;
 uint CTFT_INVISIBILITY_COOLDOWN = 1000;
 uint CTFT_GRUNT_ABILITY_COOLDOWN = 8000;
 uint CTFT_FLAG_DISPENSER_COOLDOWN_TIME = 30000;
-int CTFT_MEDIC_COOLDOWN = 1200;
-int CTFT_SUPPORT_COOLDOWN = 1250;
-int CTFT_RUNNER_ABILITY_COOLDOWN = 1250;
+int CTFT_MEDIC_REGEN_COOLDOWN = 1200;
+int CTFT_SUPPORT_REGEN_COOLDOWN = 1200;
+int CTFT_RUNNER_ABILITY_COOLDOWN = 1200;
+int CTFT_BLAST_COOLDOWN = 1000;
 int CTFT_BLAST_AP_COST = 15;
 int CTFT_TRANSLOCATOR_AP_COST = 15;
 int CTFT_SMOKE_GRENADE_AP_COST = 30;
@@ -828,7 +829,6 @@ void GT_PlayerRespawn( Entity @ent, int old_team, int new_team )
     if ( @player.reviver != null && player.reviver.triggered )
     {
         // when revived do not clear all timers
-        player.shellCooldownTime = 0;
         player.respawnTime = 0;
         player.invisibilityEnabled = false;
         player.invisibilityLoad = 0;

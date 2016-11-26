@@ -48,7 +48,7 @@ void CTFT_BuildCommand( Client @client, const String &argsString, int argc )
 		return;
 	}
 
-	if ( player.isEngineerCooldown() )
+	if ( player.isEngineerBuildCooldown() )
     {
         client.printMessage( "You cannot build yet\n" );
         return;
@@ -148,7 +148,7 @@ void CTFT_BuildTurret( Client @client, cPlayer @player )
 
     @player.turret = @turret;
     // have a delay before being able to build again
-    player.setEngineerCooldown();
+    player.setEngineerBuildCooldown();
 
 	// Disabled since the ability to destroy a turret is added 
 	// (otherwise an engineer can gain scores by building a turret and immediately destroying it)
@@ -170,7 +170,7 @@ void CTFT_BuildBouncePad( Client @client, cPlayer @player )
 	client.armor -= CTFT_TURRET_AP_COST;
 
 	@player.bouncePad = bouncePad;
-	player.setEngineerCooldown();
+	player.setEngineerBuildCooldown();
 }
 
 void CTFT_DestroyTurret( Client @client, cPlayer @player )
@@ -183,7 +183,7 @@ void CTFT_DestroyTurret( Client @client, cPlayer @player )
 
 	player.turret.die( null, null );
 	@player.turret = null;
-	player.engineerBuildCooldownTime = 0;
+	player.engineerBuildCooldownTime = levelTime + 750;
 	client.armor += CTFT_TURRET_AP_COST;
 }
 
@@ -197,7 +197,7 @@ void CTFT_DestroyBouncePad( Client @client, cPlayer @player )
 
 	player.bouncePad.die( null, null );
 	@player.bouncePad = null;
-	player.engineerBuildCooldownTime = 0;
+	player.engineerBuildCooldownTime = levelTime + 750;
 	client.armor += CTFT_TURRET_AP_COST;
 }
 
@@ -275,9 +275,9 @@ void CTFT_ThrowClusterGrenade( Client @client, cPlayer @player )
 		return;
 	}
 
-    if ( player.isGruntCooldown() )
+    if ( player.isGruntAbilityCooldown() )
     {
-        client.printMessage( "You can't throw a bomb yet\n" );
+        client.printMessage( "You can't throw a cluster grenade yet\n" );
         return;
     }
 
@@ -291,7 +291,7 @@ void CTFT_ThrowClusterGrenade( Client @client, cPlayer @player )
         if ( @bomb != null )
         {
             client.armor -= CTFT_CLUSTER_GRENADE_AP_COST;
-			player.setGruntCooldown();
+			player.setGruntAbilityCooldown();
 			@player.bomb = bomb;
         }
     }
@@ -321,7 +321,7 @@ void CTFT_ThrowSmokeGrenade( Client @client, cPlayer @player )
 
 void CTFT_Blast( Client @client, cPlayer @player )
 {
-	if ( player.isSupportCooldown() )
+	if ( player.isBlastCooldown() )
 	{
 		client.printMessage( "You can't fire a blast yet\n" );
 		return;
@@ -338,7 +338,7 @@ void CTFT_Blast( Client @client, cPlayer @player )
 	fireOrigin.z += ent.viewHeight;
 	if ( @G_FireWeakBolt( fireOrigin, ent.angles, 8000, CTFT_BLAST_DAMAGE, 100, 1000, ent ) != null )
 	{
-		player.setSupportCooldown();
+		player.setBlastCooldown();
 		client.armor -= CTFT_BLAST_AP_COST;
 	}
 }

@@ -30,12 +30,11 @@ class cPlayer
     cBomb @bomb;
 	cTranslocator @translocator;
 
-    uint medicCooldownTime;
+    uint medicRegenCooldownTime;
 	uint gruntAbilityCooldownTime;
-	uint supportCooldownTime;
+	uint supportRegenCooldownTime;
     uint engineerBuildCooldownTime;
-    uint shellCooldownTime;
-    uint bombCooldownTime;
+	uint blastCooldownTime;    
 	uint runnerAbilityCooldownTime;
 	uint flagDispenserCooldownTime;
 	uint adrenalineTime;
@@ -85,12 +84,11 @@ class cPlayer
 
     void resetTimers()
     {
-        this.medicCooldownTime = 0;
+        this.medicRegenCooldownTime = 0;
 		this.gruntAbilityCooldownTime = 0;
-		this.supportCooldownTime = 0;
+		this.supportRegenCooldownTime = 0;
         this.engineerBuildCooldownTime = 0;
-        this.shellCooldownTime = 0;
-        this.bombCooldownTime = 0;
+   		this.blastCooldownTime = 0;
 		this.runnerAbilityCooldownTime = 0;
 		this.flagDispenserCooldownTime = 0;
 		this.adrenalineTime = 0;
@@ -171,29 +169,35 @@ class cPlayer
 
         float frac;
 
-        if ( this.isEngineerCooldown() )
+        if ( this.isEngineerBuildCooldown() )
         {
-            frac = float( this.engineerCooldownTimeLeft() ) / float( CTFT_ENGINEER_BUILD_COOLDOWN_TIME );
+            frac = float( this.engineerBuildCooldownTimeLeft() ) / float( CTFT_ENGINEER_BUILD_COOLDOWN_TIME );
             this.client.setHUDStat( STAT_PROGRESS_SELF, int( frac * 100 ) );
         }
 
-        if ( this.isGruntCooldown() )
+        if ( this.isGruntAbilityCooldown() )
         {
-            frac = float( this.gruntCooldownTimeLeft() ) / float( CTFT_GRUNT_ABILITY_COOLDOWN );
+            frac = float( this.gruntAbilityCooldownTimeLeft() ) / float( CTFT_GRUNT_ABILITY_COOLDOWN );
             this.client.setHUDStat( STAT_PROGRESS_SELF, int( frac * 100 ) );
         }
 
-		if ( this.isMedicCooldown() )
+		if ( this.isMedicRegenCooldown() )
         {
-            frac = float( this.medicCooldownTimeLeft() ) / float( CTFT_MEDIC_COOLDOWN );
+            frac = float( this.medicRegenCooldownTimeLeft() ) / float( CTFT_MEDIC_REGEN_COOLDOWN );
             this.client.setHUDStat( STAT_PROGRESS_SELF, int( frac * 100 ) );
         }
 
-		if ( this.isSupportCooldown() )
+		if ( this.isSupportRegenCooldown() )
         {
-            frac = float( this.supportCooldownTimeLeft() ) / float( CTFT_SUPPORT_COOLDOWN );
+            frac = float( this.supportCooldownTimeLeft() ) / float( CTFT_SUPPORT_REGEN_COOLDOWN );
             this.client.setHUDStat( STAT_PROGRESS_SELF, int( frac * 100 ) );
         }
+
+		if ( this.isBlastCooldown() )
+		{
+			frac = float( this.blastCooldownTimeLeft() ) / float( CTFT_BLAST_COOLDOWN );
+            this.client.setHUDStat( STAT_PROGRESS_OTHER, int( frac * 100 ) );
+		}
 
         if ( this.playerClass.tag == PLAYERCLASS_SNIPER && this.invisibilityLoad > 0 )
         {
@@ -675,12 +679,12 @@ class cPlayer
 
 		if ( this.playerClass.tag == PLAYERCLASS_MEDIC )
 		{
-			if ( !this.isMedicCooldown() )
+			if ( !this.isMedicRegenCooldown() )
 				refreshMedicInfluenceEmission();
 		}		
 		else if ( this.playerClass.tag == PLAYERCLASS_SUPPORT )
 		{
-			if ( !this.isSupportCooldown() )
+			if ( !this.isSupportRegenCooldown() )
 				refreshSupportInfluenceEmission();
 		}
 	}
@@ -855,7 +859,7 @@ class cPlayer
 		if ( this.playerClass.tag == PLAYERCLASS_MEDIC )
 		{
 			// Medic regens health unless in cooldown
-            if ( !this.isMedicCooldown() )
+            if ( !this.isMedicRegenCooldown() )
             {
                 // Medic regens health
                 if ( this.ent.health < 100 ) 
@@ -876,7 +880,7 @@ class cPlayer
 		else if ( this.playerClass.tag == PLAYERCLASS_SUPPORT )
 		{
 			// The Support regen armor
-			if ( !this.isSupportCooldown() )
+			if ( !this.isSupportRegenCooldown() )
 			{
 				int maxArmor = this.playerClass.maxArmor;
 				float armorGain = 0.0f;
@@ -959,7 +963,7 @@ class cPlayer
     {
         if ( this.playerClass.tag == PLAYERCLASS_MEDIC )
         {
-            this.setMedicCooldown();
+            this.setMedicRegenCooldown();
         }
         else if ( this.playerClass.tag == PLAYERCLASS_SNIPER )
         {
@@ -967,51 +971,51 @@ class cPlayer
         }
 		else if ( this.playerClass.tag == PLAYERCLASS_SUPPORT )
 		{
-			this.setSupportCooldown();
+			this.setSupportRegenCooldown();
 		}
     }
 
-    void setMedicCooldown()
+    void setMedicRegenCooldown()
     {
         if ( this.playerClass.tag != PLAYERCLASS_MEDIC )
             return;
 
-        this.medicCooldownTime = levelTime + CTFT_MEDIC_COOLDOWN;
+        this.medicRegenCooldownTime = levelTime + CTFT_MEDIC_REGEN_COOLDOWN;
     }
 
-    bool isMedicCooldown()
+    bool isMedicRegenCooldown()
     {
         if ( this.playerClass.tag != PLAYERCLASS_MEDIC )
             return false;
 
-        return ( this.medicCooldownTime > levelTime ) ? true : false;
+        return ( this.medicRegenCooldownTime > levelTime ) ? true : false;
     }
 
-    int medicCooldownTimeLeft()
+    int medicRegenCooldownTimeLeft()
     {
         if ( this.playerClass.tag != PLAYERCLASS_MEDIC )
             return 0;
 
-        if ( this.medicCooldownTime <= levelTime )
+        if ( this.medicRegenCooldownTime <= levelTime )
             return 0;
 
-        return int( levelTime - this.medicCooldownTime );
+        return int( levelTime - this.medicRegenCooldownTime );
     }
 	
-	bool isSupportCooldown()
+	bool isSupportRegenCooldown()
 	{
 		if ( this.playerClass.tag != PLAYERCLASS_SUPPORT )
 			return false;
 
-		return ( this.supportCooldownTime > levelTime ) ? true : false;
+		return ( this.supportRegenCooldownTime > levelTime ) ? true : false;
 	}
 
-	void setSupportCooldown()
+	void setSupportRegenCooldown()
 	{
 		if ( this.playerClass.tag != PLAYERCLASS_SUPPORT )
 			return;
 
-		this.supportCooldownTime = levelTime + CTFT_SUPPORT_COOLDOWN;
+		this.supportRegenCooldownTime = levelTime + CTFT_SUPPORT_REGEN_COOLDOWN;
 	}
 
 	int supportCooldownTimeLeft()
@@ -1019,10 +1023,37 @@ class cPlayer
 		if ( this.playerClass.tag != PLAYERCLASS_SUPPORT )
 			return 0;
 		
-		if ( this.supportCooldownTime <= levelTime )
+		if ( this.supportRegenCooldownTime <= levelTime )
 			return 0;
 
-		return int( levelTime - this.supportCooldownTime );
+		return int( levelTime - this.supportRegenCooldownTime );
+	}
+
+	bool isBlastCooldown()
+	{
+		if ( this.playerClass.tag != PLAYERCLASS_SUPPORT )
+			return false;
+
+		return ( this.blastCooldownTime > levelTime ) ? true : false;
+	}
+
+	void setBlastCooldown()
+	{
+		if ( this.playerClass.tag != PLAYERCLASS_SUPPORT )
+			return;
+
+		this.blastCooldownTime = levelTime + CTFT_BLAST_COOLDOWN;
+	}
+
+	int blastCooldownTimeLeft()
+	{
+		if ( this.playerClass.tag != PLAYERCLASS_SUPPORT )
+			return 0;
+		
+		if ( this.blastCooldownTime <= levelTime )
+			return 0;
+
+		return int( levelTime - this.blastCooldownTime );
 	}
    
     void setInvisibilityCooldown()
@@ -1041,7 +1072,7 @@ class cPlayer
         return ( this.invisibilityCooldownTime > levelTime ) ? true : false;
     }
 
-    void setEngineerCooldown()
+    void setEngineerBuildCooldown()
     {
         if ( this.playerClass.tag != PLAYERCLASS_ENGINEER )
             return;
@@ -1049,7 +1080,7 @@ class cPlayer
         this.engineerBuildCooldownTime = levelTime + CTFT_ENGINEER_BUILD_COOLDOWN_TIME;
     }
 
-    bool isEngineerCooldown()
+    bool isEngineerBuildCooldown()
     {
         if ( this.playerClass.tag != PLAYERCLASS_ENGINEER )
             return false;
@@ -1057,7 +1088,7 @@ class cPlayer
         return ( engineerBuildCooldownTime > levelTime ) ? true : false;
     }
 
-    int engineerCooldownTimeLeft()
+    int engineerBuildCooldownTimeLeft()
     {
         if ( this.playerClass.tag != PLAYERCLASS_ENGINEER )
             return 0;
@@ -1086,17 +1117,17 @@ class cPlayer
         return int( this.runnerAbilityCooldownTime - levelTime );
     }
 
-    void setGruntCooldown()
+    void setGruntAbilityCooldown()
     {
         this.gruntAbilityCooldownTime = levelTime + CTFT_GRUNT_ABILITY_COOLDOWN;
     }
 
-    bool isGruntCooldown()
+    bool isGruntAbilityCooldown()
     {
         return ( this.gruntAbilityCooldownTime > levelTime ) ? true : false;
     }
 
-    int gruntCooldownTimeLeft()
+    int gruntAbilityCooldownTimeLeft()
     {
         if ( this.gruntAbilityCooldownTime <= levelTime )
             return 0;
@@ -1179,22 +1210,22 @@ class cPlayer
 			return;
 		}
 
-        if ( this.isGruntCooldown() )
+        if ( this.isGruntAbilityCooldown() )
         {
-            this.printMessage( "Cannot use the skill yet\n" );
+            this.printMessage( "Cannot activate shell yet\n" );
             return;
         }
 
 		// Costs same as a cluster grenade
         if ( this.client.armor < CTFT_CLUSTER_GRENADE_AP_COST )
         {
-            this.printMessage( "You don't have enough armor to spawn a Warshell\n" );
+            this.printMessage( "You don't have enough armor to activate a shell\n" );
         }
         else
         {
             this.client.armor -= CTFT_CLUSTER_GRENADE_AP_COST;
             this.client.inventorySetCount( POWERUP_SHELL, 4 );
-            this.setGruntCooldown();
+            this.setGruntAbilityCooldown();
 
             G_Sound( this.ent, CHAN_MUZZLEFLASH, G_SoundIndex( "sounds/items/shell_spawn" ), 0.3f );
         }
