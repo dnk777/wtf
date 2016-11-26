@@ -118,13 +118,13 @@ cPlayerClass[] cPlayerClassInfos( PLAYERCLASS_TOTAL );
 // can be divided in two these groups by movement parameters.
 
 // "Slow" classes (the Grunt, the Engineer and the Sniper)
-const int SLOW_MAX_SPEED_IN_AIR = 240;
-const int SLOW_MAX_SPEED_ON_GROUND = 300;
-const int SLOW_DASH_SPEED = 380;
+const int SLOW_MAX_SPEED_IN_AIR = 260;
+const int SLOW_MAX_SPEED_ON_GROUND = 320;
+const int SLOW_DASH_SPEED = 450;
 
 // "Fast" classes (the Medic and the Support)
-const int FAST_MAX_SPEED_IN_AIR = 280;
-const int FAST_MAX_SPEED_ON_GROUND = 320;
+const int FAST_MAX_SPEED_IN_AIR = 300;
+const int FAST_MAX_SPEED_ON_GROUND = 330;
 const int FAST_DASH_SPEED = 450;
 
 // AS does not have array literals, so we have to define descriptions separately
@@ -254,9 +254,9 @@ void GENERIC_InitPlayerClasses()
         100,						// initial health
         30,						    // initial armor
 		50,                         // max armor
-        350,						// pmoveMaxSpeedInAir
-		350,                        // pmoveMaxSpeedOnGround
-        450,						// dash speed
+        370,						// pmoveMaxSpeedInAir
+		370,                        // pmoveMaxSpeedOnGround
+        475,						// dash speed
         false,						// can be stunned
         "gfx/wtf/wtf_runner",
         "gfx/wtf/runner1",
