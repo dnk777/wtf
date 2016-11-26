@@ -1228,13 +1228,13 @@ class cPlayer
 			client.inventorySetCount( AMMO_GUNBLADE, 1 );
 			if ( fullLoad )
 			{
-				client.inventorySetCount( AMMO_ROCKETS, 7 );
-				client.inventorySetCount( AMMO_SHELLS, 7 );
+				client.inventorySetCount( AMMO_ROCKETS, 9 );
+				client.inventorySetCount( AMMO_SHELLS, 9 );
 			}
 			else
 			{
-				this.checkAndLoadAmmo( AMMO_ROCKETS, 4 );
-				this.checkAndLoadAmmo( AMMO_SHELLS, 4 );
+				this.checkAndLoadAmmo( AMMO_ROCKETS, 5 );
+				this.checkAndLoadAmmo( AMMO_SHELLS, 5 );
 			}
 		}
 		else if ( this.playerClass.tag == PLAYERCLASS_MEDIC )
@@ -1244,29 +1244,29 @@ class cPlayer
 			if ( fullLoad )
 			{
 		    	client.inventorySetCount( AMMO_PLASMA, 100 );
-				client.inventorySetCount( AMMO_BULLETS, 125 );
-				client.inventorySetCount( AMMO_GRENADES, 7 );
+				client.inventorySetCount( AMMO_BULLETS, 150 );
+				client.inventorySetCount( AMMO_GRENADES, 10 );
 			}
 			else
 			{
 				this.checkAndLoadAmmo( AMMO_PLASMA, 50 );
-				this.checkAndLoadAmmo( AMMO_BULLETS, 75 );
-				this.checkAndLoadAmmo( AMMO_GRENADES, 4 );
+				this.checkAndLoadAmmo( AMMO_BULLETS, 100 );
+				this.checkAndLoadAmmo( AMMO_GRENADES, 5 );
 			}
 		}
 		else if ( this.playerClass.tag == PLAYERCLASS_GRUNT )
 		{
 			if ( fullLoad )
 			{
-		    	client.inventorySetCount( AMMO_ROCKETS, 10 );
+		    	client.inventorySetCount( AMMO_ROCKETS, 15 );
 				client.inventorySetCount( AMMO_LASERS, 100 );
-				client.inventorySetCount( AMMO_GRENADES, 10 );
+				client.inventorySetCount( AMMO_GRENADES, 15 );
 			}
 			else
 			{
-				this.checkAndLoadAmmo( AMMO_ROCKETS, 5 );
-				this.checkAndLoadAmmo( AMMO_LASERS, 50 );
-				this.checkAndLoadAmmo( AMMO_GRENADES, 5 );
+				this.checkAndLoadAmmo( AMMO_ROCKETS, 7 );
+				this.checkAndLoadAmmo( AMMO_LASERS, 75 );
+				this.checkAndLoadAmmo( AMMO_GRENADES, 7 );
 			}
 		}
 		else if ( this.playerClass.tag == PLAYERCLASS_ENGINEER )
@@ -1281,7 +1281,7 @@ class cPlayer
 			{
 				this.checkAndLoadAmmo( AMMO_ROCKETS, 3 );
 				this.checkAndLoadAmmo( AMMO_PLASMA, 75 );
-				this.checkAndLoadAmmo( AMMO_SHELLS, 5 );
+				this.checkAndLoadAmmo( AMMO_SHELLS, 7 );
 			}
 		}
 		else if ( this.playerClass.tag == PLAYERCLASS_SUPPORT )
@@ -1291,24 +1291,24 @@ class cPlayer
 			if ( fullLoad )
 			{
 				client.inventorySetCount( AMMO_LASERS, 100 );
-				client.inventorySetCount( AMMO_SHELLS, 10 );
+				client.inventorySetCount( AMMO_SHELLS, 15 );
 			}
 			else
 			{
 				this.checkAndLoadAmmo( AMMO_LASERS, 50 );
-				this.checkAndLoadAmmo( AMMO_SHELLS, 5 );
+				this.checkAndLoadAmmo( AMMO_SHELLS, 7 );
 			}
 		}
 		else if ( this.playerClass.tag == PLAYERCLASS_SNIPER )
 		{
 			if ( fullLoad )
 			{
-				client.inventorySetCount( AMMO_BOLTS, 10 );
-				client.inventorySetCount( AMMO_BULLETS, 100 );
+				client.inventorySetCount( AMMO_BOLTS, 13 );
+				client.inventorySetCount( AMMO_BULLETS, 125 );
 			}
 			else
 			{
-				this.checkAndLoadAmmo( AMMO_BOLTS, 5 );
+				this.checkAndLoadAmmo( AMMO_BOLTS, 7 );
 				this.checkAndLoadAmmo( AMMO_BULLETS, 75 );
 			}
 		}
