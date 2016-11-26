@@ -150,9 +150,21 @@ void CTFT_BuildTurret( Client @client, cPlayer @player )
     // have a delay before being able to build again
     player.setEngineerBuildCooldown();
 
-	// Disabled since the ability to destroy a turret is added 
-	// (otherwise an engineer can gain scores by building a turret and immediately destroying it)
-    // client.stats.addScore( 2 );
+	if ( player.turretHealthWhenDestroyed < CTFT_TURRET_HEALTH )
+	{
+		if ( levelTime - player.turretDestroyedAtTime < CTFT_FAST_REPAIR_TIME )
+		{
+			if ( player.turretHealthWhenDestroyed < 0 )
+				player.turretHealthWhenDestroyed = 0;
+
+			uint bonus = uint( 0.01f * ( CTFT_TURRET_HEALTH - player.turretHealthWhenDestroyed ) );
+			if ( bonus > 0 )
+			{
+				player.client.stats.addScore( bonus );
+				player.client.addAward( S_COLOR_CYAN + "Fast repair!" );
+			} 
+		}
+	}
 }
 
 void CTFT_BuildBouncePad( Client @client, cPlayer @player )
@@ -171,6 +183,22 @@ void CTFT_BuildBouncePad( Client @client, cPlayer @player )
 
 	@player.bouncePad = bouncePad;
 	player.setEngineerBuildCooldown();
+
+	if ( player.bouncePadHealthWhenDestroyed < CTFT_BOUNCE_PAD_HEALTH )
+	{
+		if ( levelTime - player.bouncePadDestroyedAtTime < CTFT_FAST_REPAIR_TIME )
+		{
+			if ( player.bouncePadHealthWhenDestroyed < 0 )
+				player.bouncePadHealthWhenDestroyed = 0;
+
+			uint bonus = uint( 0.03f * ( CTFT_BOUNCE_PAD_HEALTH - player.bouncePadHealthWhenDestroyed ) );
+			if ( bonus > 0 )
+			{
+				player.client.stats.addScore( bonus );
+				player.client.addAward( S_COLOR_CYAN + "Fast repair!" );
+			} 
+		}
+	}
 }
 
 void CTFT_DestroyTurret( Client @client, cPlayer @player )

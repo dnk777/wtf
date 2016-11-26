@@ -287,10 +287,7 @@ class cTurret
         {
             cPlayer @player = GetPlayer( this.client );
             if ( @player != null )
-			{
-				player.centerPrintMessage( S_COLOR_RED + "Your turret has been destroyed!\n" );
-                @player.turret = null;
-			}
+				player.turretHasBeenDestroyed( this.bodyEnt );
         }
 
         this.Free();

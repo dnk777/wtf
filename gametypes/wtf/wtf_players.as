@@ -39,6 +39,10 @@ class cPlayer
 	uint flagDispenserCooldownTime;
 	uint adrenalineTime;
     uint respawnTime;
+	uint turretDestroyedAtTime;
+	float turretHealthWhenDestroyed;
+	uint bouncePadDestroyedAtTime;
+	float bouncePadHealthWhenDestroyed;
 	bool isHealingTeammates;
 	bool hasReceivedAmmo;
 	bool hasReceivedAdrenaline;
@@ -78,6 +82,11 @@ class cPlayer
 		
 		this.medicInfluenceScore = 0.0;
 		this.supportInfluenceScore = 0.0;
+
+		this.turretDestroyedAtTime = 0;
+		this.turretHealthWhenDestroyed = CTFT_TURRET_HEALTH;
+		this.bouncePadDestroyedAtTime = 0;
+		this.bouncePadHealthWhenDestroyed = CTFT_BOUNCE_PAD_HEALTH;
     }
 
     ~cPlayer() {}
@@ -1474,6 +1483,22 @@ class cPlayer
 		this.engineerBuildCooldownTime = 0;
 		// Return armor spent on throwing a bounce pad spawner
 		client.armor += CTFT_TURRET_AP_COST;
+	}
+
+	void turretHasBeenDestroyed( Entity @turretEnt )
+	{
+		this.turretDestroyedAtTime = levelTime;
+		this.turretHealthWhenDestroyed = turretEnt.health;
+		this.centerPrintMessage( S_COLOR_RED + "Your turret has been destroyed!\n" );
+		@this.turret = null;
+	}
+
+	void bouncePadHasBeenDestroyed( Entity @padEnt )
+	{
+		this.bouncePadDestroyedAtTime = levelTime;
+		this.bouncePadHealthWhenDestroyed = padEnt.health;
+		this.centerPrintMessage( S_COLOR_RED + "Your bounce pad has been destroyed!\n" );
+		@this.bouncePad = null;
 	}
 
 	void printDescription()

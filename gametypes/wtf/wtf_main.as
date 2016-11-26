@@ -35,6 +35,8 @@ const float CTF_OBJECT_DEFENSE_BONUS_DISTANCE = 512.0f;
 const int CTFT_TURRET_HEALTH = 400;
 const int CTFT_BOUNCE_PAD_HEALTH = 50;
 
+const uint CTFT_FAST_REPAIR_TIME = 5000;
+
 int CTFT_BASE_RESPAWN_TIME = 7000;
 int CTFT_DISABLED_REVIVER_RESPAWN_PENALTY = 4000;
 int CTFT_TURRET_AP_COST = 50;
@@ -115,7 +117,7 @@ const String SELECT_CLASS_COMMAND =
 ///*****************************************************************
 
 // a player has just died. The script is warned about it so it can account scores
-void CTF_playerKilled( Entity @target, Entity @attacker, Entity @inflictor )
+void CTF_playerKilled( Entity @target, Entity @attacker, Entity @inflictor, bool suppressAwards )
 {
     if ( @target.client == null )
         return;
@@ -126,7 +128,7 @@ void CTF_playerKilled( Entity @target, Entity @attacker, Entity @inflictor )
     if ( @flagBase != null )
     {
         if ( @attacker != null )
-            flagBase.carrierKilled( attacker, target );
+            flagBase.carrierKilled( attacker, target, suppressAwards );
 
         CTF_PlayerDropFlag( target, false );
     }
@@ -136,15 +138,15 @@ void CTF_playerKilled( Entity @target, Entity @attacker, Entity @inflictor )
 
         // if not flag carrier, check whether victim was offending our flag base or friendly flag carrier
         if ( @flagBase != null )
-            flagBase.offenderKilled( attacker, target );		
+            flagBase.offenderKilled( attacker, target, suppressAwards );		
     }
 
     if ( match.getState() != MATCH_STATE_PLAYTIME )
         return;
 
     // check for generic awards for the frag
-    if( @attacker != null && attacker.team != target.team )
-		award_playerKilled( @target, @attacker, @inflictor );	
+    if( !suppressAwards && @attacker != null && attacker.team != target.team )
+		award_playerKilled( @target, @attacker, @inflictor );
 }
 
 void CTF_SetVoicecommQuickMenu( Client @client, int playerClass )
@@ -632,6 +634,7 @@ void GT_ScoreEvent( Client @client, const String &score_event, const String &arg
         int arg3 = args.getToken( 2 ).toInt();
 
         Entity @target = @G_GetEntity( arg1 );
+		Entity @attacker = @G_GetEntity( arg3 );
 
         if ( @target != null )
         {
@@ -647,26 +650,60 @@ void GT_ScoreEvent( Client @client, const String &score_event, const String &arg
 					target.health += 75.0f;
 			}
         }
+
+		if ( @attacker.client == null && attacker.classname == "bounce_pad_body" )
+		{
+			// Add a score for each enemy hurt by pad event
+			if ( attacker.count >= 0 && attacker.count < MAX_BOUNCE_PADS )
+				if ( @gtBouncePads[attacker.count].player != null )
+					gtBouncePads[attacker.count].player.client.stats.addScore( 1 );
+		}
     }
     else if ( score_event == "kill" )
     {
-        Entity @attacker = null;
-        if ( @client != null )
-            @attacker = @client.getEnt();
-
-        int arg1 = args.getToken( 0 ).toInt();
-        int arg2 = args.getToken( 1 ).toInt();
-        Entity @ent = G_GetEntity( arg1 );
+        Entity @target = G_GetEntity( args.getToken( 0 ).toInt() );
+		Entity @inflictor = G_GetEntity( args.getToken( 1 ).toInt() );
+		Entity @attacker = G_GetEntity( args.getToken( 2 ).toInt() );
 
         // Important - if turret ends up here without this, crash =P
-        if ( @ent == null || @ent.client == null )
+        if ( @target == null || @target.client == null )
             return;
 
+		bool suppressAwards = false;
+		if ( @attacker.client == null )
+		{
+			suppressAwards = true;
+			if ( attacker.classname == "turret_body" )
+			{
+				if ( attacker.count >= 0 && attacker.count < MAX_TURRETS )
+				{
+					// Set the turret owner as an attacker
+					if ( @gtTurrets[attacker.count].client != null )
+					{	
+						@attacker = @gtTurrets[attacker.count].client.getEnt();
+						// Add a score for killing a player not for inflicting a damage as in general,
+						// otherwise engineers will always be on top of the scoreboard.
+						attacker.client.stats.addScore( 1 );
+					}				
+				}
+			}
+			else if ( attacker.classname == "bounce_pad_body" )
+			{
+				if ( attacker.count >= 0 && attacker.count < MAX_BOUNCE_PADS )
+				// Set the pad owner as an attacker
+				if ( @gtBouncePads[attacker.count].player != null )
+				{
+					@attacker = @gtBouncePads[attacker.count].player.ent;
+					attacker.client.stats.addScore( 1 );
+				}
+			}
+		}
+
         // target, attacker, inflictor
-        CTF_playerKilled( ent, attacker, G_GetEntity( arg2 ) );
+        CTF_playerKilled( target, attacker, inflictor, suppressAwards );
 
         // Class-specific death stuff
-        cPlayer @targetPlayer = @GetPlayer( ent.client );
+        cPlayer @targetPlayer = @GetPlayer( target.client );
         targetPlayer.respawnTime = levelTime + CTFT_BASE_RESPAWN_TIME;
 
         // Spawn respawn indicator
@@ -674,20 +711,20 @@ void GT_ScoreEvent( Client @client, const String &score_event, const String &arg
             targetPlayer.spawnReviver();
 
         if ( targetPlayer.playerClass.tag == PLAYERCLASS_SUPPORT )
-            CTFT_DeathDrop( ent.client, "Green Armor" );
+            CTFT_DeathDrop( target.client, "Green Armor" );
 
         if ( targetPlayer.playerClass.tag == PLAYERCLASS_ENGINEER )
-            CTFT_DeathDrop( ent.client, "Green Armor" );
+            CTFT_DeathDrop( target.client, "Green Armor" );
 
         if ( targetPlayer.playerClass.tag == PLAYERCLASS_SNIPER )
-            CTFT_DeathDrop( ent.client, "Green Armor" );
+            CTFT_DeathDrop( target.client, "Green Armor" );
 
         if ( targetPlayer.playerClass.tag == PLAYERCLASS_MEDIC )
-            CTFT_DeathDrop( ent.client, "50 Health" );
+            CTFT_DeathDrop( target.client, "50 Health" );
 
         if ( targetPlayer.playerClass.tag == PLAYERCLASS_GRUNT )
         {
-            CTFT_DeathDrop( ent.client, "Yellow Armor" );
+            CTFT_DeathDrop( target.client, "Yellow Armor" );
 
             // Explode all cluster bombs belonging to this grunt when dying
             cBomb @bomb = null;
@@ -1102,6 +1139,9 @@ void CTFT_SetUpMatch()
 					if ( ent.client.armor >= player.playerClass.armor )
 						ent.client.armor = player.playerClass.armor;
 				}
+
+				player.turretHealthWhenDestroyed = CTFT_TURRET_HEALTH;
+				player.bouncePadHealthWhenDestroyed = CTFT_BOUNCE_PAD_HEALTH;
 			}
         }
     }

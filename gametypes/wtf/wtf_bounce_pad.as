@@ -176,8 +176,8 @@ class cBouncePad
         if ( !this.inuse )
 			return;
 
-		if ( @this.player != null )
-			this.player.centerPrintMessage( S_COLOR_RED + "Your bounce pad has been destroyed\n" );
+		if ( @this.player != null && @this.bodyEnt != null )
+			this.player.bouncePadHasBeenDestroyed( this.bodyEnt );
 
         this.Free();
     }
@@ -218,7 +218,7 @@ class cBouncePad
 
 		// Apply a damage if an enemy entity used this
 		if ( other.takeDamage != 0 && other.team != this.bodyEnt.team )
-			other.sustainDamage( null, null, this.normal, 50, 50, 500, 0 );
+			other.sustainDamage( this.bodyEnt, this.bodyEnt, this.normal, 50, 50, 500, 0 );
 	}
 
 	void think()

@@ -410,7 +410,7 @@ class cFlagBase
         this.resetFlag();
     }
 
-    void carrierKilled( Entity @player, Entity @enemy )
+    void carrierKilled( Entity @player, Entity @enemy, bool suppressAwards )
     {
         if ( player.team == enemy.team ) // ouch, that was a team kill
             return;
@@ -434,15 +434,17 @@ class cFlagBase
         if ( @player.client != null )
         {
             player.client.stats.addScore( bonus );
-
-            if ( bonus == CTF_BONUS_CARRIER_KILL )
-                player.client.addAward( S_COLOR_GREEN + "Carrier Kill!" );
-            else
-                player.client.addAward( S_COLOR_GREEN + "Carrier Super Kill!" );
+			if ( !suppressAwards )
+			{
+            	if ( bonus == CTF_BONUS_CARRIER_KILL )
+                	player.client.addAward( S_COLOR_GREEN + "Carrier Kill!" );
+            	else
+                	player.client.addAward( S_COLOR_GREEN + "Carrier Super Kill!" );
+			}
         }
     }
 
-    void offenderKilled( Entity @player, Entity @enemy )
+    void offenderKilled( Entity @player, Entity @enemy, bool suppressAwards )
     {
         if ( player.team == enemy.team ) // ouch, that was a team kill
             return;
@@ -461,7 +463,8 @@ class cFlagBase
                 if( G_InPVS( this.carrier.origin, enemy.origin ) )
                 {
                     player.client.stats.addScore( CTF_BONUS_FLAG_DEFENSE );
-                    player.client.addAward( S_COLOR_GREEN + "Flag Defense!" );
+					if ( !suppressAwards )
+                    	player.client.addAward( S_COLOR_GREEN + "Flag Defense!" );
                 }
             }
         }
@@ -475,7 +478,8 @@ class cFlagBase
                 if( G_InPVS( enemyBase.carrier.origin, enemy.origin ) )
                 {
                     player.client.stats.addScore( CTF_BONUS_CARRIER_PROTECT );
-                    player.client.addAward( S_COLOR_GREEN + "Carrier Defense!" );
+					if ( !suppressAwards )    
+						player.client.addAward( S_COLOR_GREEN + "Carrier Defense!" );
                 }
             }
         }
