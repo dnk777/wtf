@@ -67,6 +67,11 @@ float CTFT_SUPPORT_INFLUENCE_BASE_RADIUS = 192.0f;
 const int CTFT_BLAST_DAMAGE = 101;
 const uint CTFT_TURRET_STUN_TIME = 1250;
 
+const uint CTFT_BIO_GRENADE_COOLDOWN = 2500;
+const uint CTFT_BIO_GRENADE_DECAY = 2000;
+const float CTFT_BIO_GRENADE_RADIUS = 96.0f;
+const int CTFT_BIO_GRENADE_HEALTH_COST = 50;
+
 // precache images and sounds
 
 int prcShockIcon;
@@ -101,6 +106,11 @@ int prcBouncePadActivateSound;
 int prcBouncePadSpawnerModel;
 int prcBouncePadNormalModel;
 int prcBouncePadActivatedModel;
+
+int prcBioCloudShaderIndex;
+int prcBioTeamSparksShaderIndex;
+int prcBioEnemySparksShaderIndex;
+int prcBioEmissionSound;
 
 bool firstSpawn = false;
 
@@ -1323,6 +1333,12 @@ void GT_InitGametype()
 
 	// Smoke
 	G_ImageIndex( "gfx/wtf/wtf_smoke" );
+
+	// Bio
+	prcBioCloudShaderIndex = G_ImageIndex( "gfx/wtf/bio_cloud" );
+	prcBioTeamSparksShaderIndex = G_ImageIndex( "gfx/wtf/bio_team_sparks" );
+	prcBioEnemySparksShaderIndex = G_ImageIndex( "gfx/wtf/bio_enemy_sparks" );
+	prcBioEmissionSound = G_SoundIndex( "sounds/wtf/bio_emission", true );
 
     // Translocator
     G_ModelIndex( "models/objects/wtf/translocator_body_normal.md3", true );

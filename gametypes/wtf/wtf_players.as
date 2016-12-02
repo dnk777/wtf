@@ -34,7 +34,8 @@ class cPlayer
 	uint gruntAbilityCooldownTime;
 	uint supportRegenCooldownTime;
     uint engineerBuildCooldownTime;
-	uint blastCooldownTime;    
+	uint blastCooldownTime;
+	uint bioGrenadeCooldownTime;
 	uint runnerAbilityCooldownTime;
 	uint flagDispenserCooldownTime;
 	uint adrenalineTime;
@@ -98,6 +99,7 @@ class cPlayer
 		this.supportRegenCooldownTime = 0;
         this.engineerBuildCooldownTime = 0;
    		this.blastCooldownTime = 0;
+		this.bioGrenadeCooldownTime = 0;
 		this.runnerAbilityCooldownTime = 0;
 		this.flagDispenserCooldownTime = 0;
 		this.adrenalineTime = 0;
@@ -205,6 +207,12 @@ class cPlayer
 		if ( this.isBlastCooldown() )
 		{
 			frac = float( this.blastCooldownTimeLeft() ) / float( CTFT_BLAST_COOLDOWN );
+            this.client.setHUDStat( STAT_PROGRESS_OTHER, int( frac * 100 ) );
+		}
+
+		if ( this.isBioGrenadeCooldown() )
+		{
+			frac = float( this.bioGrenadeCooldownTimeLeft() ) / float( CTFT_BIO_GRENADE_COOLDOWN );
             this.client.setHUDStat( STAT_PROGRESS_OTHER, int( frac * 100 ) );
 		}
 
@@ -1065,6 +1073,33 @@ class cPlayer
 		return int( levelTime - this.blastCooldownTime );
 	}
    
+	bool isBioGrenadeCooldown()
+	{
+		if ( this.playerClass.tag != PLAYERCLASS_MEDIC )
+			return false;
+
+		return ( this.bioGrenadeCooldownTime > levelTime ) ? true : false;
+	}
+
+	void setBioGrenadeCooldown()
+	{
+		if ( this.playerClass.tag != PLAYERCLASS_MEDIC )
+			return;
+
+		this.bioGrenadeCooldownTime = levelTime + CTFT_BIO_GRENADE_COOLDOWN;
+	}
+
+	int bioGrenadeCooldownTimeLeft()
+	{
+		if ( this.playerClass.tag != PLAYERCLASS_MEDIC )
+			return 0;
+		
+		if ( this.bioGrenadeCooldownTime <= levelTime )
+			return 0;
+
+		return int( levelTime - this.bioGrenadeCooldownTime );
+	}
+
     void setInvisibilityCooldown()
     {
         if ( this.playerClass.tag != PLAYERCLASS_SNIPER )

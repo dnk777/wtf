@@ -21,6 +21,7 @@ wtf/wtf_bomb.as;
 wtf/wtf_translocator.as;
 wtf/wtf_smoke_grenade.as;
 wtf/wtf_bounce_pad.as;
+wtf/wtf_bio_grenade.as;
 
 legacy/quake1.as;
 

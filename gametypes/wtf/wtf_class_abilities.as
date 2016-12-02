@@ -285,6 +285,12 @@ void CTFT_AltAttackCommand( Client @client, const String &argsString, int argc )
 		return;
 	}
 
+	if ( player.playerClass.tag == PLAYERCLASS_MEDIC )
+	{
+		CTFT_ThrowBioGrenade( client, player );
+		return;
+	}
+
 	if ( player.playerClass.tag == PLAYERCLASS_SUPPORT )
 	{
 		CTFT_Blast( client, player );
@@ -345,6 +351,34 @@ void CTFT_ThrowSmokeGrenade( Client @client, cPlayer @player )
             client.armor -= CTFT_SMOKE_GRENADE_AP_COST;
         }
     }
+}
+
+void CTFT_ThrowBioGrenade( Client @client, cPlayer @player )
+{
+	if ( player.playerClass.tag != PLAYERCLASS_MEDIC )
+	{
+		client.printMessage( "This command is not available for your class\n" );
+		return;
+	}
+
+	if ( player.isBioGrenadeCooldown() )
+	{
+		client.printMessage( "You can't throw a grenade yet\n" );
+		return;
+	}
+
+    if ( player.ent.health < CTFT_BIO_GRENADE_HEALTH_COST + 15 )
+    {
+        client.printMessage( "You don't have enough health to throw a grenade\n" );
+		return;
+    }
+    
+	if ( @ClientThrowBioGrenade( client ) != null )
+	{
+        player.ent.health -= CTFT_BIO_GRENADE_HEALTH_COST;
+		player.setBioGrenadeCooldown();
+    }
+    
 }
 
 void CTFT_Blast( Client @client, cPlayer @player )
@@ -540,7 +574,7 @@ void CTFT_Classaction1Command( Client @client )
 			player.activateShell();
 			break;
 		case PLAYERCLASS_MEDIC:
-			CTFT_SupplyAdrenaline( client, player );
+			CTFT_ThrowBioGrenade( client, player );
 			break;
 		case PLAYERCLASS_RUNNER:
 			if ( @player.translocator == null )
