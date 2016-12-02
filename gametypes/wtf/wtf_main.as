@@ -72,6 +72,11 @@ const uint CTFT_BIO_GRENADE_DECAY = 2000;
 const float CTFT_BIO_GRENADE_RADIUS = 96.0f;
 const int CTFT_BIO_GRENADE_HEALTH_COST = 50;
 
+// Shared values for all grenades.
+// Values should match GL projectile ones to aid aiming.
+const float CTFT_GRENADE_SPEED = 1000;
+const uint CTFT_GRENADE_TIMEOUT = 1250;
+
 // precache images and sounds
 
 int prcShockIcon;

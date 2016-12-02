@@ -57,12 +57,11 @@ Entity @ClientThrowSmokeGrenade( Client @client )
     ent.health = 999;
     ent.mass = 50;
     ent.takeDamage = 0;
-    ent.nextThink = levelTime + 900;
+    ent.nextThink = levelTime + CTFT_GRENADE_TIMEOUT;
     
     // assign some frontal velocity to the grenade, as for being dropped by the player
     dir.normalize();
-    dir *= 750;
-    dir.z += 150;
+    dir *= CTFT_GRENADE_SPEED;
 
     ent.velocity = dir;
     ent.linkEntity();

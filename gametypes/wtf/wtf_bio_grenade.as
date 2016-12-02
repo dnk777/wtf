@@ -55,10 +55,8 @@ Entity @ClientThrowBioGrenade( Client @client )
     ent.mass = 50;
     ent.takeDamage = 0;
     
-    // assign some frontal velocity to the grenade, as for being dropped by the player
     dir.normalize();
-    dir *= 750;
-    dir.z += 150;
+    dir *= CTFT_GRENADE_SPEED;
 
     ent.velocity = dir;
     ent.linkEntity();

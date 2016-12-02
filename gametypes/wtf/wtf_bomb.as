@@ -18,8 +18,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
 const int MAX_BOMBS = 16;
-const uint BOMB_EXPLODE_DELAY = 300;
-const uint BOMB_EXPIRE_TIME = 2000; 
+const uint BOMB_EXPLODE_DELAY = 300; 
 const int NUM_WARHEADS = 13;
 
 cBomb[] gtBombs( MAX_BOMBS );
@@ -130,7 +129,7 @@ class cBomb
         @this.player = @player;
         this.bombEnt.count = index;
         this.inuse = true;
-		this.expireTime = levelTime + BOMB_EXPIRE_TIME;
+		this.expireTime = levelTime + CTFT_GRENADE_TIMEOUT;
 
         return true; // bomb has been correctly spawned
     }
@@ -317,10 +316,8 @@ cBomb @ClientDropBomb( Client @client )
     if ( !bomb.Spawn( tr.endPos, client ) ) // can't spawn bomb in that position. Blocked by something
         return null;
 
-    // assign some frontal velocity to the bomb, as for being dropped by the player
     dir.normalize();
-    dir *= 750;
-    dir.z += 150;
+    dir *= CTFT_GRENADE_SPEED;
 
     bomb.bombEnt.velocity = dir;
     bomb.bombEnt.linkEntity();
