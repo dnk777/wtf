@@ -43,9 +43,10 @@ int CTFT_TURRET_AP_COST = 50;
 int CTFT_TURRET_STRONG_AP_COST = 125;
 int CTFT_CLUSTER_GRENADE_AP_COST = 50;
 uint CTFT_ENGINEER_BUILD_COOLDOWN_TIME = 1500;
-float CTFT_SNIPER_INVISIBILITY_MINLOAD = 20;
-float CTFT_SNIPER_INVISIBILITY_MAXLOAD = 100;
+float CTFT_GUNNER_INVISIBILITY_MINLOAD = 20;
+float CTFT_GUNNER_INVISIBILITY_MAXLOAD = 100;
 uint CTFT_INVISIBILITY_COOLDOWN = 1000;
+uint CTFT_GUNNER_DEPLOY_TIME = 500;
 uint CTFT_GRUNT_ABILITY_COOLDOWN = 8000;
 uint CTFT_FLAG_DISPENSER_COOLDOWN_TIME = 30000;
 int CTFT_MEDIC_REGEN_COOLDOWN = 1200;
@@ -76,6 +77,8 @@ const int CTFT_BIO_GRENADE_HEALTH_COST = 50;
 // Values should match GL projectile ones to aid aiming.
 const float CTFT_GRENADE_SPEED = 1000;
 const uint CTFT_GRENADE_TIMEOUT = 1250;
+
+const int CTFT_GUNNER_MAX_LG_AMMO = 180;
 
 // precache images and sounds
 
@@ -125,7 +128,7 @@ Cvar wtfForceFullbrightSkins( "wtf_forceFullbrightSkins", "0", CVAR_ARCHIVE );
 const String SELECT_CLASS_COMMAND = 
 	"mecu \"Select class\"" 
 	+ " Grunt \"class grunt\" Medic \"class medic\" Runner \"class runner\"" 
-	+ " Engineer \"class engineer\" Support \"class support\" Sniper \"class sniper\"";
+	+ " Gunner \"class gunner\" Support \"class support\" Sniper \"class sniper\"";
 
 ///*****************************************************************
 /// LOCAL FUNCTIONS
@@ -243,19 +246,14 @@ bool GT_Command( Client @client, const String &cmdString, const String &argsStri
 		CTFT_Classaction2Command( client );
 		return true;
 	}
-	else if ( cmdString == "build" )
-	{
-		CTFT_BuildCommand( client, argsString, argc );
-		return true;
-	}
-	else if ( cmdString == "destroy" )
-	{
-		CTFT_DestroyCommand( client, argsString, argc );
-		return true;
-	}
 	else if ( cmdString == "altattack" )
 	{
 		CTFT_AltAttackCommand( client, argsString, argc );
+		return true;
+	}
+	else if ( cmdString == "deploy" )
+	{
+		CTFT_DeployCommand( client, argsString, argc );
 		return true;
 	}
 	else if ( cmdString == "protect" )
@@ -638,6 +636,39 @@ String @GT_ScoreboardMessage( uint maxlen )
     return scoreboardMessage;
 }
 
+// This is a big HACK to buff LG damage in deployed mode!
+// We can't call G_Damage() in GT_ScoreEvent() because GT_ScoreEvent() 
+// is called inside G_Damage() and G_Damage() is not reentrant.
+// For each entity we record 4 attackers that used the specified fire mode
+// (if there were > 4 attackers the target is likely to be dead instantly, don't bother about data loss).
+// Then we apply damage outside GT_ScoreEvent() in GT_ThinkRules()
+int[] entitySpecialLGAttackers(4 * maxEntities);
+int[] entitySpecialLGNumAttackers(maxEntities);
+
+void CTFT_ApplySpecialLGDamage()
+{
+	for (int i = 0; i < maxEntities; ++i)
+	{	
+		int numAttackers = entitySpecialLGNumAttackers[i];
+		if ( numAttackers > 0 )
+		{
+			Entity @target = @G_GetEntity( i );
+			for (int j = 0; j < numAttackers; ++j)
+			{
+				Entity @attacker = @G_GetEntity( entitySpecialLGAttackers[4 * i + j] );
+				Vec3 damageDir(target.origin);
+				damageDir -= attacker.origin;
+				damageDir.normalize();
+				// Base LG damage is 7.0 units per shot
+				// Base LG knockback is 14 knockback units per shot
+				// Add extra 1.5x damage and knockback
+				target.sustainDamage( attacker, attacker, damageDir, 10.5f, 21, 300, MOD_LASERGUN_W );
+			}
+		}
+		entitySpecialLGNumAttackers[i] = 0;
+	} 
+}
+
 // Some game actions get reported to the script as score events.
 // Warning: client can be null
 void GT_ScoreEvent( Client @client, const String &score_event, const String &args )
@@ -649,7 +680,7 @@ void GT_ScoreEvent( Client @client, const String &score_event, const String &arg
         int arg3 = args.getToken( 2 ).toInt();
 
         Entity @target = @G_GetEntity( arg1 );
-		Entity @attacker = @G_GetEntity( arg3 );
+		Entity @attacker = @G_GetEntity( arg3 );	
 
         if ( @target != null )
         {
@@ -666,7 +697,22 @@ void GT_ScoreEvent( Client @client, const String &score_event, const String &arg
 			}
         }
 
-		if ( @attacker.client == null && attacker.classname == "bounce_pad_body" )
+		if ( @attacker.client != null )
+		{
+			if ( GetPlayer( attacker.client ).isDeployed )
+			{
+				// Check whether this is actually LG damage 
+				// (otherwise damage from projectiles fired before deployment might be counted).
+				if ( arg2 == 7.0f )
+				{
+					if ( entitySpecialLGNumAttackers[arg1] < 4 )
+					{
+						entitySpecialLGAttackers[4 * arg1 + entitySpecialLGNumAttackers[arg1]++] = arg3;
+					}
+				}
+			}
+		}
+		else if ( attacker.classname == "bounce_pad_body" )
 		{
 			// Add a score for each enemy hurt by pad event
 			if ( attacker.count >= 0 && attacker.count < MAX_BOUNCE_PADS )
@@ -839,18 +885,19 @@ void GT_PlayerRespawn( Entity @ent, int old_team, int new_team )
         client.inventoryGiveItem( WEAP_LASERGUN );
         client.inventoryGiveItem( WEAP_GRENADELAUNCHER );
     }
-    // Engineer
-    else if ( player.playerClass.tag == PLAYERCLASS_ENGINEER )
+    // Gunner
+    else if ( player.playerClass.tag == PLAYERCLASS_GUNNER )
     {
         // Weapons
-        client.inventoryGiveItem( WEAP_ROCKETLAUNCHER );
+        client.inventoryGiveItem( WEAP_LASERGUN );
         client.inventoryGiveItem( WEAP_PLASMAGUN );
-        client.inventoryGiveItem( WEAP_RIOTGUN );
+        client.inventoryGiveItem( WEAP_GRENADELAUNCHER );
     }
 	else if ( player.playerClass.tag == PLAYERCLASS_SUPPORT )
 	{
 		// Weapons
-		client.inventoryGiveItem( WEAP_LASERGUN );
+		client.inventoryGiveItem( WEAP_ROCKETLAUNCHER );
+		client.inventoryGiveItem( WEAP_MACHINEGUN );
 		client.inventoryGiveItem( WEAP_RIOTGUN );
 	}
 	else if ( player.playerClass.tag == PLAYERCLASS_SNIPER )
@@ -864,12 +911,6 @@ void GT_PlayerRespawn( Entity @ent, int old_team, int new_team )
 		// Remove IG ammo
 		client.inventorySetCount( AMMO_INSTAS, 0 );
 	}
-
-	player.loadAmmo();
-
-
-    // select rocket launcher if available
-    client.selectWeapon( -1 ); // auto-select best weapon in the inventory
 
 	ent.svflags |= SVF_FORCETEAM;
 
@@ -887,10 +928,21 @@ void GT_PlayerRespawn( Entity @ent, int old_team, int new_team )
         player.invisibilityCooldownTime = 0;
         player.hudMessageTimeout = 0;
 
-        player.invisibilityWasUsingWeapon = -1;
+		player.isDeployed = false;
+		player.isDeployingUp = false;
+		player.isDeployingDown = false;
+        player.lastNormalModeWeapon = -1;
     }
     else
         player.resetTimers();
+
+	// must be called after resetting deployed mode (since it depends of it)
+	player.loadAmmo();
+	// if was fragged in deployed mode, some weak lasers ammo might be left
+	client.inventorySetCount( AMMO_WEAK_LASERS, 0 );
+
+    // select rocket launcher if available
+    client.selectWeapon( -1 ); // auto-select best weapon in the inventory
 
     player.removeReviver();
 
@@ -964,6 +1016,8 @@ void GT_ThinkRules()
             match.launchState( match.getState() + 1 );
     }
 
+	CTFT_ApplySpecialLGDamage();
+
     GENERIC_Think();
     CTFT_RespawnQueuedPlayers();
 
@@ -1020,6 +1074,7 @@ void GT_ThinkRules()
 		player.refreshInfluenceAbsorption();
         player.refreshRegeneration();
         player.watchShell();
+		player.watchDeployedMode();
         player.updateHUDstats();
 		player.printNextTip();
     }
@@ -1301,8 +1356,7 @@ void GT_InitGametype()
     G_RegisterCommand( "class" );
 	G_RegisterCommand( "classaction1" );
 	G_RegisterCommand( "classaction2" );
-    G_RegisterCommand( "build" );
-    G_RegisterCommand( "destroy" );
+	G_RegisterCommand( "deploy" );
 	G_RegisterCommand( "altattack" );
 	G_RegisterCommand( "protect" );
 	G_RegisterCommand( "supply" );

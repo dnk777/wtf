@@ -20,6 +20,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 const int PLAYERCLASS_GRUNT = 0;
 const int PLAYERCLASS_MEDIC = 1;
 const int PLAYERCLASS_RUNNER = 2;
+const int PLAYERCLASS_GUNNER = 3;
+// Turrets and pads code kept as possibly useful in future development need this constant defined 
 const int PLAYERCLASS_ENGINEER = 3;
 const int PLAYERCLASS_SUPPORT = 4;
 const int PLAYERCLASS_SNIPER = 5;
@@ -166,28 +168,23 @@ const String[] runnerDescription =
 	"Generic command ^8classaction2^7: Same as ^6protect^7\n"
 };
 
-const String[] engineerDescription =
+const String[] gunnerDescription = 
 {
-	"You're spawned as ^8ENGINEER^7. This is a defencive class with an ability to build entities.\n",
-	"You can build a single turret that fires bullets and rockets\n",
-	"Your turret gets destroyed when you switch to another class\n",
-	"Be aware of your turret! It can be damaged, stunned or hacked.\n",
-	"Destroy a turret and build a new one if your turret is heavily damaged\n",
-	"You can buld a bounce pad that allows a player to bounce off it preserving his speed\n",
-	"Command ^6build turret^7: Build a turret\n",
-	"Command ^6destroy turret^7: Destroy a turret\n",
-	"Command ^6build pad^7: Build a bounce pad\n",
-	"Command ^6destroy pad^7: Destroy a bounce pad\n",
-	"Commands ^6build status^7, ^6destroy status^7: Print a status of built entities\n",
-	"Generic command ^8classaction1^7: Builds a turret, then a bounce pad\n",
-	"Generic command ^8classaction2^7: Destroys a bounce pad, then a turret\n" 
+	"You're spawned as ^8GUNNER^7. This is a class with the most powerful weapon.\n",
+	"You can switch 3 player modes: normal, invisible and deployed\n",
+	"In deployed mode you can barely move but have a protection shell and a powerful laser beam\n",
+	"Take a good position in normal or invisible mode and wreck your enemies in deployed one\n",
+	"Command ^6protect^7: Toggle invisibility\n",
+	"Command ^6deploy^7: Toggle deployed mode\n",
+	"Generic command ^8classaction1^7: Same as ^6protect^7\n",
+	"Generic command ^8classaction2^7: Same as ^6deploy^7\n"
 };
 
 const String[] supportDescription =
 {
 	"You're spawned as ^4SUPPORT^7. This is a supportive class with armor regeneration.\n",
 	"You repair teammates armor in your aura radius\n",
-	"Command ^6altattack^7: Fire a powerful energy blast that hurts enemies and stuns turrets\n",
+	"Command ^6altattack^7: Fire a powerful energy blast\n",
 	"Consider setting ^2cg_particles 1^7 to make the blast clearly visible\n",
 	"Command ^6supply^7: Give ammo yourself and teammates in your aura\n",
 	"Generic command ^8classaction1^7: Same as ^6altattack^7\n",
@@ -197,10 +194,9 @@ const String[] supportDescription =
 const String[] sniperDescription =
 {
 	"You're spawned as ^5SNIPER^7. This is a defencive class with best weapons for far-range fights.\n",
-	"Command ^6protect^7: Toggle invisibility\n",
 	"Command ^6supply^7: Buy an instagun shot\n",
 	"You can't carry more than 3 instagun shots\n",
-	"Generic command ^8classaction1^7: Same as ^6protect^7\n", 
+	"Generic command ^8classaction1^7: Same as ^6supply^7\n",
 	"Generic command ^8classaction2^7: Same as ^6supply^7\n" 
 };
 
@@ -265,21 +261,21 @@ void GENERIC_InitPlayerClasses()
 		runnerDescription
     );
 
-    cPlayerClassInfos[ PLAYERCLASS_ENGINEER ].setup(
-        "Engineer",					// name
-        PLAYERCLASS_ENGINEER,
-        "$models/players/bobot",	// player model
-        100,						// initial health
-        50,						    // initial armor
-		75,                         // max armor
+    cPlayerClassInfos[ PLAYERCLASS_GUNNER ].setup(
+        "Gunner",			     	  // name
+        PLAYERCLASS_GUNNER,
+        "$models/players/silverclaw", // player model
+        100,						  // initial health
+        50,						      // initial armor
+		75,                           // max armor
         SLOW_MAX_SPEED_IN_AIR,
 		SLOW_MAX_SPEED_ON_GROUND,
 		SLOW_DASH_SPEED,
-        true,						// can be stunned
-        "gfx/wtf/wtf_engineer",
-        "gfx/wtf/engineer1",
-        "gfx/wtf/engineer2",
-		engineerDescription
+        true,					  	  // can be stunned
+        "gfx/wtf/wtf_gunner",
+        "gfx/wtf/gunner1",
+        "gfx/wtf/gunner2",
+		gunnerDescription
     );
 
 	cPlayerClassInfos[ PLAYERCLASS_SUPPORT ].setup(
@@ -302,7 +298,7 @@ void GENERIC_InitPlayerClasses()
 	cPlayerClassInfos[ PLAYERCLASS_SNIPER ].setup(
 		"Sniper",                     // name
 		PLAYERCLASS_SNIPER,
-		"$models/players/silverclaw", // player model
+		"$models/players/bobot",      // player model
 		100,                          // initial health
 		50,                           // initial armor
 		50,                           // max armor

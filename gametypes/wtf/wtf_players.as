@@ -44,6 +44,11 @@ class cPlayer
 	float turretHealthWhenDestroyed;
 	uint bouncePadDestroyedAtTime;
 	float bouncePadHealthWhenDestroyed;
+	uint deployUpTime;
+	uint deployDownTime;
+	bool isDeployed;
+	bool isDeployingUp;
+	bool isDeployingDown;
 	bool isHealingTeammates;
 	bool hasReceivedAmmo;
 	bool hasReceivedAdrenaline;
@@ -58,7 +63,9 @@ class cPlayer
 	float adrenalineDashSpeedBoost;
     bool invisibilityEnabled;
     float invisibilityLoad;
-    int invisibilityWasUsingWeapon;
+    int lastNormalModeWeapon;
+	int lastNormalModePGAmmo;
+	int lastNormalModeGLAmmo;
     uint invisibilityCooldownTime;
     uint hudMessageTimeout;
 	uint nextTipDescriptionLine;
@@ -104,6 +111,11 @@ class cPlayer
 		this.flagDispenserCooldownTime = 0;
 		this.adrenalineTime = 0;
         this.respawnTime = 0;
+		this.deployUpTime = 0;
+		this.deployDownTime = 0;
+		this.isDeployed = false;
+		this.isDeployingUp = false;
+		this.isDeployingDown = false;
 		this.isHealingTeammates = false;
 		this.hasReceivedAmmo = false;
 		this.hasReceivedAdrenaline = false;
@@ -123,7 +135,7 @@ class cPlayer
 		this.nextTipTime = 0;
         this.deadcamMedicScanTime = 0;
 
-        this.invisibilityWasUsingWeapon = -1;
+        this.lastNormalModeWeapon = -1;
     }
 
     void printMessage( String &string )
@@ -216,13 +228,29 @@ class cPlayer
             this.client.setHUDStat( STAT_PROGRESS_OTHER, int( frac * 100 ) );
 		}
 
-        if ( this.playerClass.tag == PLAYERCLASS_SNIPER && this.invisibilityLoad > 0 )
+        if ( this.playerClass.tag == PLAYERCLASS_GUNNER )
         {
-            frac = this.invisibilityLoad / CTFT_SNIPER_INVISIBILITY_MAXLOAD;
-            if ( this.isInvisibilityCooldown() || this.invisibilityLoad < CTFT_SNIPER_INVISIBILITY_MINLOAD )
-                this.client.setHUDStat( STAT_PROGRESS_SELF, -int( frac * 100 ) );
-            else
-                this.client.setHUDStat( STAT_PROGRESS_SELF, int( frac * 100 ) );
+			if ( this.invisibilityLoad > 0 )
+			{
+            	frac = this.invisibilityLoad / CTFT_GUNNER_INVISIBILITY_MAXLOAD;
+            	if ( this.isInvisibilityCooldown() || this.invisibilityLoad < CTFT_GUNNER_INVISIBILITY_MINLOAD )
+                	this.client.setHUDStat( STAT_PROGRESS_SELF, -int( frac * 100 ) );
+            	else
+            	    this.client.setHUDStat( STAT_PROGRESS_SELF, int( frac * 100 ) );
+			}
+			if ( this.isDeployed )
+			{
+				if ( this.isDeployCooldown() )
+				{
+				    frac = this.deployCooldownTimeLeft() / float( CTFT_GUNNER_DEPLOY_TIME );
+					this.client.setHUDStat( STAT_PROGRESS_OTHER, int( frac * 100 ) );
+				}
+				else
+				{
+					frac = this.client.inventoryCount( AMMO_WEAK_LASERS ) / float( CTFT_GUNNER_MAX_LG_AMMO );
+					this.client.setHUDStat( STAT_PROGRESS_OTHER, int( frac * 100 ) );
+				}
+			}
         }
 
         /****************************************
@@ -642,6 +670,13 @@ class cPlayer
 				return;
 			}
 
+			if ( this.isDeployed )
+			{
+				this.client.pmoveMaxSpeed = 100;
+				this.ent.mass = 450;
+				return;
+			}
+
             this.client.pmoveDashSpeed = this.playerClass.dashSpeed;
             this.client.pmoveJumpSpeed = this.playerClass.jumpSpeed;
 
@@ -816,15 +851,23 @@ class cPlayer
 		if ( this.supportInfluence > 1.0f )
 			this.supportInfluence = 1.0f;
 
-		if ( this.medicInfluence > 0 && ( this.ent.effects & EF_PLAYER_HIDENAME ) == 0 )
-			this.ent.effects |= EF_REGEN;
-		else
-			this.ent.effects &= ~EF_REGEN;
+		this.ent.effects &= ~( EF_QUAD | EF_REGEN | EF_GODMODE );
+		if ( !this.invisibilityEnabled )
+		{
+			if ( this.isDeployed )
+			{
+				this.ent.effects |= EF_QUAD;
+			}
+			else
+			{
+				if ( this.medicInfluence > 0 )
+					this.ent.effects |= EF_REGEN;
+		
+				if ( this.supportInfluence > 0 )
+					this.ent.effects |= EF_GODMODE;
+			}
+		}
 
-		if ( this.supportInfluence > 0 && ( this.ent.effects & EF_PLAYER_HIDENAME ) == 0 )
-			this.ent.effects |= EF_QUAD;
-		else
-			this.ent.effects &= ~EF_QUAD;
 
 		if ( this.hasReceivedAmmo )
 		{
@@ -929,7 +972,7 @@ class cPlayer
 				this.client.armor += armorGain;
 			}
 		}
-		else if ( this.playerClass.tag == PLAYERCLASS_SNIPER )
+		else if ( this.playerClass.tag == PLAYERCLASS_GUNNER )
 		{
 			// if carrying the flag, disable invisibility
             if ( ( this.ent.effects & EF_CARRIER ) != 0 )
@@ -952,8 +995,8 @@ class cPlayer
             else
             {
                 this.invisibilityLoad += ( frameTime * 0.033f );
-                if ( this.invisibilityLoad > CTFT_SNIPER_INVISIBILITY_MAXLOAD )
-                    this.invisibilityLoad = CTFT_SNIPER_INVISIBILITY_MAXLOAD;
+                if ( this.invisibilityLoad > CTFT_GUNNER_INVISIBILITY_MAXLOAD )
+                    this.invisibilityLoad = CTFT_GUNNER_INVISIBILITY_MAXLOAD;
             }
 		}
 
@@ -982,7 +1025,7 @@ class cPlayer
         {
             this.setMedicRegenCooldown();
         }
-        else if ( this.playerClass.tag == PLAYERCLASS_SNIPER )
+        else if ( this.playerClass.tag == PLAYERCLASS_GUNNER )
         {
             this.setInvisibilityCooldown();
         }
@@ -1102,7 +1145,7 @@ class cPlayer
 
     void setInvisibilityCooldown()
     {
-        if ( this.playerClass.tag != PLAYERCLASS_SNIPER )
+        if ( this.playerClass.tag != PLAYERCLASS_GUNNER )
             return;
 
         this.invisibilityCooldownTime = levelTime + CTFT_INVISIBILITY_COOLDOWN;
@@ -1110,7 +1153,7 @@ class cPlayer
 
     bool isInvisibilityCooldown()
     {
-        if ( this.playerClass.tag != PLAYERCLASS_SNIPER )
+        if ( this.playerClass.tag != PLAYERCLASS_GUNNER )
             return false;
 
         return ( this.invisibilityCooldownTime > levelTime ) ? true : false;
@@ -1193,26 +1236,23 @@ class cPlayer
         if ( this.isInvisibilityCooldown() )
             return;
 
+		if ( this.isDeployed )
+            return;
+
         if ( ( this.ent.effects & EF_CARRIER ) != 0 )
         {
             this.printMessage( "Cannot use the skill now\n" );
             return;
         }
 
-        if ( this.client.inventoryCount( POWERUP_SHELL ) > 0 )
-        {
-            this.printMessage( "Cannot use the skill now\n" );
-            return;
-        }
-
-        if ( this.invisibilityLoad < CTFT_SNIPER_INVISIBILITY_MINLOAD )
+        if ( this.invisibilityLoad < CTFT_GUNNER_INVISIBILITY_MINLOAD )
         {
             this.printMessage( "Cannot use the skill yet\n" );
             return;
         }
 
         this.invisibilityEnabled = true;
-        this.invisibilityWasUsingWeapon = this.ent.weapon;
+        this.lastNormalModeWeapon = this.ent.weapon;
         this.client.selectWeapon( WEAP_NONE );
         this.ent.effects |= EF_PLAYER_HIDENAME;
 
@@ -1233,7 +1273,7 @@ class cPlayer
 
         this.invisibilityEnabled = false;
 
-        this.client.selectWeapon( this.invisibilityWasUsingWeapon );
+        this.client.selectWeapon( this.lastNormalModeWeapon );
         this.client.pmoveFeatures = this.client.pmoveFeatures | PMFEAT_WEAPONSWITCH;
         this.ent.effects &= ~EF_PLAYER_HIDENAME;
 
@@ -1288,6 +1328,138 @@ class cPlayer
                 this.centerPrintMessage( "Warshell wearing off in " + this.client.inventoryCount( POWERUP_SHELL ) + " seconds" );
         }
     }
+
+	void deploy()
+	{
+		if ( this.isDeployingUp || this.isDeployingDown )
+			return;
+
+		if ( this.isDeployed )
+		{
+			setDeployingDown();
+			return;
+		}
+		
+		if ( this.invisibilityEnabled )
+			return;
+
+		if ( this.client.inventoryCount( AMMO_LASERS ) == 0 )
+		{
+			client.printMessage( "No LG ammo. Can't switch to the deployed mode\n" );
+			return;
+		}
+
+		G_Sound( this.ent, CHAN_MUZZLEFLASH, G_SoundIndex( "sounds/items/quad_spawn" ), 0.3f );
+		this.isDeployed = true;
+		setDeployingUp();
+	}
+
+	void setDeployingUp()
+	{
+		this.isDeployingUp = true;
+		this.deployUpTime = levelTime + CTFT_GUNNER_DEPLOY_TIME;
+
+		this.client.pmoveFeatures = this.client.pmoveFeatures & ~( PMFEAT_JUMP|PMFEAT_DASH|PMFEAT_WALLJUMP|PMFEAT_CROUCH|PMFEAT_WEAPONSWITCH );
+		
+		this.client.inventorySetCount( WEAP_GUNBLADE, 0 );
+		this.client.inventorySetCount( AMMO_WEAK_LASERS, this.client.inventoryCount( AMMO_LASERS ) );
+		this.client.inventorySetCount( AMMO_LASERS, 0 );
+		this.lastNormalModePGAmmo = this.client.inventoryCount( AMMO_PLASMA );
+		this.client.inventorySetCount( AMMO_PLASMA, 0 );
+		this.client.inventorySetCount( WEAP_PLASMAGUN, 0 );
+		this.lastNormalModeGLAmmo = this.client.inventoryCount( AMMO_GRENADES );
+		this.client.inventorySetCount( AMMO_GRENADES, 0 );
+		this.client.inventorySetCount( WEAP_GRENADELAUNCHER, 0 );
+		
+		this.lastNormalModeWeapon = this.client.weapon;
+		this.client.selectWeapon( WEAP_NONE );
+	}
+
+	void setDeployingDown()
+	{
+		this.isDeployingDown = true;
+		this.deployDownTime = levelTime + CTFT_GUNNER_DEPLOY_TIME;
+		
+		this.client.selectWeapon( WEAP_NONE );
+	}
+
+	void deployedUp()
+	{
+		this.isDeployingUp = false;
+		
+		this.client.selectWeapon( WEAP_LASERGUN );
+	}
+
+	void deployedDown()
+	{
+		this.isDeployingDown = false;
+		this.isDeployed = false;
+	
+		this.client.pmoveFeatures = this.client.pmoveFeatures | ( PMFEAT_JUMP|PMFEAT_DASH|PMFEAT_WALLJUMP|PMFEAT_CROUCH|PMFEAT_WEAPONSWITCH );
+
+		this.client.inventorySetCount( WEAP_GUNBLADE, 1 );		
+		this.client.inventorySetCount( AMMO_LASERS, this.client.inventoryCount( AMMO_WEAK_LASERS ) );
+		this.client.inventorySetCount( AMMO_WEAK_LASERS, 0 );
+		this.client.inventorySetCount( WEAP_PLASMAGUN, 1 );
+		this.client.inventorySetCount( AMMO_PLASMA, this.lastNormalModePGAmmo );
+		this.client.inventorySetCount( WEAP_GRENADELAUNCHER, 1 );
+		this.client.inventorySetCount( AMMO_GRENADES, this.lastNormalModeGLAmmo );
+		this.client.inventorySetCount( POWERUP_SHELL, 0 );
+		
+		// Prevent showing an empty screen when running out of ammo by selecting a best weapon first
+		this.client.selectWeapon( -1 );
+		this.client.selectWeapon( this.lastNormalModeWeapon );
+	}
+
+	void watchDeployedMode()
+	{
+		if ( !this.isDeployed )
+			return;
+
+		this.client.inventorySetCount( POWERUP_SHELL, 99 );
+	
+		if ( this.isDeployingUp && this.deployUpTime < levelTime )
+		{
+			this.deployedUp();
+			return;
+		}
+
+		if ( this.isDeployingDown )
+		{
+			if ( this.deployDownTime < levelTime )
+				this.deployedDown();
+		}
+		else
+		{ 
+			if ( this.client.inventoryCount( AMMO_WEAK_LASERS ) == 0 )
+				this.setDeployingDown();
+		}	
+	}
+
+	bool isDeployCooldown()
+	{
+		if ( this.playerClass.tag != PLAYERCLASS_GUNNER )
+			return false;
+		
+		if ( this.isDeployingUp || this.isDeployingDown )
+			return true;
+
+		return false;
+	}
+
+	int deployCooldownTimeLeft()
+	{
+		if ( this.playerClass.tag != PLAYERCLASS_GUNNER )
+			return 0;
+
+		if ( this.isDeployingUp && levelTime < this.deployUpTime )
+			return -int( this.deployUpTime - levelTime );
+
+		if ( this.isDeployingDown && levelTime < this.deployDownTime )
+			return -int( this.deployDownTime - levelTime );
+
+		return 0;
+	}
 
 	void checkAndLoadAmmo( int ammoTag, int minCount )
 	{
@@ -1344,19 +1516,40 @@ class cPlayer
 				this.checkAndLoadAmmo( AMMO_GRENADES, 7 );
 			}
 		}
-		else if ( this.playerClass.tag == PLAYERCLASS_ENGINEER )
+		else if ( this.playerClass.tag == PLAYERCLASS_GUNNER )
 		{
 			if ( fullLoad )
 			{
-				client.inventorySetCount( AMMO_ROCKETS, 5 );
-				client.inventorySetCount( AMMO_PLASMA, 125 );
-				client.inventorySetCount( AMMO_SHELLS, 15 );
+				if ( this.isDeployed )
+				{
+					client.inventorySetCount( AMMO_WEAK_LASERS, CTFT_GUNNER_MAX_LG_AMMO );
+					this.lastNormalModePGAmmo = 100;
+					this.lastNormalModeGLAmmo = 10;
+				}
+				else
+				{
+					client.inventorySetCount( AMMO_LASERS, CTFT_GUNNER_MAX_LG_AMMO );
+					client.inventorySetCount( AMMO_PLASMA, 100 );
+					client.inventorySetCount( AMMO_GRENADES, 10 );
+				}
 			}
 			else
 			{
-				this.checkAndLoadAmmo( AMMO_ROCKETS, 3 );
-				this.checkAndLoadAmmo( AMMO_PLASMA, 75 );
-				this.checkAndLoadAmmo( AMMO_SHELLS, 7 );
+				if ( this.isDeployed )
+				{
+					if ( client.inventoryCount( AMMO_WEAK_LASERS ) < ( 2 * CTFT_GUNNER_MAX_LG_AMMO ) / 3 )
+						client.inventorySetCount( AMMO_WEAK_LASERS, ( 2 * CTFT_GUNNER_MAX_LG_AMMO ) / 3 );
+					if ( this.lastNormalModePGAmmo < 50 )
+						this.lastNormalModePGAmmo = 50;
+					if ( this.lastNormalModeGLAmmo < 5 )
+						this.lastNormalModeGLAmmo = 5;
+				}
+				else
+				{
+					this.checkAndLoadAmmo( AMMO_LASERS, ( 2 * CTFT_GUNNER_MAX_LG_AMMO ) / 3 );
+					this.checkAndLoadAmmo( AMMO_PLASMA, 50 );
+					this.checkAndLoadAmmo( AMMO_GRENADES, 5 );
+				}
 			}
 		}
 		else if ( this.playerClass.tag == PLAYERCLASS_SUPPORT )
@@ -1365,13 +1558,15 @@ class cPlayer
 			client.inventorySetCount( AMMO_GUNBLADE, 1 );
 			if ( fullLoad )
 			{
-				client.inventorySetCount( AMMO_LASERS, 100 );
-				client.inventorySetCount( AMMO_SHELLS, 15 );
+				client.inventorySetCount( AMMO_ROCKETS, 10 );
+				client.inventorySetCount( AMMO_BULLETS, 125 );
+				client.inventorySetCount( AMMO_SHELLS, 10 );
 			}
 			else
 			{
-				this.checkAndLoadAmmo( AMMO_LASERS, 50 );
-				this.checkAndLoadAmmo( AMMO_SHELLS, 7 );
+				this.checkAndLoadAmmo( AMMO_ROCKETS, 5 );
+				this.checkAndLoadAmmo( AMMO_BULLETS, 75 );
+				this.checkAndLoadAmmo( AMMO_SHELLS, 5 );
 			}
 		}
 		else if ( this.playerClass.tag == PLAYERCLASS_SNIPER )
@@ -1379,12 +1574,12 @@ class cPlayer
 			if ( fullLoad )
 			{
 				client.inventorySetCount( AMMO_BOLTS, 13 );
-				client.inventorySetCount( AMMO_BULLETS, 125 );
+				client.inventorySetCount( AMMO_BULLETS, 75 );
 			}
 			else
 			{
 				this.checkAndLoadAmmo( AMMO_BOLTS, 7 );
-				this.checkAndLoadAmmo( AMMO_BULLETS, 75 );
+				this.checkAndLoadAmmo( AMMO_BULLETS, 50 );
 			}
 		}
 	}

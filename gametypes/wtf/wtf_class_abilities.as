@@ -269,6 +269,24 @@ void CTFT_PrintBuiltEntitiesStatus( Client @client, cPlayer @player )
 	client.printMessage( message );
 }
 
+void CTFT_DeployCommand( Client @client, const String &argsString, int argc )
+{
+	if ( @client == null )
+		return;
+
+	if ( client.getEnt().isGhosting() )
+		return;
+
+	cPlayer @player = @GetPlayer( client );
+	if ( player.playerClass.tag == PLAYERCLASS_GUNNER )
+	{
+		player.deploy();
+		return;
+	}
+
+	client.printMessage( "This command is not available for your class\n" );
+}
+
 void CTFT_AltAttackCommand( Client @client, const String &argsString, int argc )
 {
 	if ( @client == null )
@@ -582,18 +600,14 @@ void CTFT_Classaction1Command( Client @client )
 			else
 				player.useTranslocator();
 			break;
-		case PLAYERCLASS_ENGINEER:
-			if ( @player.turret == null )
-				CTFT_BuildCommand( client, "turret", 1 );
-			else
-				CTFT_BuildCommand( client, "pad", 1 );
-			CTFT_BuildCommand( client, "status", 1 );
+		case PLAYERCLASS_GUNNER:
+			player.activateInvisibility();			
 			break;
 		case PLAYERCLASS_SUPPORT:
 			CTFT_Blast( client, player );
 			break;
 		case PLAYERCLASS_SNIPER:
-			player.activateInvisibility();
+			CTFT_BuyInstaShot( client, player );
 			break;
 	}
 }
@@ -619,12 +633,8 @@ void CTFT_Classaction2Command( Client @client )
 		case PLAYERCLASS_RUNNER:
 			CTFT_ThrowSmokeGrenade( client, player );
 			break;
-		case PLAYERCLASS_ENGINEER:
-			if ( @player.bouncePad != null )
-				CTFT_DestroyCommand( client, "pad", 1 );
-			else
-				CTFT_DestroyCommand( client, "turret", 1 );
-			CTFT_DestroyCommand( client, "status", 1 );
+		case PLAYERCLASS_GUNNER:
+			player.deploy();			
 			break;
 		case PLAYERCLASS_SUPPORT:
 			CTFT_SupplyAmmo( client, player );
