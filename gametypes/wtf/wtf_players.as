@@ -29,11 +29,15 @@ class cPlayer
 	cBouncePad @bouncePad;   
     cBomb @bomb;
 	cTranslocator @translocator;
+	Entity @motionDetector;
+
+	Entity @detectionSprite;
+	Entity @detectionMinimap;
 
     uint medicRegenCooldownTime;
 	uint gruntAbilityCooldownTime;
 	uint supportRegenCooldownTime;
-    uint engineerBuildCooldownTime;
+    uint buildCooldownTime;
 	uint blastCooldownTime;
 	uint bioGrenadeCooldownTime;
 	uint runnerAbilityCooldownTime;
@@ -86,6 +90,9 @@ class cPlayer
 		@this.bouncePad = null;
         @this.bomb = null;
 		@this.translocator = null;
+		@this.motionDetector = null;
+		@this.detectionSprite = null;
+		@this.detectionMinimap = null;
         this.resetTimers();
 		
 		this.medicInfluenceScore = 0.0;
@@ -104,7 +111,7 @@ class cPlayer
         this.medicRegenCooldownTime = 0;
 		this.gruntAbilityCooldownTime = 0;
 		this.supportRegenCooldownTime = 0;
-        this.engineerBuildCooldownTime = 0;
+        this.buildCooldownTime = 0;
    		this.blastCooldownTime = 0;
 		this.bioGrenadeCooldownTime = 0;
 		this.runnerAbilityCooldownTime = 0;
@@ -192,9 +199,9 @@ class cPlayer
 
         float frac;
 
-        if ( this.isEngineerBuildCooldown() )
+        if ( this.isBuildCooldown() )
         {
-            frac = float( this.engineerBuildCooldownTimeLeft() ) / float( CTFT_ENGINEER_BUILD_COOLDOWN_TIME );
+            frac = float( this.buildCooldownTimeLeft() ) / float( CTFT_BUILD_COOLDOWN_TIME );
             this.client.setHUDStat( STAT_PROGRESS_SELF, int( frac * 100 ) );
         }
 
@@ -374,16 +381,21 @@ class cPlayer
         if ( !success && @this.playerClass == null ) // never be null
             @this.playerClass = @cPlayerClassInfos[PLAYERCLASS_GRUNT];
 
-		if ( @oldClass != null )
+		if ( @oldClass != null && this.playerClass.tag != oldClass.tag )
 		{
-			// Destroy entities build by an engineer
-			if ( oldClass.tag == PLAYERCLASS_ENGINEER && this.playerClass.tag != PLAYERCLASS_ENGINEER )
+			// Destroy built entities
+			if ( oldClass.tag == PLAYERCLASS_ENGINEER )
 			{
 				if ( @this.turret != null )
 					this.turret.die( null, null );
 
 				if ( @this.bouncePad != null )
 					this.bouncePad.die( null, null );
+			}
+			else if ( oldClass.tag == PLAYERCLASS_SNIPER )
+			{
+				if ( @this.motionDetector != null )
+					motion_detector_die( this.motionDetector, null, null );
 			}
 		}
 
@@ -1159,31 +1171,31 @@ class cPlayer
         return ( this.invisibilityCooldownTime > levelTime ) ? true : false;
     }
 
-    void setEngineerBuildCooldown()
+    void setBuildCooldown()
     {
-        if ( this.playerClass.tag != PLAYERCLASS_ENGINEER )
+        if ( this.playerClass.tag != PLAYERCLASS_SNIPER )
             return;
 
-        this.engineerBuildCooldownTime = levelTime + CTFT_ENGINEER_BUILD_COOLDOWN_TIME;
+        this.buildCooldownTime = levelTime + CTFT_BUILD_COOLDOWN_TIME;
     }
 
-    bool isEngineerBuildCooldown()
+    bool isBuildCooldown()
     {
-        if ( this.playerClass.tag != PLAYERCLASS_ENGINEER )
+        if ( this.playerClass.tag != PLAYERCLASS_SNIPER )
             return false;
 
-        return ( engineerBuildCooldownTime > levelTime ) ? true : false;
+        return ( this.buildCooldownTime > levelTime ) ? true : false;
     }
 
-    int engineerBuildCooldownTimeLeft()
+    int buildCooldownTimeLeft()
     {
-        if ( this.playerClass.tag != PLAYERCLASS_ENGINEER )
+        if ( this.playerClass.tag != PLAYERCLASS_SNIPER )
             return 0;
 
-        if ( this.engineerBuildCooldownTime <= levelTime )
+        if ( this.buildCooldownTime <= levelTime )
             return 0;
 
-        return int( this.engineerBuildCooldownTime - levelTime );
+        return int( this.buildCooldownTime - levelTime );
     }
 
 	void setRunnerAbilityCooldown()
@@ -1710,7 +1722,7 @@ class cPlayer
 	{
 		@this.bouncePad = null;
 		client.printMessage( "Can't spawn a bounce pad here\n" );
-		this.engineerBuildCooldownTime = 0;
+		this.buildCooldownTime = 0;
 		// Return armor spent on throwing a bounce pad spawner
 		client.armor += CTFT_TURRET_AP_COST;
 	}
@@ -1755,6 +1767,101 @@ class cPlayer
 		G_CenterPrintMsg( this.ent, this.playerClass.description[this.nextTipDescriptionLine] );
 		this.nextTipDescriptionLine++;
 		this.nextTipTime = levelTime + 2400;
+	}
+
+	void showDetectionEntities()
+	{
+		if ( @this.detectionSprite != null )
+		{
+			// Just update the sprite origin
+			this.detectionSprite.origin = this.ent.origin;
+			this.detectionSprite.linkEntity();	
+		}
+		else
+		{ 
+			@this.detectionSprite = @G_SpawnEntity( "player_detection_sprite" );
+			this.detectionSprite.type = ET_RADAR;
+			this.detectionSprite.solid = SOLID_NOT;
+			this.detectionSprite.team = ( this.ent.team == TEAM_ALPHA ) ? TEAM_BETA : TEAM_ALPHA;
+			this.detectionSprite.modelindex = prcMotionDetectorSpriteImageIndex;
+			this.detectionSprite.frame = 120;
+			this.detectionSprite.origin = this.ent.origin;
+			this.detectionSprite.svflags = ( this.detectionSprite.svflags & ~uint(SVF_NOCLIENT) ) | uint(SVF_ONLYTEAM|SVF_BROADCAST);
+			this.detectionSprite.linkEntity();
+		}
+
+		if ( @this.detectionMinimap != null )
+		{
+			// Just update the entity origin
+			this.detectionMinimap.origin = this.ent.origin;
+			this.detectionMinimap.linkEntity();
+		}
+		else
+		{
+			@this.detectionMinimap = @G_SpawnEntity( "player_detection_minimap" );
+			this.detectionMinimap.type = ET_MINIMAP_ICON;
+			this.detectionMinimap.solid = SOLID_NOT;
+			this.detectionMinimap.team = ( this.ent.team == TEAM_ALPHA ) ? TEAM_BETA : TEAM_ALPHA;
+			this.detectionMinimap.modelindex = prcMotionDetectorMinimapImageIndex;
+			this.detectionMinimap.frame = 20;
+			this.detectionMinimap.origin = this.ent.origin;
+			this.detectionMinimap.svflags = ( this.detectionMinimap.svflags & ~uint(SVF_NOCLIENT) ) | uint(SVF_ONLYTEAM|SVF_BROADCAST);
+			this.detectionMinimap.linkEntity();
+		}
+	}
+
+	void hideDetectionEntities()
+	{
+		if ( @this.detectionSprite != null )
+		{
+			this.detectionSprite.freeEntity();
+			@this.detectionSprite = null;
+		}
+		
+		if ( @this.detectionMinimap != null )
+		{
+			this.detectionMinimap.freeEntity();
+			@this.detectionMinimap = null;
+		}
+	}
+
+	void buildMotionDetector()
+	{
+		if ( this.buildCooldownTime >= levelTime )
+			return;
+
+		if ( @this.motionDetector != null )
+		{
+			motion_detector_die( this.motionDetector, null, null );
+			this.motionDetectorBuildingCanceled();
+			this.setBuildCooldown();		
+			return;
+		}
+
+		if ( this.client.armor < CTFT_MOTION_DETECTOR_AP_COST )
+		{
+			client.printMessage( "You do not have enough armor to build a motion detector\n" );
+			return;
+		}
+
+		@this.motionDetector = @ClientThrowMotionDetector( this.client );
+		if ( @this.motionDetector == null )
+			return;
+
+		this.setBuildCooldown();
+		this.client.armor -= CTFT_MOTION_DETECTOR_AP_COST;
+	}
+
+	void motionDetectorBuildingCanceled()
+	{
+		this.client.armor += CTFT_MOTION_DETECTOR_AP_COST;
+		@this.motionDetector = null;
+	}
+
+	void motionDetectorDestroyed()
+	{
+		this.centerPrintMessage( S_COLOR_RED + "Your motion detector has been destroyed" );
+		@this.motionDetector = null;
 	}
 }
 

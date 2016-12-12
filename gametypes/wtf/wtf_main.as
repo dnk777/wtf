@@ -42,12 +42,13 @@ int CTFT_DISABLED_REVIVER_RESPAWN_PENALTY = 4000;
 int CTFT_TURRET_AP_COST = 50;
 int CTFT_TURRET_STRONG_AP_COST = 125;
 int CTFT_CLUSTER_GRENADE_AP_COST = 50;
-uint CTFT_ENGINEER_BUILD_COOLDOWN_TIME = 1500;
+uint CTFT_BUILD_COOLDOWN_TIME = 1500;
 float CTFT_GUNNER_INVISIBILITY_MINLOAD = 20;
 float CTFT_GUNNER_INVISIBILITY_MAXLOAD = 100;
 uint CTFT_INVISIBILITY_COOLDOWN = 1000;
 uint CTFT_GUNNER_DEPLOY_TIME = 500;
 uint CTFT_GRUNT_ABILITY_COOLDOWN = 8000;
+uint CTFT_DETECTOR_GRENADE_COOLDOWN = 8000;
 uint CTFT_FLAG_DISPENSER_COOLDOWN_TIME = 30000;
 int CTFT_MEDIC_REGEN_COOLDOWN = 1200;
 int CTFT_SUPPORT_REGEN_COOLDOWN = 1200;
@@ -79,6 +80,9 @@ const float CTFT_GRENADE_SPEED = 1000;
 const uint CTFT_GRENADE_TIMEOUT = 1250;
 
 const int CTFT_GUNNER_MAX_LG_AMMO = 180;
+
+const float CTFT_PLAYER_DETECTION_RADIUS = 512;
+const int CTFT_MOTION_DETECTOR_AP_COST = 40;
 
 // precache images and sounds
 
@@ -119,6 +123,9 @@ int prcBioCloudShaderIndex;
 int prcBioTeamSparksShaderIndex;
 int prcBioEnemySparksShaderIndex;
 int prcBioEmissionSound;
+
+int prcMotionDetectorSpriteImageIndex;
+int prcMotionDetectorMinimapImageIndex;
 
 bool firstSpawn = false;
 
@@ -1007,6 +1014,41 @@ void CTFT_UpdateHidenameEffects()
 	}
 }
 
+void CTFT_UpdateDetectionEntities()
+{
+	for ( int i = 0; i < maxClients; ++i )
+	{
+		GetPlayer( G_GetClient( i ) ).hideDetectionEntities();
+	}
+
+	// Make sure that Runners moving on ground cannot be detected
+	const float speedLimit = cPlayerClassInfos[ PLAYERCLASS_RUNNER ].pmoveMaxSpeedOnGround;
+	array<Entity @> @detectors = @G_FindByClassname( "motion_detector" );
+	for ( uint i = 0; i < detectors.size(); ++i )
+	{
+		Entity @detector = detectors[i];
+		array<Entity @> @inradius = @G_FindInRadius( detector.origin, CTFT_PLAYER_DETECTION_RADIUS );
+		for ( uint j = 0; j < inradius.size(); ++j )
+		{
+			Entity @ent = inradius[j];
+			if ( @ent.client == null )
+				continue;
+			if ( ent.isGhosting() )
+				continue;
+			if ( ent.team == detector.team )
+				continue;
+			// Skip slow targets 
+			if ( ent.velocity.length() <= speedLimit )
+				continue;
+			// This test is not cheap, do it last after all possible rejections
+			if ( !G_InPVS( detector.origin, ent.origin ) )
+				continue;
+
+			GetPlayer( ent.client ).showDetectionEntities();
+		}
+	}
+}
+
 // Thinking function. Called each frame
 void GT_ThinkRules()
 {
@@ -1080,6 +1122,8 @@ void GT_ThinkRules()
     }
 
 	CTFT_UpdateHidenameEffects();
+
+	CTFT_UpdateDetectionEntities();
 }
 
 // The game has detected the end of the match state, but it
@@ -1169,6 +1213,7 @@ void CTFT_SetUpMatch()
 	CTFT_RemoveTranslocators();
 	CTFT_RemoveSmokeGrenades();
 	CTFT_RemoveBouncePads();
+	CTFT_RemoveMotionDetectors();
     CTFT_RemoveItemsByName("25 Health");
     CTFT_RemoveItemsByName("Yellow Armor");
     CTFT_RemoveItemsByName("5 Health");
@@ -1398,6 +1443,9 @@ void GT_InitGametype()
 	prcBioTeamSparksShaderIndex = G_ImageIndex( "gfx/wtf/bio_team_sparks" );
 	prcBioEnemySparksShaderIndex = G_ImageIndex( "gfx/wtf/bio_enemy_sparks" );
 	prcBioEmissionSound = G_SoundIndex( "sounds/wtf/bio_emission", true );
+
+	prcMotionDetectorSpriteImageIndex = G_ImageIndex( "gfx/wtf/motion_detector_sprite" );
+	prcMotionDetectorMinimapImageIndex = G_ImageIndex( "gfx/wtf/motion_detector_minimap" );
 
     // Translocator
     G_ModelIndex( "models/objects/wtf/translocator_body_normal.md3", true );

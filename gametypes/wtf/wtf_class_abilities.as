@@ -17,258 +17,6 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
-void CTFT_BuildCommand( Client @client, const String &argsString, int argc )
-{
-	if( @client == null )
-		return;
-
-    if ( client.getEnt().isGhosting() )
-        return;
-
-	cPlayer @player = @GetPlayer( client );
-
-    if ( player.playerClass.tag != PLAYERCLASS_ENGINEER )
-    {
-		client.printMessage( "This command is not available for your class\n" );
-		return;
-	}
-
-	if ( argc != 1 )
-	{
-		client.printMessage( "Illegal command usage (a single argument is expected)\n" );
-		return;
-	}
-
-	String token = argsString.getToken( 0 );
-
-	// hack for entities status
-	if ( token == "status" )
-	{
-		CTFT_PrintBuiltEntitiesStatus( client, player );
-		return;
-	}
-
-	if ( player.isEngineerBuildCooldown() )
-    {
-        client.printMessage( "You cannot build yet\n" );
-        return;
-    }
-
-	for ( cFlagBase @flagBase = @fbHead; @flagBase != null; @flagBase = @flagBase.next )
-	{
-		if( flagBase.owner.origin.distance( client.getEnt().origin ) < CTFT_BUILD_RADIUS )
-		{
-			client.printMessage( "Too close to the flag, cannot build here\n" );
-			return;
-		}
-	}
-
-    if ( client.armor < CTFT_TURRET_AP_COST )
-    {
-        client.printMessage( "You don't have enough armor to build\n" );
-		return;
-    }
-
-
-	if ( token == "turret" )
-	{
-		CTFT_BuildTurret( client, player );
-		return;
-	}
-
-	if ( token == "pad" )
-	{
-		CTFT_BuildBouncePad( client, player );
-		return;
-	}
-
-	client.printMessage( "Illegal command usage. Available arguments: ^6turret^7, ^6pad^7, ^6status^7.\n" );
-}
-
-void CTFT_DestroyCommand( Client @client, const String &argsString, int argc )
-{
-	if( @client == null )
-		return;
-
-    if ( client.getEnt().isGhosting() )
-        return;
-
-	cPlayer @player = @GetPlayer( client );
-
-    if ( player.playerClass.tag != PLAYERCLASS_ENGINEER )
-    {
-		client.printMessage( "This command is not available for your class\n" );
-		return;
-	}
-
-	if ( argc != 1 )
-	{
-		client.printMessage( "Illegal command usage (a single argument is expected)\n" );
-		return;
-	}
-
-	String token = argsString.getToken( 0 );
-
-	// hack for entities status
-	if ( token == "status" )
-	{
-		CTFT_PrintBuiltEntitiesStatus( client, player );
-		return;
-	}
-
-	if ( token == "turret" )
-	{
-		CTFT_DestroyTurret( client, player );
-		return;
-	}
-
-	if ( token == "pad" )
-	{
-		CTFT_DestroyBouncePad( client, player );
-		return;
-	}
-
-	client.printMessage( "Illegal command usage. Available arguments: ^6turret^7, ^6pad^7, ^6status^7.\n" );
-}
-
-void CTFT_BuildTurret( Client @client, cPlayer @player )
-{
-    if ( @player.turret != null )
-    {
-        client.printMessage( "You have already built a turret\n" );
-        return;
-    }
-
-    cTurret @turret = ClientDropTurret( client );
-	if ( @turret == null )
-		return;
-
-    @turret.client = @client;
-    client.armor = client.armor - CTFT_TURRET_AP_COST;
-
-    @player.turret = @turret;
-    // have a delay before being able to build again
-    player.setEngineerBuildCooldown();
-
-	if ( player.turretHealthWhenDestroyed < CTFT_TURRET_HEALTH )
-	{
-		if ( levelTime - player.turretDestroyedAtTime < CTFT_FAST_REPAIR_TIME )
-		{
-			if ( player.turretHealthWhenDestroyed < 0 )
-				player.turretHealthWhenDestroyed = 0;
-
-			uint bonus = uint( 0.01f * ( CTFT_TURRET_HEALTH - player.turretHealthWhenDestroyed ) );
-			if ( bonus > 0 )
-			{
-				player.client.stats.addScore( bonus );
-				player.client.addAward( S_COLOR_CYAN + "Fast repair!" );
-			} 
-		}
-	}
-}
-
-void CTFT_BuildBouncePad( Client @client, cPlayer @player )
-{
-	if ( @player.bouncePad != null )
-	{
-		client.printMessage( "You have already built a bounce pad\n" );
-		return;
-	}
-
-	cBouncePad @bouncePad = ClientDropBouncePad( client );
-	if ( @bouncePad == null )
-		return;
-
-	client.armor -= CTFT_TURRET_AP_COST;
-
-	@player.bouncePad = bouncePad;
-	player.setEngineerBuildCooldown();
-
-	if ( player.bouncePadHealthWhenDestroyed < CTFT_BOUNCE_PAD_HEALTH )
-	{
-		if ( levelTime - player.bouncePadDestroyedAtTime < CTFT_FAST_REPAIR_TIME )
-		{
-			if ( player.bouncePadHealthWhenDestroyed < 0 )
-				player.bouncePadHealthWhenDestroyed = 0;
-
-			uint bonus = uint( 0.03f * ( CTFT_BOUNCE_PAD_HEALTH - player.bouncePadHealthWhenDestroyed ) );
-			if ( bonus > 0 )
-			{
-				player.client.stats.addScore( bonus );
-				player.client.addAward( S_COLOR_CYAN + "Fast repair!" );
-			} 
-		}
-	}
-}
-
-void CTFT_DestroyTurret( Client @client, cPlayer @player )
-{
-	if ( @player.turret == null )
-	{
-		client.printMessage( "There is no your turret\n" );
-		return;
-	}
-
-	player.turret.die( null, null );
-	@player.turret = null;
-	player.engineerBuildCooldownTime = levelTime + 750;
-	client.armor += CTFT_TURRET_AP_COST;
-}
-
-void CTFT_DestroyBouncePad( Client @client, cPlayer @player )
-{
-	if ( @player.bouncePad == null )
-	{
-		client.printMessage( "There is no your bounce pad\n" );
-		return;
-	}
-
-	player.bouncePad.die( null, null );
-	@player.bouncePad = null;
-	player.engineerBuildCooldownTime = levelTime + 750;
-	client.armor += CTFT_TURRET_AP_COST;
-}
-
-void CTFT_PrintBuiltEntitiesStatus( Client @client, cPlayer @player )
-{
-	String message = "Built entites status: turret ";
-	if ( @player.turret != null && @player.turret.bodyEnt != null )
-	{
-		int health = int( player.turret.bodyEnt.health );
-		if ( health >= ( 2 * CTFT_TURRET_HEALTH ) / 3 )
-			message += "^2";
-		else if ( health > CTFT_TURRET_HEALTH / 3 )
-			message += "^3";
-		else
-			message += "^1";
-		message += health;
-		message += "^7/";
-		message += CTFT_TURRET_HEALTH;
-	}
-	else
-		message += "not built";
-
-	message += ", bounce pad ";
-	if ( @player.bouncePad != null && @player.bouncePad.bodyEnt != null )
-	{
-		int health = int( player.bouncePad.bodyEnt.health );
-		if ( health >= ( 2 * CTFT_BOUNCE_PAD_HEALTH ) / 3 )
-			message += "^2";
-		else if ( health > CTFT_BOUNCE_PAD_HEALTH / 3 )
-			message += "^3";
-		else
-			message += "^1";
-		message += health;
-		message += "^7/";
-		message += CTFT_BOUNCE_PAD_HEALTH;
-	}
-	else
-		message += "not built";
-
-	message += "\n";
-	client.printMessage( message );
-}
-
 void CTFT_DeployCommand( Client @client, const String &argsString, int argc )
 {
 	if ( @client == null )
@@ -281,6 +29,12 @@ void CTFT_DeployCommand( Client @client, const String &argsString, int argc )
 	if ( player.playerClass.tag == PLAYERCLASS_GUNNER )
 	{
 		player.deploy();
+		return;
+	}
+
+	if ( player.playerClass.tag == PLAYERCLASS_SNIPER )
+	{
+		player.buildMotionDetector();
 		return;
 	}
 
@@ -396,7 +150,6 @@ void CTFT_ThrowBioGrenade( Client @client, cPlayer @player )
         player.ent.health -= CTFT_BIO_GRENADE_HEALTH_COST;
 		player.setBioGrenadeCooldown();
     }
-    
 }
 
 void CTFT_Blast( Client @client, cPlayer @player )
@@ -607,7 +360,7 @@ void CTFT_Classaction1Command( Client @client )
 			CTFT_Blast( client, player );
 			break;
 		case PLAYERCLASS_SNIPER:
-			CTFT_BuyInstaShot( client, player );
+			player.buildMotionDetector();
 			break;
 	}
 }

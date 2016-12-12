@@ -104,6 +104,22 @@ void CTFT_RemoveBouncePads()
 	}
 }
 
+void CTFT_RemoveMotionDetectors()
+{
+	array<Entity @> @ents = G_FindByClassname( "motion_detector" );
+	for ( uint i = 0; i < ents.size(); ++i )
+	{
+		Entity @ent = ents[i];
+		Client @ownerClient = G_GetClient( ent.ownerNum );
+		if ( @ownerClient != null )
+			@GetPlayer( ownerClient ).motionDetector = null;
+		
+		// Remove silently
+		ent.ownerNum = 0;	
+		ent.freeEntity();
+	}
+}
+
 bool CTFT_RemoveItemsByName( String type )
 {
 	Item @tmp = G_GetItemByName( type );

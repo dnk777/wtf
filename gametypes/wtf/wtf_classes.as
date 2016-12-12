@@ -194,9 +194,11 @@ const String[] supportDescription =
 const String[] sniperDescription =
 {
 	"You're spawned as ^5SNIPER^7. This is a defencive class with best weapons for far-range fights.\n",
+	"Command ^6deploy^7: Build or destroy a motion detector\n",
+	"The motion detector reveals fast moving nearby enemies and highlights ones for you and your team\n",
 	"Command ^6supply^7: Buy an instagun shot\n",
 	"You can't carry more than 3 instagun shots\n",
-	"Generic command ^8classaction1^7: Same as ^6supply^7\n",
+	"Generic command ^8classaction1^7: Same as ^6deploy^7\n",
 	"Generic command ^8classaction2^7: Same as ^6supply^7\n" 
 };
 
