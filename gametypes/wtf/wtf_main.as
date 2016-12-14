@@ -729,7 +729,23 @@ void GT_ScoreEvent( Client @client, const String &score_event, const String &arg
 
         // Class-specific death stuff
         cPlayer @targetPlayer = @GetPlayer( target.client );
-        targetPlayer.respawnTime = levelTime + CTFT_BASE_RESPAWN_TIME;
+		// Set base player respawn time
+		targetPlayer.respawnTime = levelTime + CTFT_BASE_RESPAWN_TIME;
+		// Shorten respawn time when fragged at the team base
+		cFlagBase @targetBase = @CTF_getBaseForTeam( target.team );
+		if ( @targetBase != null )
+		{
+			cFlagBase @enemyBase = @CTF_getBaseForTeam( target.team == TEAM_ALPHA ? TEAM_BETA : TEAM_ALPHA );
+			if ( @enemyBase != null )
+			{
+				float baseToBaseDistance = targetBase.owner.origin.distance( enemyBase.owner.origin );
+				float targetToBaseDistance = target.origin.distance( targetBase.owner.origin );
+				if ( targetToBaseDistance < 0.16f * baseToBaseDistance )
+					targetPlayer.respawnTime -= 2000;
+				else if ( targetToBaseDistance < 0.33f * baseToBaseDistance )
+					targetPlayer.respawnTime -= 1000;
+			}
+		}
 
         // Spawn respawn indicator
         if ( match.getState() == MATCH_STATE_PLAYTIME )
