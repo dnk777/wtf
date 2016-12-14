@@ -153,7 +153,7 @@ class cBouncePad
         this.bodyEnt.clipMask = MASK_PLAYERSOLID;
         this.bodyEnt.moveType = MOVETYPE_NONE;
         this.bodyEnt.svflags &= ~SVF_NOCLIENT;
-        this.bodyEnt.health = CTFT_BOUNCE_PAD_HEALTH;
+        this.bodyEnt.health = 10;
         this.bodyEnt.mass = 99999;
         this.bodyEnt.takeDamage = 1;
 		this.bodyEnt.nextThink = levelTime + 1;
@@ -178,6 +178,9 @@ class cBouncePad
 
 		if ( @this.player != null && @this.bodyEnt != null )
 			this.player.bouncePadHasBeenDestroyed( this.bodyEnt );
+
+		if ( @this.bodyEnt != null )
+			this.bodyEnt.explosionEffect( 96 );
 
         this.Free();
     }
@@ -223,13 +226,20 @@ class cBouncePad
 
 	void think()
 	{
-		// I'm not sure if it is the right approach to handle client left events
-		if ( @this.player != null && @this.player.client != null )
+		if ( @this.player != null )
 		{
-			if ( this.player.client.state() < CS_SPAWNED || this.player.ent.team != this.bodyEnt.team )
+			if ( this.player.client.state() < CS_SPAWNED )
 			{
-				@this.player.bouncePad = null;
-				@this.player = null;
+				this.die( null, null );
+				return;
+			}
+			else if ( this.player.ent.team != this.bodyEnt.team )
+			{
+				this.die( null, null );
+				return;
+			}
+			else if ( this.player.playerClass.tag != PLAYERCLASS_SNIPER )
+			{
 				this.die( null, null );
 				return;
 			}

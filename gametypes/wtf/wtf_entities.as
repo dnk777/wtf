@@ -188,32 +188,6 @@ class cFlagBase
         // if the flag is not at base, no worth continue
         if ( ( this.owner.effects & EF_CARRIER ) == 0 )
             return;
-
-        // find players around
-        Trace tr;
-        Vec3 center, mins, maxs;
-        Entity @target = null;
-        Entity @stop = null;
-        Vec3 origin = this.owner.origin;
-
-		// Check for blockers
-		int timeNow = levelTime;
-		cTurret @turret = null;
-		if ( this.checkBlockages < timeNow )
-		{
-			// Destroy turrets
-			for ( int i = 0; i < MAX_TURRETS; i++ )
-			{
-				if ( gtTurrets[i].inuse == true )
-				{
-					@turret = @gtTurrets[i];
-
-					if( turret.bodyEnt.origin.distance( origin ) < CTFT_BUILD_DESTROY_RADIUS )
-						turret.die(target,target);
-				}
-			}
-			this.checkBlockages = timeNow + 3000;
-		}
     }
 
     void thinkRules()

@@ -32,15 +32,9 @@ const float CTF_FLAG_RECOVERY_BONUS_DISTANCE = 512.0f;
 const float CTF_CARRIER_KILL_BONUS_DISTANCE = 512.0f;
 const float CTF_OBJECT_DEFENSE_BONUS_DISTANCE = 512.0f;
 
-const int CTFT_TURRET_HEALTH = 400;
-const int CTFT_BOUNCE_PAD_HEALTH = 50;
-
-const uint CTFT_FAST_REPAIR_TIME = 5000;
-
 int CTFT_BASE_RESPAWN_TIME = 7000;
 int CTFT_DISABLED_REVIVER_RESPAWN_PENALTY = 4000;
-int CTFT_TURRET_AP_COST = 50;
-int CTFT_TURRET_STRONG_AP_COST = 125;
+int CTFT_BUILD_AP_COST = 25;
 int CTFT_CLUSTER_GRENADE_AP_COST = 50;
 uint CTFT_BUILD_COOLDOWN_TIME = 1500;
 float CTFT_GUNNER_INVISIBILITY_MINLOAD = 20;
@@ -64,10 +58,7 @@ float CTFT_BUILD_DESTROY_RADIUS = 96.0f;
 float CTFT_MEDIC_INFLUENCE_BASE_RADIUS = 192.0f;
 float CTFT_SUPPORT_INFLUENCE_BASE_RADIUS = 192.0f;
 
-// More than the maximum damage the Runner can inflict in a single shot (he has a RL so it's 80).
-// We also want the blast to be a powerful weapon (because shots are rare) so add a bit more.
 const int CTFT_BLAST_DAMAGE = 101;
-const uint CTFT_TURRET_STUN_TIME = 1250;
 
 const uint CTFT_BIO_GRENADE_COOLDOWN = 2500;
 const uint CTFT_BIO_GRENADE_DECAY = 2000;
@@ -256,6 +247,16 @@ bool GT_Command( Client @client, const String &cmdString, const String &argsStri
 	else if ( cmdString == "altattack" )
 	{
 		CTFT_AltAttackCommand( client, argsString, argc );
+		return true;
+	}
+	else if ( cmdString == "build" )
+	{
+		CTFT_BuildCommand( client, argsString, argc );
+		return true;
+	}
+	else if ( cmdString == "destroy" )
+	{
+		CTFT_DestroyCommand( client, argsString, argc );
 		return true;
 	}
 	else if ( cmdString == "deploy" )
@@ -695,13 +696,6 @@ void GT_ScoreEvent( Client @client, const String &score_event, const String &arg
 			{
             	GetPlayer( target.client ).tookDamage( arg3, arg2 );
 			}
-			// Hack: IG should not inflict more than 125 damage units on turrets
-			else if ( arg2 == 200.0f )
-			{
-				// We did a cheap numeric test first to cut off this string comparison
-				if ( target.classname == "turret_body" )
-					target.health += 75.0f;
-			}
         }
 
 		if ( @attacker.client != null )
@@ -719,13 +713,6 @@ void GT_ScoreEvent( Client @client, const String &score_event, const String &arg
 				}
 			}
 		}
-		else if ( attacker.classname == "bounce_pad_body" )
-		{
-			// Add a score for each enemy hurt by pad event
-			if ( attacker.count >= 0 && attacker.count < MAX_BOUNCE_PADS )
-				if ( @gtBouncePads[attacker.count].player != null )
-					gtBouncePads[attacker.count].player.client.stats.addScore( 1 );
-		}
     }
     else if ( score_event == "kill" )
     {
@@ -737,38 +724,8 @@ void GT_ScoreEvent( Client @client, const String &score_event, const String &arg
         if ( @target == null || @target.client == null )
             return;
 
-		bool suppressAwards = false;
-		if ( @attacker.client == null )
-		{
-			suppressAwards = true;
-			if ( attacker.classname == "turret_body" )
-			{
-				if ( attacker.count >= 0 && attacker.count < MAX_TURRETS )
-				{
-					// Set the turret owner as an attacker
-					if ( @gtTurrets[attacker.count].client != null )
-					{	
-						@attacker = @gtTurrets[attacker.count].client.getEnt();
-						// Add a score for killing a player not for inflicting a damage as in general,
-						// otherwise engineers will always be on top of the scoreboard.
-						attacker.client.stats.addScore( 1 );
-					}				
-				}
-			}
-			else if ( attacker.classname == "bounce_pad_body" )
-			{
-				if ( attacker.count >= 0 && attacker.count < MAX_BOUNCE_PADS )
-				// Set the pad owner as an attacker
-				if ( @gtBouncePads[attacker.count].player != null )
-				{
-					@attacker = @gtBouncePads[attacker.count].player.ent;
-					attacker.client.stats.addScore( 1 );
-				}
-			}
-		}
-
-        // target, attacker, inflictor
-        CTF_playerKilled( target, attacker, inflictor, suppressAwards );
+        // target, attacker, inflictor, suppressAwards
+        CTF_playerKilled( target, attacker, inflictor, @attacker.client == null );
 
         // Class-specific death stuff
         cPlayer @targetPlayer = @GetPlayer( target.client );
@@ -781,7 +738,7 @@ void GT_ScoreEvent( Client @client, const String &score_event, const String &arg
         if ( targetPlayer.playerClass.tag == PLAYERCLASS_SUPPORT )
             CTFT_DeathDrop( target.client, "Green Armor" );
 
-        if ( targetPlayer.playerClass.tag == PLAYERCLASS_ENGINEER )
+        if ( targetPlayer.playerClass.tag == PLAYERCLASS_GUNNER )
             CTFT_DeathDrop( target.client, "Green Armor" );
 
         if ( targetPlayer.playerClass.tag == PLAYERCLASS_SNIPER )
@@ -1184,8 +1141,11 @@ void GT_MatchStateStarted()
 
     case MATCH_STATE_POSTMATCH:
         GENERIC_SetUpEndMatch();
-        CTFT_RemoveTurrets();
         CTFT_RemoveBombs();
+		CTFT_RemoveTranslocators();
+		CTFT_RemoveSmokeGrenades();
+		CTFT_RemoveBouncePads();
+		CTFT_RemoveMotionDetectors();
         CTFT_RemoveRevivers();
         break;
 
@@ -1208,7 +1168,6 @@ void CTFT_SetUpMatch()
     // Reset flags
     CTF_ResetFlags();
     CTFT_ResetRespawnQueue();
-    CTFT_RemoveTurrets();
     CTFT_RemoveBombs();
 	CTFT_RemoveTranslocators();
 	CTFT_RemoveSmokeGrenades();
@@ -1254,9 +1213,6 @@ void CTFT_SetUpMatch()
 					if ( ent.client.armor >= player.playerClass.armor )
 						ent.client.armor = player.playerClass.armor;
 				}
-
-				player.turretHealthWhenDestroyed = CTFT_TURRET_HEALTH;
-				player.bouncePadHealthWhenDestroyed = CTFT_BOUNCE_PAD_HEALTH;
 			}
         }
     }
@@ -1401,17 +1357,15 @@ void GT_InitGametype()
     G_RegisterCommand( "class" );
 	G_RegisterCommand( "classaction1" );
 	G_RegisterCommand( "classaction2" );
+	G_RegisterCommand( "build" );
+	G_RegisterCommand( "destroy" );
 	G_RegisterCommand( "deploy" );
 	G_RegisterCommand( "altattack" );
 	G_RegisterCommand( "protect" );
 	G_RegisterCommand( "supply" );
 	G_RegisterCommand( "trans" );
 
-    // Make turret models pure
-    G_ModelIndex( "models/objects/turret/base.md3", true );
-    G_ModelIndex( "models/objects/turret/gun.md3", true );
-    G_ModelIndex( "models/objects/turret/flash.md3", true );
-
+  
 	// Make WTF assets pure
 
     G_ModelIndex( "scripts/wtf_gfx.shader", true );

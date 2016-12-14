@@ -33,22 +33,6 @@ void CTFT_ResetRespawnQueue()
     }
 }
 
-void CTFT_RemoveTurrets()
-{
-    for ( int i = 0; i < MAX_TURRETS; i++ )
-    {
-        if ( gtTurrets[i].inuse == true )
-        {
-			cPlayer @player = GetPlayer( gtTurrets[i].client );
-			if ( @player != null )
-			{
-				@player.turret = null;
-			}
-            gtTurrets[i].Free();
-        }
-    }
-}
-
 void CTFT_RemoveRevivers()
 {
     for ( int i = 0; i < maxClients; i++ )
@@ -95,8 +79,10 @@ void CTFT_RemoveBouncePads()
 	{
 		if ( gtBouncePads[i].inuse )
 		{
+			// Remove the pad in a silent way for the owner
 			if ( @gtBouncePads[i].player != null )
 			{
+				@gtBouncePads[i].player.bouncePad = null;
 				@gtBouncePads[i].player = null;
 			}
 			gtBouncePads[i].Free();
@@ -111,6 +97,7 @@ void CTFT_RemoveMotionDetectors()
 	{
 		Entity @ent = ents[i];
 		Client @ownerClient = G_GetClient( ent.ownerNum );
+		// Remove the detector in a silent way for the owner
 		if ( @ownerClient != null )
 			@GetPlayer( ownerClient ).motionDetector = null;
 		

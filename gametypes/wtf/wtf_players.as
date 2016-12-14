@@ -25,7 +25,6 @@ class cPlayer
     Client @client;
     Entity @ent;
     cReviver @reviver;
-    cTurret @turret;
 	cBouncePad @bouncePad;   
     cBomb @bomb;
 	cTranslocator @translocator;
@@ -44,10 +43,6 @@ class cPlayer
 	uint flagDispenserCooldownTime;
 	uint adrenalineTime;
     uint respawnTime;
-	uint turretDestroyedAtTime;
-	float turretHealthWhenDestroyed;
-	uint bouncePadDestroyedAtTime;
-	float bouncePadHealthWhenDestroyed;
 	uint deployUpTime;
 	uint deployDownTime;
 	bool isDeployed;
@@ -86,7 +81,6 @@ class cPlayer
         // initialize all as grunt
         @this.playerClass = @cPlayerClassInfos[PLAYERCLASS_GRUNT];
         @this.reviver = null;
-        @this.turret = null;
 		@this.bouncePad = null;
         @this.bomb = null;
 		@this.translocator = null;
@@ -97,11 +91,6 @@ class cPlayer
 		
 		this.medicInfluenceScore = 0.0;
 		this.supportInfluenceScore = 0.0;
-
-		this.turretDestroyedAtTime = 0;
-		this.turretHealthWhenDestroyed = CTFT_TURRET_HEALTH;
-		this.bouncePadDestroyedAtTime = 0;
-		this.bouncePadHealthWhenDestroyed = CTFT_BOUNCE_PAD_HEALTH;
     }
 
     ~cPlayer() {}
@@ -363,8 +352,6 @@ class cPlayer
     {
         bool success = false;
 
-		cPlayerClass @oldClass = @this.playerClass;
-
         if ( @className != null )
         {
             for ( int i = 0; i < PLAYERCLASS_TOTAL; i++ )
@@ -380,24 +367,6 @@ class cPlayer
 
         if ( !success && @this.playerClass == null ) // never be null
             @this.playerClass = @cPlayerClassInfos[PLAYERCLASS_GRUNT];
-
-		if ( @oldClass != null && this.playerClass.tag != oldClass.tag )
-		{
-			// Destroy built entities
-			if ( oldClass.tag == PLAYERCLASS_ENGINEER )
-			{
-				if ( @this.turret != null )
-					this.turret.die( null, null );
-
-				if ( @this.bouncePad != null )
-					this.bouncePad.die( null, null );
-			}
-			else if ( oldClass.tag == PLAYERCLASS_SNIPER )
-			{
-				if ( @this.motionDetector != null )
-					motion_detector_die( this.motionDetector, null, null );
-			}
-		}
 
         return success;
     }
@@ -1718,31 +1687,6 @@ class cPlayer
 			client.armor += CTFT_TRANSLOCATOR_AP_COST;
 	}
 
-	void bouncePadSpawningHasFailed()
-	{
-		@this.bouncePad = null;
-		client.printMessage( "Can't spawn a bounce pad here\n" );
-		this.buildCooldownTime = 0;
-		// Return armor spent on throwing a bounce pad spawner
-		client.armor += CTFT_TURRET_AP_COST;
-	}
-
-	void turretHasBeenDestroyed( Entity @turretEnt )
-	{
-		this.turretDestroyedAtTime = levelTime;
-		this.turretHealthWhenDestroyed = turretEnt.health;
-		this.centerPrintMessage( S_COLOR_RED + "Your turret has been destroyed!\n" );
-		@this.turret = null;
-	}
-
-	void bouncePadHasBeenDestroyed( Entity @padEnt )
-	{
-		this.bouncePadDestroyedAtTime = levelTime;
-		this.bouncePadHealthWhenDestroyed = padEnt.health;
-		this.centerPrintMessage( S_COLOR_RED + "Your bounce pad has been destroyed!\n" );
-		@this.bouncePad = null;
-	}
-
 	void printDescription()
 	{
 		// Print all description lines to the players's console
@@ -1832,13 +1776,17 @@ class cPlayer
 
 		if ( @this.motionDetector != null )
 		{
-			motion_detector_die( this.motionDetector, null, null );
-			this.motionDetectorBuildingCanceled();
-			this.setBuildCooldown();		
+			client.printMessage( "You have already built a motion detector\n" );
 			return;
 		}
 
-		if ( this.client.armor < CTFT_MOTION_DETECTOR_AP_COST )
+		if ( this.isBuildCooldown() )
+    	{
+        	client.printMessage( "You cannot build yet\n" );
+        	return;
+    	}
+
+		if ( this.client.armor < CTFT_BUILD_AP_COST )
 		{
 			client.printMessage( "You do not have enough armor to build a motion detector\n" );
 			return;
@@ -1849,12 +1797,26 @@ class cPlayer
 			return;
 
 		this.setBuildCooldown();
-		this.client.armor -= CTFT_MOTION_DETECTOR_AP_COST;
+		this.client.armor -= CTFT_BUILD_AP_COST;
+	}
+
+	void destroyMotionDetector()
+	{
+		if ( @this.motionDetector == null )
+		{
+			client.printMessage( "There is no your motion detector\n" );
+			return;
+		}
+
+		motion_detector_die( this.motionDetector, null, null );
+		this.motionDetectorBuildingCanceled();
+		this.setBuildCooldown();	
+		return;
 	}
 
 	void motionDetectorBuildingCanceled()
 	{
-		this.client.armor += CTFT_MOTION_DETECTOR_AP_COST;
+		this.client.armor += CTFT_BUILD_AP_COST;
 		@this.motionDetector = null;
 	}
 
@@ -1862,6 +1824,78 @@ class cPlayer
 	{
 		this.centerPrintMessage( S_COLOR_RED + "Your motion detector has been destroyed" );
 		@this.motionDetector = null;
+	}
+
+	void buildBouncePad()
+	{
+		if ( @this.bouncePad != null )
+		{
+			client.printMessage( "You have already built a bounce pad\n" );
+			return;
+		}
+
+		if ( this.isBuildCooldown() )
+   	 	{
+        	client.printMessage( "You cannot build yet\n" );
+        	return;
+    	}
+
+		if ( this.client.armor < CTFT_BUILD_AP_COST )
+		{
+			client.printMessage( "You do not have enough armor to build a bounce pad\n" );
+			return;
+		}
+
+		cBouncePad @bouncePad = ClientDropBouncePad( client );
+		if ( @bouncePad == null )
+			return;
+
+		client.armor -= CTFT_BUILD_AP_COST;
+		@this.bouncePad = bouncePad;
+		this.setBuildCooldown();
+	}
+
+	void destroyBouncePad()
+	{
+		if ( @this.bouncePad == null )
+		{
+			client.printMessage( "There is no your bounce pad\n" );
+			return;
+		}
+
+		this.bouncePad.die( null, null );
+		@this.bouncePad = null;
+		this.setBuildCooldown();
+		client.armor += CTFT_BUILD_AP_COST;
+	}
+
+	void bouncePadSpawningHasFailed()
+	{
+		@this.bouncePad = null;
+		client.printMessage( "Can't spawn a bounce pad here\n" );
+		// Return armor spent on throwing a bounce pad spawner
+		client.armor += CTFT_BUILD_AP_COST;
+	}
+
+	void bouncePadHasBeenDestroyed( Entity @padEnt )
+	{
+		this.centerPrintMessage( S_COLOR_RED + "Your bounce pad has been destroyed!\n" );
+		@this.bouncePad = null;
+	}
+
+	void printBuiltEntitiesStatus()
+	{
+		String message = "Built entities status: ";
+		if ( @this.motionDetector != null )
+			message += "motion detector: ^2(+)^7, ";
+		else
+			message += "motion detector: ^1(-)^7, ";
+		if ( @this.bouncePad != null )
+			message += "bounce pad: ^2(+)^7\n";
+		else
+			message += "bounce pad: ^1(-)^7\n";
+		
+		client.printMessage( message );
 	}
 }
 

@@ -21,8 +21,6 @@ const int PLAYERCLASS_GRUNT = 0;
 const int PLAYERCLASS_MEDIC = 1;
 const int PLAYERCLASS_RUNNER = 2;
 const int PLAYERCLASS_GUNNER = 3;
-// Turrets and pads code kept as possibly useful in future development need this constant defined 
-const int PLAYERCLASS_ENGINEER = 3;
 const int PLAYERCLASS_SUPPORT = 4;
 const int PLAYERCLASS_SNIPER = 5;
 
@@ -194,12 +192,18 @@ const String[] supportDescription =
 const String[] sniperDescription =
 {
 	"You're spawned as ^5SNIPER^7. This is a defencive class with best weapons for far-range fights.\n",
-	"Command ^6deploy^7: Build or destroy a motion detector\n",
+	"You can also build some useful entities: motion detectors and bounce pads\n",
 	"The motion detector reveals fast moving nearby enemies and highlights ones for you and your team\n",
+	"The bounce pad pushes players in air preserving their horizontal velocity\n",
 	"Command ^6supply^7: Buy an instagun shot\n",
 	"You can't carry more than 3 instagun shots\n",
-	"Generic command ^8classaction1^7: Same as ^6deploy^7\n",
-	"Generic command ^8classaction2^7: Same as ^6supply^7\n" 
+	"Command ^6build detector^7: Build a motion detector\n",
+	"Command ^6build pad^7: Build a bounce pad\n",
+	"Command ^6destroy detector^7: Destroy the built motion detector\n",
+	"Command ^6destroy pad^7: Destroy the built bounce pad\n",
+	"Commands ^6build status^7, ^6destroy status^7: Print built entities status\n",
+	"Generic command ^8classaction1^7: Build a motion detector, then a bounce pad, then destroy both ones^7\n",
+	"Generic command ^8classaction2^7: Same as ^6supply^7\n"
 };
 
 // Initialize player classes
