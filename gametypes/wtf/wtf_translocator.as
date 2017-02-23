@@ -28,6 +28,12 @@ const Vec3 playerBoxMaxs( +16, +16, +40 );
 // (if a translocator is fit in the enviornment, player should fit too if there is enough height) 
 const Vec3 translocatorMins( playerBoxMins.x - 0.5f, playerBoxMins.y - 0.5f, -4 );
 const Vec3 translocatorMaxs( playerBoxMaxs.x + 0.5f, playerBoxMaxs.y + 0.5f, +4 );
+// An offset that should be added to translocator entity origin to produce an initial suggested player origin.
+// A player is intended to be spawned 1 unit above a ground and 1 unit below a ceiling (if any).
+const Vec3 translocationOriginOffset( 0, 0, translocatorMins.z - playerBoxMins.z + 1.0f );
+// These bounds are used for testing an actual translocation box
+const Vec3 translocationTestMins( playerBoxMins.x, playerBoxMins.y, playerBoxMins.z - 1.0f );
+const Vec3 translocationTestMaxs( playerBoxMaxs.x, playerBoxMaxs.y, playerBoxMaxs.z + 1.0f );
 
 class cTranslocator
 {
@@ -97,7 +103,7 @@ class cTranslocator
 		@this.bodyEnt.die = translocator_body_die;
 		@this.bodyEnt.think = translocator_body_think;
         this.bodyEnt.type = ET_GENERIC;
-        this.bodyEnt.modelindex = G_ModelIndex( "models/wtf/translocator_body_normal.md3", true );
+        this.bodyEnt.modelindex = prcTransBodyNormalModelIndex;
         this.bodyEnt.setSize( translocatorMins, translocatorMaxs );
         this.bodyEnt.team = this.player.ent.team;
         this.bodyEnt.ownerNum = this.player.client.playerNum;
@@ -135,7 +141,7 @@ class cTranslocator
 
 	void pain( Entity @other, float kick, float damage )
 	{
-		this.bodyEnt.modelindex = G_ModelIndex( "models/wtf/translocator_body_damaged.md3", true );
+		this.bodyEnt.modelindex = prcTransBodyDamagedModelIndex;
 	}
 
     void die( Entity @inflictor, Entity @attacker )
@@ -148,17 +154,11 @@ class cTranslocator
 
 	// Returns null if teleportation cannot be done.
 	// Note: player should be unlinked
-	array<Entity @> @getPlayerBoxTelefraggableEntities()
+	array<Entity @> @getPlayerBoxTelefraggableEntities( const Vec3 &in origin )
 	{	
 		if ( !this.inuse || @this.bodyEnt == null || @this.player == null )
 			return null;
 		
-		float playerMinsOffset = translocatorMins.z - playerBoxMins.z;
-		// We teleport a player 1 unit above the ground and 1 unit below the ceiling (if they are present).
-		// Actual min Z of a teleported player is translocatorOrigin.z + playerMinsOffset + 1.0f;
-		Vec3 mins( playerBoxMins.x, playerBoxMins.y, playerBoxMins.z + playerMinsOffset );
-		Vec3 maxs( playerBoxMaxs.x, playerBoxMaxs.y, playerBoxMaxs.z + playerMinsOffset + 2.0f );
-
 		// Based on the native KillBox() (g_utils.cpp).
 
 		array<Entity @> result( 0 );
@@ -172,7 +172,7 @@ class cTranslocator
 		// While there are no entities in the box		
 		while ( true )
 		{
-			trace.doTrace( this.bodyEnt.origin, mins, maxs, this.bodyEnt.origin, this.bodyEnt.entNum, MASK_PLAYERSOLID );
+			trace.doTrace( origin, translocationTestMins, translocationTestMaxs, origin, this.bodyEnt.entNum, MASK_PLAYERSOLID );
 			if ( ( trace.fraction == 1.0f && !trace.startSolid ) )
 				break;
 

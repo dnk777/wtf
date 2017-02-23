@@ -118,6 +118,13 @@ int prcBioEmissionSound;
 int prcMotionDetectorSpriteImageIndex;
 int prcMotionDetectorMinimapImageIndex;
 
+int prcTransBodyNormalModelIndex;
+int prcTransBodyDamagedModelIndex;
+int prcTransInSoundIndex;
+int prcTransOutSoundIndex;
+int prcTransCheckSucceededSoundIndex;
+int prcTransReturnedSoundIndex;
+
 bool firstSpawn = false;
 
 Cvar ctfAllowPowerupDrop( "ctf_powerupDrop", "0", CVAR_ARCHIVE );
@@ -1417,14 +1424,18 @@ void GT_InitGametype()
 	prcMotionDetectorSpriteImageIndex = G_ImageIndex( "gfx/wtf/motion_detector_sprite" );
 	prcMotionDetectorMinimapImageIndex = G_ImageIndex( "gfx/wtf/motion_detector_minimap" );
 
-    // Translocator
-    G_ModelIndex( "models/objects/wtf/translocator_body_normal.md3", true );
-    G_ModelIndex( "models/objects/wtf/translocator_body_damaged.md3", true );
+	// Translocator
+    prcTransBodyNormalModelIndex = G_ModelIndex( "models/wtf/translocator_body_normal.md3", true );
+    prcTransBodyDamagedModelIndex = G_ModelIndex( "models/wtf/translocator_body_damaged.md3", true );
+	G_ImageIndex( "models/wtf/translocator_body_normal" );
     G_ImageIndex( "models/wtf/translocator_body_damaged" );
-    G_ImageIndex( "models/wtf/translocator_body_normal" );
     G_ImageIndex( "models/wtf/translocator_light" );
     G_ImageIndex( "models/wtf/translocator_body_normal_colorpass" );
     G_ImageIndex( "models/wtf/translocator_body_normal_emit" );
+	prcTransInSoundIndex = G_SoundIndex( "sounds/world/tele_in", true );
+	prcTransOutSoundIndex = G_SoundIndex( "sounds/world/tele_out", true );
+	prcTransCheckSucceededSoundIndex = G_SoundIndex( "sounds/menu/ok", true );
+	prcTransReturnedSoundIndex = G_SoundIndex( "sounds/menu/back", true );
 
     InitPlayers();
     G_RegisterCallvote( "ctf_powerup_drop", "1 or 0", "bool", "Enables or disables the dropping of powerups at dying" );
