@@ -758,7 +758,6 @@ class cPlayer
 				return;
 			}
 
-            this.client.pmoveDashSpeed = this.playerClass.dashSpeed;
             this.client.pmoveJumpSpeed = this.playerClass.jumpSpeed;
 
 			// No adrenaline (the most common case)
@@ -769,14 +768,18 @@ class cPlayer
 					this.client.pmoveMaxSpeed = this.playerClass.pmoveMaxSpeedInAir;
 				else
 					this.client.pmoveMaxSpeed = this.playerClass.pmoveMaxSpeedOnGround;
+
+				this.client.pmoveDashSpeed = this.playerClass.dashSpeed;
 			}
 			else
 			{
 				// Choose the best speed and add some bonus value
 				if ( this.playerClass.pmoveMaxSpeedInAir < this.playerClass.pmoveMaxSpeedOnGround )
-					this.client.pmoveMaxSpeed = this.playerClass.pmoveMaxSpeedOnGround + 20;
+					this.client.pmoveMaxSpeed = this.playerClass.pmoveMaxSpeedOnGround + 30;
 				else
-					this.client.pmoveMaxSpeed = this.playerClass.pmoveMaxSpeedInAir + 20;
+					this.client.pmoveMaxSpeed = this.playerClass.pmoveMaxSpeedInAir + 30;
+
+				this.client.pmoveDashSpeed = this.playerClass.dashSpeed + 100;
 			}
 
             if ( this.playerClass.tag == PLAYERCLASS_GRUNT )
