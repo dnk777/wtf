@@ -134,6 +134,7 @@ const String[] gruntDescription =
 	"You're spawned as ^1GRUNT^7. This is a tank class with slow movement, strong armor and weapons.\n",
     "Command ^6altattack^7: Throw a cluster grenade\n",
 	"Command ^6protect^7: Use a protection Warshell\n",
+	"Note that you cannot use dash, walljump and aircontrol being protected by a shell",
 	"Generic command ^8classaction1^7: Same as ^6protect^7\n",
 	"Generic command ^8classaction2^7: Same as ^6altattack^7\n" 
 };

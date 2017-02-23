@@ -19,6 +19,14 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 cPlayer[] gtPlayers( maxClients ); // gt info of each player
 
+const int ALL_DISABLED_MOVEMENT_FEATURES =
+	PMFEAT_WEAPONSWITCH|PMFEAT_WALK|PMFEAT_CROUCH|PMFEAT_JUMP|PMFEAT_DASH|PMFEAT_WALLJUMP|PMFEAT_AIRCONTROL;
+
+const int GUNNER_DEPLOY_DISABLED_MOVEMENT_FEATURES =
+	PMFEAT_WEAPONSWITCH|PMFEAT_WALK|PMFEAT_CROUCH|PMFEAT_JUMP|PMFEAT_DASH|PMFEAT_WALLJUMP|PMFEAT_AIRCONTROL;
+
+const int GRUNT_SHELL_DISABLED_MOVEMENT_FEATURES = PMFEAT_DASH|PMFEAT_WALLJUMP|PMFEAT_AIRCONTROL;
+
 class cPlayer
 {
     cPlayerClass @playerClass;
@@ -723,6 +731,7 @@ class cPlayer
         }
         else
         {
+			this.client.pmoveFeatures = this.client.pmoveFeatures | ALL_DISABLED_MOVEMENT_FEATURES;
 			if ( this.isTranslocating )
 			{
 				handleIsTranslocatingState();
@@ -738,6 +747,7 @@ class cPlayer
 			if ( this.isDeployed )
 			{
 				this.client.pmoveMaxSpeed = 100;
+				this.client.pmoveFeatures = this.client.pmoveFeatures & ~GUNNER_DEPLOY_DISABLED_MOVEMENT_FEATURES;
 				this.ent.mass = 450;
 				return;
 			}
@@ -763,12 +773,19 @@ class cPlayer
 					this.client.pmoveMaxSpeed = this.playerClass.pmoveMaxSpeedInAir + 20;
 			}
 
-			this.ent.mass = 200;
-
-            // there used to be a grunt Warshell slowdown code
-			// the Grunt is very slow anyway, do not make him even slower
             if ( this.playerClass.tag == PLAYERCLASS_GRUNT )
-                this.ent.mass = 325;
+			{
+				// Disable dash/walljump/aircontrol features while wearing a shell
+				if ( this.client.inventoryCount( POWERUP_SHELL ) > 0 )
+				{
+					this.client.pmoveFeatures = this.client.pmoveFeatures & ~GRUNT_SHELL_DISABLED_MOVEMENT_FEATURES;
+					this.ent.mass = 350;
+				}
+				else
+					this.ent.mass = 250;
+			}
+			else
+				this.ent.mass = 200;
 
             /* Needs latest bins */
             this.client.takeStun = this.playerClass.takeStun;
@@ -1421,11 +1438,11 @@ class cPlayer
 
 	void setDeployingUp()
 	{
+		// Movement features switch is done in this.refreshMovement()
+
 		this.isDeployingUp = true;
 		this.deployUpTime = levelTime + CTFT_GUNNER_DEPLOY_TIME;
 
-		this.client.pmoveFeatures = this.client.pmoveFeatures & ~( PMFEAT_JUMP|PMFEAT_DASH|PMFEAT_WALLJUMP|PMFEAT_CROUCH|PMFEAT_WEAPONSWITCH );
-		
 		this.client.inventorySetCount( WEAP_GUNBLADE, 0 );
 		this.client.inventorySetCount( AMMO_WEAK_LASERS, this.client.inventoryCount( AMMO_LASERS ) );
 		this.client.inventorySetCount( AMMO_LASERS, 0 );
@@ -1457,11 +1474,11 @@ class cPlayer
 
 	void deployedDown()
 	{
+		// Movement features switch is done in this.refreshMovement()
+
 		this.isDeployingDown = false;
 		this.isDeployed = false;
 	
-		this.client.pmoveFeatures = this.client.pmoveFeatures | ( PMFEAT_JUMP|PMFEAT_DASH|PMFEAT_WALLJUMP|PMFEAT_CROUCH|PMFEAT_WEAPONSWITCH );
-
 		this.client.inventorySetCount( WEAP_GUNBLADE, 1 );		
 		this.client.inventorySetCount( AMMO_LASERS, this.client.inventoryCount( AMMO_WEAK_LASERS ) );
 		this.client.inventorySetCount( AMMO_WEAK_LASERS, 0 );
