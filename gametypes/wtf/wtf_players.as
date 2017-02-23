@@ -252,7 +252,7 @@ class cPlayer
 			{
 				if ( this.isDeployCooldown() )
 				{
-				    frac = this.deployCooldownTimeLeft() / float( CTFT_GUNNER_DEPLOY_TIME );
+				    frac = this.deployCooldownTimeLeft() / float( WTF_GUNNER_DEPLOY_TIME );
 					this.client.setHUDStat( STAT_PROGRESS_OTHER, int( frac * 100 ) );
 				}
 				else
@@ -1437,7 +1437,7 @@ class cPlayer
 		// Movement features switch is done in this.refreshMovement()
 
 		this.isDeployingUp = true;
-		this.deployUpTime = levelTime + CTFT_GUNNER_DEPLOY_TIME;
+		this.deployUpTime = levelTime + WTF_GUNNER_DEPLOY_TIME;
 
 		this.client.inventorySetCount( WEAP_GUNBLADE, 0 );
 		this.client.inventorySetCount( AMMO_WEAK_LASERS, this.client.inventoryCount( AMMO_LASERS ) );
@@ -1456,7 +1456,7 @@ class cPlayer
 	void setDeployingDown()
 	{
 		this.isDeployingDown = true;
-		this.deployDownTime = levelTime + CTFT_GUNNER_DEPLOY_TIME;
+		this.deployDownTime = levelTime + WTF_GUNNER_DEPLOY_TIME;
 		
 		this.client.selectWeapon( WEAP_NONE );
 	}

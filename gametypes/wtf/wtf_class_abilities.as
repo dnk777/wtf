@@ -195,7 +195,7 @@ void CTFT_ThrowSmokeGrenade( Client @client, cPlayer @player )
 		return;
 	}
 
-    if ( client.armor < CTFT_SMOKE_GRENADE_AP_COST )
+    if ( client.armor < WTF_SMOKE_GRENADE_AP_COST )
     {
         client.printMessage( "You don't have enough armor to throw a grenade\n" );
     }
@@ -204,7 +204,7 @@ void CTFT_ThrowSmokeGrenade( Client @client, cPlayer @player )
         Entity @grenade = ClientThrowSmokeGrenade( client );
         if ( @grenade != null )
 		{
-            client.armor -= CTFT_SMOKE_GRENADE_AP_COST;
+            client.armor -= WTF_SMOKE_GRENADE_AP_COST;
         }
     }
 }
@@ -336,19 +336,19 @@ void CTFT_SupplyAmmo( Client @client, cPlayer @player )
 
 void CTFT_SupplyAdrenaline( Client @client, cPlayer @player )
 {
-	if ( client.armor < 50 )
+	if ( client.armor < WTF_ADRENALINE_AP_COST )
 	{
 		client.printMessage( "You do not have enough armor to supply adrenaline\n" );
 		return;
 	}
 
 	player.hasPendingSupplyAdrenalineCommand = true;
-	client.armor -= 50;
+	client.armor -= WTF_ADRENALINE_AP_COST;
 }
 
 void CTFT_BuyInstaShot( Client @client, cPlayer @player )
 {
-	if ( client.armor < 45 )
+	if ( client.armor < WTF_INSTA_SHOT_AP_COST )
 	{
 		client.printMessage( "You do not have enough armor to buy an insta shot\n");
 		return;
@@ -361,7 +361,7 @@ void CTFT_BuyInstaShot( Client @client, cPlayer @player )
 		return;
 	}
 
-	client.armor -= 45;
+	client.armor -= WTF_INSTA_SHOT_AP_COST;
 	client.inventorySetCount( AMMO_INSTAS, instaAmmoCount + 1 );
 }
 
