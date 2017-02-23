@@ -131,7 +131,7 @@ class cTranslocator
             }
         }
 
-		this.returnTime = levelTime + CTFT_RUNNER_ABILITY_COOLDOWN + 15000;
+		this.returnTime = levelTime + WTF_TRANSLOCATOR_RETURN_TIME;
         @this.player = @player;
         this.bodyEnt.count = index;
         this.inuse = true;

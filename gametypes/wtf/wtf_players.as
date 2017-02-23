@@ -42,12 +42,12 @@ class cPlayer
 	Entity @detectionMinimap;
 
     uint medicRegenCooldownTime;
-	uint gruntAbilityCooldownTime;
+	uint shellActivationCooldownTime;
 	uint supportRegenCooldownTime;
     uint buildCooldownTime;
 	uint blastCooldownTime;
 	uint bioGrenadeCooldownTime;
-	uint runnerAbilityCooldownTime;
+	uint translocatorCooldownTime;
 	uint flagDispenserCooldownTime;
 	uint adrenalineTime;
     uint respawnTime;
@@ -106,12 +106,12 @@ class cPlayer
     void resetTimers()
     {
         this.medicRegenCooldownTime = 0;
-		this.gruntAbilityCooldownTime = 0;
+		this.shellActivationCooldownTime = 0;
 		this.supportRegenCooldownTime = 0;
         this.buildCooldownTime = 0;
    		this.blastCooldownTime = 0;
 		this.bioGrenadeCooldownTime = 0;
-		this.runnerAbilityCooldownTime = 0;
+		this.translocatorCooldownTime = 0;
 		this.flagDispenserCooldownTime = 0;
 		this.adrenalineTime = 0;
         this.respawnTime = 0;
@@ -202,11 +202,17 @@ class cPlayer
             this.client.setHUDStat( STAT_PROGRESS_SELF, int( frac * 100 ) );
         }
 
-        if ( this.isGruntAbilityCooldown() )
+        if ( this.isShellActivationCooldown() )
         {
-            frac = float( this.gruntAbilityCooldownTimeLeft() ) / float( CTFT_GRUNT_ABILITY_COOLDOWN );
+            frac = float( this.shellActivationCooldownTimeLeft() ) / float( WTF_SHELL_COOLDOWN );
             this.client.setHUDStat( STAT_PROGRESS_SELF, int( frac * 100 ) );
         }
+
+		if ( this.isTranslocatorCooldown() )
+		{
+			frac = float( this.translocatorCooldownTimeLeft() ) / float ( WTF_TRANSLOCATOR_COOLDOWN );
+			this.client.setHUDStat( STAT_PROGRESS_SELF, int( frac * 100 ) );
+		}
 
 		if ( this.isMedicRegenCooldown() )
         {
@@ -714,10 +720,10 @@ class cPlayer
 		this.ent.origin = adjustedOrigin;
 		this.ent.linkEntity();
 		this.addTranslocationEffect( prcTransOutSoundIndex );
-		// this call leads to returning armor points
+		// this call leads to resetting translocator cooldown
 		this.translocator.Free();
-		// subtract armor points again
-		this.client.armor -= CTFT_TRANSLOCATOR_AP_COST;
+		// set cooldown after translocation
+		this.setTranslocatorCooldown();
 	}
 
     void refreshMovement()
@@ -1268,40 +1274,40 @@ class cPlayer
         return int( this.buildCooldownTime - levelTime );
     }
 
-	void setRunnerAbilityCooldown()
+	void setTranslocatorCooldown()
 	{
-		this.runnerAbilityCooldownTime = levelTime + CTFT_RUNNER_ABILITY_COOLDOWN;
+		this.translocatorCooldownTime = levelTime + WTF_TRANSLOCATOR_COOLDOWN;
 	}
 
-	bool isRunnerAbilityCooldown()
+	bool isTranslocatorCooldown()
 	{
-		return this.runnerAbilityCooldownTime > levelTime;
+		return this.translocatorCooldownTime > levelTime;
 	}
 
-	int runnerCooldownTimeLeft()
+	int translocatorCooldownTimeLeft()
     {
-        if ( this.runnerAbilityCooldownTime <= levelTime )
+        if ( this.translocatorCooldownTime <= levelTime )
             return 0;
 
-        return int( this.runnerAbilityCooldownTime - levelTime );
+        return int( this.translocatorCooldownTime - levelTime );
     }
 
-    void setGruntAbilityCooldown()
+    void setShellActivationCooldown()
     {
-        this.gruntAbilityCooldownTime = levelTime + CTFT_GRUNT_ABILITY_COOLDOWN;
+        this.shellActivationCooldownTime = levelTime + WTF_SHELL_COOLDOWN;
     }
 
-    bool isGruntAbilityCooldown()
+    bool isShellActivationCooldown()
     {
-        return ( this.gruntAbilityCooldownTime > levelTime ) ? true : false;
+        return ( this.shellActivationCooldownTime > levelTime ) ? true : false;
     }
 
-    int gruntAbilityCooldownTimeLeft()
+    int shellActivationCooldownTimeLeft()
     {
-        if ( this.gruntAbilityCooldownTime <= levelTime )
+        if ( this.shellActivationCooldownTime <= levelTime )
             return 0;
 
-        return int( this.gruntAbilityCooldownTime - levelTime );
+        return int( this.shellActivationCooldownTime - levelTime );
     }
 
     void activateInvisibility()
@@ -1376,25 +1382,15 @@ class cPlayer
 			return;
 		}
 
-        if ( this.isGruntAbilityCooldown() )
+        if ( this.isShellActivationCooldown() )
         {
             this.printMessage( "Cannot activate shell yet\n" );
             return;
         }
 
-		// Costs same as a cluster grenade
-        if ( this.client.armor < CTFT_CLUSTER_GRENADE_AP_COST )
-        {
-            this.printMessage( "You don't have enough armor to activate a shell\n" );
-        }
-        else
-        {
-            this.client.armor -= CTFT_CLUSTER_GRENADE_AP_COST;
-            this.client.inventorySetCount( POWERUP_SHELL, 4 );
-            this.setGruntAbilityCooldown();
-
-            G_Sound( this.ent, CHAN_MUZZLEFLASH, G_SoundIndex( "sounds/items/shell_spawn" ), 0.3f );
-        }
+		this.client.inventorySetCount( POWERUP_SHELL, 3 );
+        this.setShellActivationCooldown();
+        G_Sound( this.ent, CHAN_MUZZLEFLASH, G_SoundIndex( "sounds/items/shell_spawn" ), 0.3f );
     }
 
     void watchShell()
@@ -1677,23 +1673,15 @@ class cPlayer
 		if ( this.isTranslocating || this.hasJustTranslocated )
 			return;
 
-		if ( @this.translocator != null )
+		if ( this.isTranslocatorCooldown() )
 		{
-			// Perform an auto-return
-			if ( !this.isRunnerAbilityCooldown() )
-			{
-				this.returnTranslocator();
-			}
-			else
-			{
-				client.printMessage( "You cannot throw another translocator yet\n" );
-				return;
-			}
+			client.printMessage( "You can't throw a translocator yet\n" );
+			return;
 		}
 
-		if ( client.armor < CTFT_TRANSLOCATOR_AP_COST )
+		if ( @this.translocator != null )
 		{
-			client.printMessage( "You do not have enough armor to throw a translocator\n" );
+			this.returnTranslocator();
 			return;
 		}
 
@@ -1701,9 +1689,7 @@ class cPlayer
 		if ( @this.translocator == null )
 			return;
 		
-		client.armor -= CTFT_TRANSLOCATOR_AP_COST;
-		this.setRunnerAbilityCooldown();
-		
+		this.setTranslocatorCooldown();
 		G_Sound( this.ent, CHAN_MUZZLEFLASH, G_SoundIndex( "sounds/weapons/grenlaunch_strong" ), 0.4f );
 	}
 
@@ -1790,8 +1776,7 @@ class cPlayer
 		G_LocalSound( this.client, CHAN_AUTO, prcTransReturnedSoundIndex );
 		client.printMessage( S_COLOR_CYAN + "Your translocator has been returned\n" );
 		@this.translocator = null;
-		if ( !this.hasJustTranslocated )
-			client.armor += CTFT_TRANSLOCATOR_AP_COST;
+		this.translocatorCooldownTime = 0;
 	}
 
 	void printDescription()

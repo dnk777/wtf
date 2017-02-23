@@ -167,25 +167,23 @@ void CTFT_ThrowClusterGrenade( Client @client, cPlayer @player )
 		return;
 	}
 
-    if ( player.isGruntAbilityCooldown() )
-    {
-        client.printMessage( "You can't throw a cluster grenade yet\n" );
-        return;
-    }
+	if ( @player.bomb != null )
+	{
+		client.printMessage( "You can't throw another grenade yet\n" );
+		return;
+	}
 
     if ( client.armor < CTFT_CLUSTER_GRENADE_AP_COST )
     {
         client.printMessage( "You don't have enough armor to throw a grenade\n" );
+		return;
     }
-    else
+    
+    cBomb @bomb = ClientDropBomb( client );
+    if ( @bomb != null )
     {
-        cBomb @bomb = ClientDropBomb( client );
-        if ( @bomb != null )
-        {
-            client.armor -= CTFT_CLUSTER_GRENADE_AP_COST;
-			player.setGruntAbilityCooldown();
-			@player.bomb = bomb;
-        }
+        client.armor -= CTFT_CLUSTER_GRENADE_AP_COST;
+		@player.bomb = bomb;
     }
 }
 

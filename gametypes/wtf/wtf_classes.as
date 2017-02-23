@@ -161,7 +161,6 @@ const String[] runnerDescription =
 	"Command ^6trans return^7: Force returning a translocator\n",
 	"Command ^6trans use^7: Teleport to the translocator origin\n",
 	"A translocator gets returned automatically in a few seconds\n",
-	"When a translocator is returned, your armor points spent on throwing it are restored\n",
 	"Your translocator may be damaged. Consider checking it first before using it.\n",
 	"Generic command ^8classaction1^7: Throws your translocator, if it is thrown uses it\n",
 	"Generic command ^8classaction2^7: Same as ^6protect^7\n"
