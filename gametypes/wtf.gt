@@ -22,6 +22,7 @@ wtf/wtf_smoke_grenade.as;
 wtf/wtf_bounce_pad.as;
 wtf/wtf_bio_grenade.as;
 wtf/wtf_motion_detector.as;
+wtf/wtf_adrenaline_trail_emitter.as;
 
 legacy/quake1.as;
 

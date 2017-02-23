@@ -48,6 +48,7 @@ int CTFT_MEDIC_REGEN_COOLDOWN = 1200;
 int CTFT_SUPPORT_REGEN_COOLDOWN = 1200;
 uint WTF_TRANSLOCATOR_COOLDOWN = 2000;
 uint WTF_TRANSLOCATOR_RETURN_TIME = WTF_TRANSLOCATOR_COOLDOWN + 3000;
+uint WTF_ADRENALINE_TIME = 1750;
 int CTFT_BLAST_COOLDOWN = 1000;
 int CTFT_BLAST_AP_COST = 15;
 int WTF_SMOKE_GRENADE_AP_COST = 40;
@@ -111,6 +112,8 @@ int prcBouncePadActivateSound;
 int prcBouncePadSpawnerModel;
 int prcBouncePadNormalModel;
 int prcBouncePadActivatedModel;
+
+int prcAdrenalineTrailEmitterShaderIndex;
 
 int prcBioCloudShaderIndex;
 int prcBioTeamSparksShaderIndex;
@@ -1416,6 +1419,9 @@ void GT_InitGametype()
 
 	// Smoke
 	G_ImageIndex( "gfx/wtf/wtf_smoke" );
+
+	// Adrenaline
+	prcAdrenalineTrailEmitterShaderIndex = G_ImageIndex( "gfx/wtf/adrenaline_trail" );
 
 	// Bio
 	prcBioCloudShaderIndex = G_ImageIndex( "gfx/wtf/bio_cloud" );

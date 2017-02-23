@@ -959,28 +959,44 @@ class cPlayer
 
 		if ( this.hasReceivedAmmo )
 		{
-			this.loadAmmo();
-			// loadAmmo() does not play this sound because it might be confusing on respawn when it is called too			
-			G_Sound( this.ent, CHAN_AUTO, G_SoundIndex( "sounds/items/weapon_pickup" ), 0.4f );
-			this.hasReceivedAmmo = false;
-
-			if ( !this.hasPendingSupplyAmmoCommand )
-				this.centerPrintMessage( S_COLOR_CYAN + "A teammate gave you some ammo!\n" );
+			onHasReceivedAmmo();
+			this.hasReceivedAmmo = false;	
 		}
 
 		if ( this.hasReceivedAdrenaline )
 		{
-			this.adrenalineTime = levelTime + 1750;
-			this.ent.health += 50;
-			G_Sound( this.ent, CHAN_AUTO, G_SoundIndex( "sounds/items/regen_pickup" ), 0.4f );					
-			this.hasReceivedAdrenaline = false;
-
-			if ( !this.hasPendingSupplyAdrenalineCommand )
-				this.centerPrintMessage( S_COLOR_MAGENTA + "You gained some adrenaline! Be quick!\n" );
+			onHasReceivedAdrenaline();
+			this.hasReceivedAdrenaline = false;			
 		}
 
 		this.hasPendingSupplyAmmoCommand = false;
 		this.hasPendingSupplyAdrenalineCommand = false;
+	}
+
+	void onHasReceivedAmmo()
+	{
+		this.loadAmmo();
+		// loadAmmo() does not play this sound because it might be confusing on respawn when it is called too			
+		G_Sound( this.ent, CHAN_AUTO, G_SoundIndex( "sounds/items/weapon_pickup" ), 0.4f );
+		this.hasReceivedAmmo = false;
+
+		// if the player is not an ammo supplier
+		if ( !this.hasPendingSupplyAmmoCommand )
+			this.centerPrintMessage( S_COLOR_CYAN + "A teammate gave you some ammo!\n" );
+	}
+
+	void onHasReceivedAdrenaline()
+	{
+		this.adrenalineTime = levelTime + WTF_ADRENALINE_TIME;
+		this.ent.health += 50;
+		G_Sound( this.ent, CHAN_AUTO, G_SoundIndex( "sounds/items/regen_pickup" ), 0.4f );					
+		this.hasReceivedAdrenaline = false;
+
+		// it the player is not an adrenaline supplier
+		if ( !this.hasPendingSupplyAdrenalineCommand )
+			this.centerPrintMessage( S_COLOR_MAGENTA + "You gained some adrenaline! Be quick!\n" );
+
+		WTF_AddAdrenalineTrailEmitter( this.ent );
 	}
 
     void refreshRegeneration()
