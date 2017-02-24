@@ -432,10 +432,14 @@ void CTFT_Classaction1Command( Client @client )
 			CTFT_ThrowBioGrenade( client, player );
 			break;
 		case PLAYERCLASS_RUNNER:
-			if ( @player.translocator == null )
-				player.throwTranslocator();
-			else
-				player.useTranslocator();
+			if ( player.repeatedCommandTime <= levelTime )
+			{
+				player.repeatedCommandTime = levelTime + 250;
+				if ( @player.translocator == null )
+					player.throwTranslocator();
+				else
+					player.useTranslocator();
+			}
 			break;
 		case PLAYERCLASS_GUNNER:
 			player.activateInvisibility();			
@@ -444,13 +448,19 @@ void CTFT_Classaction1Command( Client @client )
 			CTFT_Blast( client, player );
 			break;
 		case PLAYERCLASS_SNIPER:
+			if ( player.repeatedCommandTime > levelTime )
+				break;
+
+			player.repeatedCommandTime = levelTime + 250;
 			if ( @player.motionDetector == null )
 			{
 				player.buildMotionDetector();
 			}
 			else if ( @player.bouncePad == null )
 			{
-				player.buildBouncePad();	
+				player.buildBouncePad();
+				// Add an extra delay to prevent destroying built entities by confusion
+				player.repeatedCommandTime += 350;
 			}
 			else 
 			{	

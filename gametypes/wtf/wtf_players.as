@@ -53,6 +53,7 @@ class cPlayer
     uint respawnTime;
 	uint deployUpTime;
 	uint deployDownTime;
+	uint repeatedCommandTime;  // Prevents unitended execution of some non-idempotent commands twice
 	bool isDeployed;
 	bool isDeployingUp;
 	bool isDeployingDown;
@@ -117,6 +118,7 @@ class cPlayer
         this.respawnTime = 0;
 		this.deployUpTime = 0;
 		this.deployDownTime = 0;
+		this.repeatedCommandTime = 0;
 		this.isDeployed = false;
 		this.isDeployingUp = false;
 		this.isDeployingDown = false;
