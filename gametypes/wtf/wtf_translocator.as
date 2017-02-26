@@ -108,7 +108,9 @@ class cTranslocator
         this.bodyEnt.team = this.player.ent.team;
         this.bodyEnt.ownerNum = this.player.client.playerNum;
         this.bodyEnt.origin = origin;
-        this.bodyEnt.solid = SOLID_YES;
+		// spawn the entity as non-solid to prevent bumping into it
+		// (adding origin offset on spawn is not a reliable solution)
+        this.bodyEnt.solid = SOLID_TRIGGER;
         this.bodyEnt.clipMask = MASK_PLAYERSOLID;
         this.bodyEnt.moveType = MOVETYPE_TOSS;
         this.bodyEnt.svflags &= ~SVF_NOCLIENT;
@@ -251,6 +253,23 @@ void translocator_body_think( Entity @self )
 	cTranslocator @trans = gtTranslocators[self.count];
 	if ( trans.returnTime > levelTime )
 	{
+		// try become solid
+		if ( self.solid != SOLID_YES )
+		{
+			// first check whether trans is far enough from the owner
+			if ( trans.player.ent.origin.distance( self.origin ) > 96.0f )
+			{
+				// prevent becoming solid inside another player
+				Trace trace;
+				if ( !trace.doTrace( self.origin, translocatorMins, translocatorMaxs, self.origin, self.entNum, MASK_PLAYERSOLID ) )
+				{
+					// become solid and link the entity again
+					self.solid = SOLID_YES;
+					self.linkEntity();
+				}
+			}
+		}
+
 		self.nextThink = levelTime + 1;
 		return;
 	}
@@ -316,6 +335,7 @@ cTranslocator @ClientThrowTranslocator( Client @client )
         return null;
 
     dir.normalize();
+	// this is much faster than common WTF grenade speed, but otherwise translocator feels bad
     dir *= 1450;
 	dir.z += 150;
 
