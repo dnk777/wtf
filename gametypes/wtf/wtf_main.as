@@ -1441,7 +1441,7 @@ void GT_InitGametype()
     G_ImageIndex( "models/wtf/translocator_body_normal_colorpass" );
     G_ImageIndex( "models/wtf/translocator_body_normal_emit" );
 	prcTransInSoundIndex = G_SoundIndex( "sounds/world/tele_in", true );
-	prcTransOutSoundIndex = G_SoundIndex( "sounds/world/tele_out", true );
+	prcTransOutSoundIndex = G_SoundIndex( "sounds/world/tele_in", true );
 	prcTransCheckSucceededSoundIndex = G_SoundIndex( "sounds/menu/ok", true );
 	prcTransReturnedSoundIndex = G_SoundIndex( "sounds/menu/back", true );
 
