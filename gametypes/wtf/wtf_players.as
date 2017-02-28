@@ -627,14 +627,23 @@ class cPlayer
 	array<Entity @> @trySideOffsetsForTranslocation( const Vec3 &in initialOrigin, Vec3 &out adjustedOrigin )
 	{
 		array<Entity @> @entities;
-		const int numAngularSteps = 6;
+		const int numAngularSteps = 19;
 		float angularStep = 3.1416f / numAngularSteps;
-		float angle = 0.0f;
+		// Randomize initial angular offset
+		float angle = -3.1416f * ( -0.5f + random() );
+		// Interleave offset sign to avoid wasting cycles on consequential tesing in "bad" areas.
+		float xSign = -1.0f;
+		float ySign = +1.0f;
 		for ( int angularStepNum = 0; angularStepNum < numAngularSteps; ++angularStepNum )
 		{
 			Vec3 testedOrigin( initialOrigin );
-			testedOrigin.x += 20.0f * sin( angle );
-			testedOrigin.y += 20.0f * cos( angle );
+			// Note: if the radius is increased from this, there is a chance 
+            // a player can be teleported behind thin/curved patch walls.
+			// I have tried adding additional traces from a tested origin to the trans origin 
+			// but they do not wark for unknown reason.
+			// So just limit the tested origins radius to 24 units.
+			testedOrigin.x += 24.0f * xSign * sin( angle );
+			testedOrigin.y += 24.0f * ySign * cos( angle );
 			@entities = this.translocator.getPlayerBoxTelefraggableEntities( testedOrigin );
 			if ( @entities != null )
 			{
@@ -642,6 +651,8 @@ class cPlayer
 				return entities;
 			}
 			angle += angularStep;
+			xSign = -xSign;
+			ySign = -ySign;
 		}
 
 		return null;

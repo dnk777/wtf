@@ -24,16 +24,19 @@ cTranslocator[] gtTranslocators( MAX_TRANSLOCATORS );
 const Vec3 playerBoxMins( -16, -16, -24 );
 const Vec3 playerBoxMaxs( +16, +16, +40 );
 
-// Width and depth should match player box ones (plus-minus some delta).
-// (if a translocator is fit in the enviornment, player should fit too if there is enough height) 
-const Vec3 translocatorMins( playerBoxMins.x - 0.5f, playerBoxMins.y - 0.5f, -4 );
-const Vec3 translocatorMaxs( playerBoxMaxs.x + 0.5f, playerBoxMaxs.y + 0.5f, +4 );
-// An offset that should be added to translocator entity origin to produce an initial suggested player origin.
+// Please test and ensure you cannot translocate behind thin/curved patch walls
+// (like wbomb1 mid curved wall near the stairs) if you change these dimensions values!
+
+// We can use lower translocator box size since better destination checks were implemented.
+// However translocator box still has non-zero size to allow translocator to be damaged.
+const Vec3 translocatorMins( -4, -4, -2 );
+const Vec3 translocatorMaxs( +4, +4, +2 );
+// An offset that should be added to translocator entity origin to produce an initial suggested player origin.`
 // A player is intended to be spawned 1 unit above a ground and 1 unit below a ceiling (if any).
 const Vec3 translocationOriginOffset( 0, 0, translocatorMins.z - playerBoxMins.z + 1.0f );
 // These bounds are used for testing an actual translocation box
-const Vec3 translocationTestMins( playerBoxMins.x, playerBoxMins.y, playerBoxMins.z - 1.0f );
-const Vec3 translocationTestMaxs( playerBoxMaxs.x, playerBoxMaxs.y, playerBoxMaxs.z + 1.0f );
+const Vec3 translocationTestMins( playerBoxMins.x - 1.0f, playerBoxMins.y - 1.0f, playerBoxMins.z - 1.0f );
+const Vec3 translocationTestMaxs( playerBoxMaxs.x + 1.0f, playerBoxMaxs.y + 1.0f, playerBoxMaxs.z + 1.0f );
 
 class cTranslocator
 {
@@ -206,7 +209,7 @@ class cTranslocator
 			{
 				failed = true;
 				break;
-			};
+			}
 			
 			ent.unlinkEntity();
 			unlinkedEntities.insertLast( ent );
