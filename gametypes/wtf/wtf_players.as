@@ -1596,17 +1596,15 @@ class cPlayer
 		}
 		else if ( this.playerClass.tag == PLAYERCLASS_MEDIC )
 		{
-		   	// Enable gunblade blast
-			client.inventorySetCount( AMMO_GUNBLADE, 1 );
 			if ( fullLoad )
 			{
-		    	client.inventorySetCount( AMMO_PLASMA, 100 );
+		    	client.inventorySetCount( AMMO_SHELLS, 10 );
 				client.inventorySetCount( AMMO_BULLETS, 150 );
 				client.inventorySetCount( AMMO_GRENADES, 10 );
 			}
 			else
 			{
-				this.checkAndLoadAmmo( AMMO_PLASMA, 50 );
+				this.checkAndLoadAmmo( AMMO_SHELLS, 5 );
 				this.checkAndLoadAmmo( AMMO_BULLETS, 100 );
 				this.checkAndLoadAmmo( AMMO_GRENADES, 5 );
 			}
@@ -1669,14 +1667,12 @@ class cPlayer
 			if ( fullLoad )
 			{
 				client.inventorySetCount( AMMO_ROCKETS, 10 );
-				client.inventorySetCount( AMMO_BULLETS, 125 );
-				client.inventorySetCount( AMMO_SHELLS, 10 );
+				client.inventorySetCount( AMMO_PLASMA, 150 );
 			}
 			else
 			{
 				this.checkAndLoadAmmo( AMMO_ROCKETS, 5 );
-				this.checkAndLoadAmmo( AMMO_BULLETS, 75 );
-				this.checkAndLoadAmmo( AMMO_SHELLS, 5 );
+				this.checkAndLoadAmmo( AMMO_PLASMA, 75 );
 			}
 		}
 		else if ( this.playerClass.tag == PLAYERCLASS_SNIPER )

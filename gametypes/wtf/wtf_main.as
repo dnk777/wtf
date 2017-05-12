@@ -865,7 +865,7 @@ void GT_PlayerRespawn( Entity @ent, int old_team, int new_team )
     else if ( player.playerClass.tag == PLAYERCLASS_MEDIC )
     {
         // Weapons
-        client.inventoryGiveItem( WEAP_PLASMAGUN );
+        client.inventoryGiveItem( WEAP_RIOTGUN );
         client.inventoryGiveItem( WEAP_MACHINEGUN );
 		client.inventoryGiveItem( WEAP_GRENADELAUNCHER );
     }
@@ -889,8 +889,7 @@ void GT_PlayerRespawn( Entity @ent, int old_team, int new_team )
 	{
 		// Weapons
 		client.inventoryGiveItem( WEAP_ROCKETLAUNCHER );
-		client.inventoryGiveItem( WEAP_MACHINEGUN );
-		client.inventoryGiveItem( WEAP_RIOTGUN );
+		client.inventoryGiveItem( WEAP_PLASMAGUN );
 	}
 	else if ( player.playerClass.tag == PLAYERCLASS_SNIPER )
 	{
