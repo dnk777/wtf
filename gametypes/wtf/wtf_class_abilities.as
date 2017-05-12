@@ -27,7 +27,7 @@ void CTFT_BuildCommand( Client @client, const String &argsString, int argc )
 
 	cPlayer @player = @GetPlayer( client );
 
-    if ( player.playerClass.tag != PLAYERCLASS_SNIPER )
+    if ( player.playerClass.tag != PLAYERCLASS_SNIPER && player.playerClass.tag != PLAYERCLASS_RUNNER )
     {
 		client.printMessage( "This command is not available for your class\n" );
 		return;
@@ -48,19 +48,26 @@ void CTFT_BuildCommand( Client @client, const String &argsString, int argc )
 		return;
 	}
 
-	if ( token == "detector" )
+	if ( player.playerClass.tag == PLAYERCLASS_SNIPER )
 	{
-		player.buildMotionDetector();
-		return;
+		if ( token == "detector" )
+		{
+			player.buildMotionDetector();
+			return;
+		}
+		
+		client.printMessage( "Illegal command usage. Available arguments: ^6detector^7, ^6status^7.\n" );
 	}
-
-	if ( token == "pad" )
+	else
 	{
-		player.buildBouncePad();
-		return;
-	}
+		if ( token == "pad" )
+		{
+			player.buildBouncePad();
+			return;
+		}
 
-	client.printMessage( "Illegal command usage. Available arguments: ^6detector^7, ^6pad^7, ^6status^7.\n" );
+		client.printMessage( "Illegal command usage. Available arguments: ^6pad^7, ^6status^7.\n" );
+	}
 }
 
 void CTFT_DestroyCommand( Client @client, const String &argsString, int argc )
@@ -73,7 +80,7 @@ void CTFT_DestroyCommand( Client @client, const String &argsString, int argc )
 
 	cPlayer @player = @GetPlayer( client );
 
-    if ( player.playerClass.tag != PLAYERCLASS_SNIPER )
+    if ( player.playerClass.tag != PLAYERCLASS_SNIPER && player.playerClass.tag != PLAYERCLASS_RUNNER )
     {
 		client.printMessage( "This command is not available for your class\n" );
 		return;
@@ -93,20 +100,27 @@ void CTFT_DestroyCommand( Client @client, const String &argsString, int argc )
 		player.printBuiltEntitiesStatus();
 		return;
 	}
-
-	if ( token == "detector" )
+	
+	if ( player.playerClass.tag == PLAYERCLASS_SNIPER )
 	{
-		player.destroyMotionDetector();
-		return;
+		if ( token == "detector" )
+		{
+			player.destroyMotionDetector();
+			return;
+		}
+		
+		client.printMessage( "Illegal command usage. Available arguments: ^6detector^7, ^6status^7.\n" );
 	}
-
-	if ( token == "pad" )
+	else 
 	{
-		player.destroyBouncePad();
-		return;
-	}
+		if ( token == "pad" )
+		{
+			player.destroyBouncePad();
+			return;
+		}
 
-	client.printMessage( "Illegal command usage. Available arguments: ^6detector^7, ^6pad^7, ^6status^7.\n" );
+		client.printMessage( "Illegal command usage. Available arguments: ^6pad^7, ^6status^7.\n" );
+	}
 }
 
 void CTFT_DeployCommand( Client @client, const String &argsString, int argc )
@@ -189,7 +203,7 @@ void CTFT_ThrowClusterGrenade( Client @client, cPlayer @player )
 
 void CTFT_ThrowSmokeGrenade( Client @client, cPlayer @player )
 {
-	if ( player.playerClass.tag != PLAYERCLASS_RUNNER )
+	if ( player.playerClass.tag != PLAYERCLASS_SUPPORT )
 	{
 		client.printMessage( "This command is not available for your class\n" );
 		return;
@@ -432,45 +446,16 @@ void CTFT_Classaction1Command( Client @client )
 			CTFT_ThrowBioGrenade( client, player );
 			break;
 		case PLAYERCLASS_RUNNER:
-			if ( player.repeatedCommandTime <= levelTime )
-			{
-				player.repeatedCommandTime = levelTime + 250;
-				if ( @player.translocator == null )
-					player.throwTranslocator();
-				else
-					player.useTranslocator();
-			}
+			player.buildOrDestroyBouncePad();
 			break;
 		case PLAYERCLASS_GUNNER:
 			player.activateInvisibility();			
 			break;
 		case PLAYERCLASS_SUPPORT:
-			CTFT_Blast( client, player );
+			CTFT_ThrowSmokeGrenade( client, player );
 			break;
 		case PLAYERCLASS_SNIPER:
-			if ( player.repeatedCommandTime > levelTime )
-				break;
-
-			player.repeatedCommandTime = levelTime + 250;
-			if ( @player.motionDetector == null )
-			{
-				player.buildMotionDetector();
-			}
-			else if ( @player.bouncePad == null )
-			{
-				player.buildBouncePad();
-				// Add an extra delay to prevent destroying built entities by confusion
-				player.repeatedCommandTime += 350;
-			}
-			else 
-			{	
-				// We have to destroy all built entities together, not the first/last built.
-				// Otherwise next command will just rebuild a destroyed entity, and another one will be kept.
-				// Use specialized commands for full control over building/destroying entities.
-				player.destroyMotionDetector();
-				player.destroyBouncePad();
-			}
-			player.printBuiltEntitiesStatus();
+			player.buildOrDestroyMotionDetector();
 			break;
 	}
 }
@@ -494,7 +479,7 @@ void CTFT_Classaction2Command( Client @client )
 			CTFT_SupplyAdrenaline( client, player );
 			break;
 		case PLAYERCLASS_RUNNER:
-			CTFT_ThrowSmokeGrenade( client, player );
+			player.throwOrUseTranslocator();
 			break;
 		case PLAYERCLASS_GUNNER:
 			player.deploy();			

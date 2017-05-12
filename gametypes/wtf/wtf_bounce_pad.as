@@ -238,7 +238,7 @@ class cBouncePad
 				this.die( null, null );
 				return;
 			}
-			else if ( this.player.playerClass.tag != PLAYERCLASS_SNIPER )
+			else if ( this.player.playerClass.tag != PLAYERCLASS_RUNNER )
 			{
 				this.die( null, null );
 				return;

@@ -1803,6 +1803,19 @@ class cPlayer
 		this.translocationOrigin = adjustedOrigin;
 	}
 
+	void throwOrUseTranslocator() 
+	{
+		if ( this.repeatedCommandTime > levelTime )
+			return;
+
+		if ( @this.translocator == null )
+			this.throwTranslocator();
+		else
+			this.useTranslocator();
+
+		this.repeatedCommandTime = levelTime + 200;
+	}
+
 	void translocatorHasBeenReturned()
 	{
 		G_LocalSound( this.client, CHAN_AUTO, prcTransReturnedSoundIndex );
@@ -1893,6 +1906,19 @@ class cPlayer
 		}
 	}
 
+	void buildOrDestroyMotionDetector()
+	{
+		if ( this.repeatedCommandTime > levelTime )
+			return;
+
+		if ( @this.motionDetector == null )
+			this.buildMotionDetector();
+		else
+			this.destroyMotionDetector();
+
+		this.repeatedCommandTime = levelTime + 300;
+	}
+
 	void buildMotionDetector()
 	{
 		if ( this.buildCooldownTime >= levelTime )
@@ -1948,6 +1974,19 @@ class cPlayer
 	{
 		this.centerPrintMessage( S_COLOR_RED + "Your motion detector has been destroyed" );
 		@this.motionDetector = null;
+	}
+
+	void buildOrDestroyBouncePad()
+	{
+		if ( this.repeatedCommandTime > levelTime )
+			return;
+
+		if ( @this.bouncePad == null )
+			this.buildBouncePad();
+		else
+			this.destroyBouncePad();
+
+		this.repeatedCommandTime = levelTime + 300;
 	}
 
 	void buildBouncePad()
@@ -2007,19 +2046,27 @@ class cPlayer
 		@this.bouncePad = null;
 	}
 
-	void printBuiltEntitiesStatus()
+	void printBuiltEntitiesStatus() 
 	{
-		String message = "Built entities status: ";
-		if ( @this.motionDetector != null )
-			message += "motion detector: ^2(+)^7, ";
+		if ( this.playerClass.tag == PLAYERCLASS_SNIPER )
+		{
+			if ( @this.motionDetector != null )
+				client.printMessage( "Motion detector health: " + this.motionDetector.health + "\n" );
+			else
+				client.printMessage( "Motion detector is not built (or is destroyed)\n" );
+		}
 		else
-			message += "motion detector: ^1(-)^7, ";
-		if ( @this.bouncePad != null )
-			message += "bounce pad: ^2(+)^7\n";
-		else
-			message += "bounce pad: ^1(-)^7\n";
-		
-		client.printMessage( message );
+		{
+			if ( @this.bouncePad != null )
+			{
+				if ( @this.bouncePad.bodyEnt != null )
+					client.printMessage( "Bounce pad health: " + this.bouncePad.bodyEnt.health + "\n" );
+				else
+					client.printMessage( "Bounce pad has not been built yet\n" );
+			}
+			else
+				client.printMessage( "Bounce pad is not built (or is destroyed)\n" );
+		}
 	}
 }
 
