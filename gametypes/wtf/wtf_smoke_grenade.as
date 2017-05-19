@@ -69,11 +69,51 @@ Entity @ClientThrowSmokeGrenade( Client @client )
     return @ent;
 }
 
+// Picks best position for an emitter
+// (if an emitter is bounded by a solid, particles appearance is ugly)
+Vec3 WTF_AdjustSmokeEmitterOrigin( const Entity @parentEntity )
+{
+	Vec3 mins(-24, -24, -24);
+	Vec3 maxs(+24, +24, +24);
+
+	Vec3 initialOrigin( parentEntity.origin );
+	const int ignoreEntNum = parentEntity.entNum;
+
+	Trace trace;
+	trace.doTrace( initialOrigin, mins, maxs, initialOrigin, ignoreEntNum, MASK_PLAYERSOLID );
+	if ( trace.fraction == 1.0f && !trace.startSolid )
+		return initialOrigin;
+
+	for ( int i = -1; i <= 1; ++i )
+	{
+		for ( int j = -1; j <= 1; ++j )
+		{
+			for ( int k = -1; k <= 1; ++k )
+			{
+				// Skip already tested exact initialOrigin position
+				if ( i == 0 && j == 0 && k == 0 )
+					continue;
+
+				Vec3 origin( initialOrigin.x + 40.0f * i, initialOrigin.y + 40.0f * j, initialOrigin.z + 40.0f * k );
+				trace.doTrace( origin, mins, maxs, origin, ignoreEntNum, MASK_PLAYERSOLID );
+				if ( trace.fraction != 1.0f || trace.startSolid )
+					continue;
+
+				// Prevent spawning an emitter behind thin walls
+				if ( !trace.doTrace( origin, vec3Origin, vec3Origin, initialOrigin, ignoreEntNum, MASK_SOLID ) )
+					return origin;
+			}
+		}
+	}
+
+	return initialOrigin;
+}
+
 void smoke_grenade_think( Entity @grenade )
 {
 	Entity @emitter = @G_SpawnEntity( "smoke_emitter" );
     emitter.type = ET_PARTICLES;
-    emitter.origin = grenade.origin;
+    emitter.origin = WTF_AdjustSmokeEmitterOrigin( grenade );
     emitter.particlesSpeed = 160;
     emitter.particlesShaderIndex = G_ImageIndex( "gfx/wtf/smoke" );
     emitter.particlesSpread = 250;
