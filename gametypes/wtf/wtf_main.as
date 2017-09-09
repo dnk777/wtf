@@ -764,20 +764,24 @@ void GT_ScoreEvent( Client @client, const String &score_event, const String &arg
             targetPlayer.spawnReviver();
 
         if ( targetPlayer.playerClass.tag == PLAYERCLASS_SUPPORT )
-            CTFT_DeathDrop( target.client, "Green Armor" );
-
-        if ( targetPlayer.playerClass.tag == PLAYERCLASS_GUNNER )
-            CTFT_DeathDrop( target.client, "Green Armor" );
-
-        if ( targetPlayer.playerClass.tag == PLAYERCLASS_SNIPER )
-            CTFT_DeathDrop( target.client, "Green Armor" );
-
-        if ( targetPlayer.playerClass.tag == PLAYERCLASS_MEDIC )
-            CTFT_DeathDrop( target.client, "50 Health" );
-
-        if ( targetPlayer.playerClass.tag == PLAYERCLASS_GRUNT )
-        {
-            CTFT_DeathDrop( target.client, "Yellow Armor" );
+		{
+			CTFT_DeathDrop( target.client, "Armor Shard", 5 );
+		}
+		else if ( targetPlayer.playerClass.tag == PLAYERCLASS_GUNNER )
+		{
+			CTFT_DeathDrop( target.client, "Armor Shard", 5 );
+		}
+		else if ( targetPlayer.playerClass.tag == PLAYERCLASS_SNIPER )
+		{
+			CTFT_DeathDrop( target.client, "Armor Shard", 5 );
+		}
+		else if ( targetPlayer.playerClass.tag == PLAYERCLASS_MEDIC )
+		{
+			CTFT_DeathDrop( target.client, "50 Health" );
+		}
+		else if ( targetPlayer.playerClass.tag == PLAYERCLASS_GRUNT )
+		{
+			CTFT_DeathDrop( target.client, "Green Armor" );
 
             // Explode all cluster bombs belonging to this grunt when dying
             cBomb @bomb = null;

@@ -133,6 +133,11 @@ bool CTFT_TeamHasTooMany( int team, String type, uint count )
 
 void CTFT_DeathDrop( Client @client, String type )
 {
+	CTFT_DeathDrop( client, type, 1 );
+}
+
+void CTFT_DeathDrop( Client @client, String type, int count )
+{
     Item @item;
     Entity @dropped = null;
 
@@ -144,26 +149,21 @@ void CTFT_DeathDrop( Client @client, String type )
     if ( @client == null )
         return;
 
-	if ( CTFT_TeamHasTooMany( client.team, type, 16 ) )
+	for( int i = 0; i < count; ++i )
 	{
-		return;
-	}
-
-	@dropped = @client.getEnt().dropItem( item.tag );
-	if ( @dropped == null )
-	{
-		client.printMessage( "Couldn't drop a " + item.name + "\n" );
-	}
-	else
-	{
-		Vec3 velocity(dropped.velocity);
-		velocity.z = 0;
-		velocity.normalize();
-		velocity *= 400;
-		velocity.z = brandom( 150, 270 );
-		velocity.x = brandom( 1, 359 );
-		velocity.y = brandom( 1, 359 );
-		dropped.velocity = velocity;
+		@dropped = @client.getEnt().dropItem( item.tag );
+		if ( @dropped == null )
+		{
+			client.printMessage( "Couldn't drop a " + item.name + "\n" );
+		}
+		else
+		{
+			Vec3 velocity(dropped.velocity);
+			velocity.z = brandom( 150, 270 );
+			velocity.x = brandom( 1, 259 );
+			velocity.y = brandom( 1, 259 );
+			dropped.velocity = velocity;
+		}
 	}
 }
 

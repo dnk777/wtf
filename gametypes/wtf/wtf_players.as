@@ -1025,13 +1025,13 @@ class cPlayer
 		if ( this.medicInfluence > 0 )
 		{
 			if ( this.ent.health < this.ent.maxHealth )
-				this.ent.health += ( frameTime * this.medicInfluence * 0.021f );
+				this.ent.health += ( frameTime * this.medicInfluence * 0.025f );
 		}
 
 		if ( this.supportInfluence > 0 )
 		{
 			if ( this.client.armor < this.playerClass.maxArmor )
-				this.client.armor += ( frameTime * this.supportInfluence * 0.019f );
+				this.client.armor += ( frameTime * this.supportInfluence * 0.025f );
 		}
 
 		// Then, check class-specific regeneration
