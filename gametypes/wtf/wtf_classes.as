@@ -17,11 +17,13 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
-const int PLAYERCLASS_GRUNT = 0;
+// Runner must be at the begin of the list, the bot class selection code relies on it.
+const int PLAYERCLASS_RUNNER = 0;
 const int PLAYERCLASS_MEDIC = 1;
-const int PLAYERCLASS_RUNNER = 2;
+const int PLAYERCLASS_GRUNT = 2;
 const int PLAYERCLASS_GUNNER = 3;
 const int PLAYERCLASS_SUPPORT = 4;
+// Sniper must be at the end of the list, the bot class selection code relies on it
 const int PLAYERCLASS_SNIPER = 5;
 
 const int PLAYERCLASS_TOTAL = 6;

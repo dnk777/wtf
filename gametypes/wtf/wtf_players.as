@@ -2066,6 +2066,95 @@ class cPlayer
 				client.printMessage( "Bounce pad is not built (or is destroyed)\n" );
 		}
 	}
+
+	void setAppropriateBotClass()
+	{
+		// The native code bot team logic assigns at least a single defender to a defense spot.
+		// Thus, if a team has only a single bot, it should have a class that suits defense well.
+		int numBotsInTeam = 0;
+		int numDefClassBotsInTeam = 0;
+		// Medics and supports are vital for a team
+		int numMedicsInTeam = 0;
+		int numSupportsInTeam = 0;
+		Team @teamList = @G_GetTeam( this.ent.team );
+		int teamSize = teamList.numPlayers;
+		for( int i = 0; i < teamSize; ++i )
+		{
+			Entity @ent = @teamList.ent( i );
+			cPlayer @player = @GetPlayer( ent.client );
+			int classTag = player.playerClass.tag;
+			if( classTag == PLAYERCLASS_MEDIC )
+			{
+				numMedicsInTeam++;
+			}
+			else if( classTag == PLAYERCLASS_SUPPORT )
+			{
+				numSupportsInTeam++;
+			}
+
+			if( @ent.client.getBot() == null )
+			{
+				continue;
+			}
+
+			numBotsInTeam++;
+			if( classTag == PLAYERCLASS_SNIPER || classTag == PLAYERCLASS_GUNNER )
+			{
+				numDefClassBotsInTeam++;
+			}
+		}
+
+		// If there is no bots with classes that are suitable for defence
+		if( numDefClassBotsInTeam == 0 )
+		{
+			setPlayerClass( random() > 0.5f ? PLAYERCLASS_SNIPER : PLAYERCLASS_GUNNER );
+			return;
+		}
+
+		// If there are no vital class players in the team
+
+		if( numMedicsInTeam == 0 )
+		{
+			setPlayerClass( PLAYERCLASS_MEDIC );
+			return;
+		}
+
+		if( numSupportsInTeam == 0 )
+		{
+			setPlayerClass( PLAYERCLASS_SUPPORT );
+			return;
+		}
+
+		// If the control flow has reached here, there are
+        // at least a single defender, Medic and Support in the team.
+
+		// TODO: We wish there were static assertions on class tags values
+
+		// Never add extra Snipers to the team.
+		const int lowerTagBound = PLAYERCLASS_SNIPER + 1;
+
+		// Never assign bot classes to Runner unless there is enough bots
+		// so the poor bot Runner play can be shadowed by the classes variety.
+		const int upperTagBound = numBotsInTeam < 5 ? PLAYERCLASS_RUNNER - 1 : PLAYERCLASS_RUNNER;
+
+		int tag = lowerTagBound;
+		for( int j = 0; j < 2; ++j )
+		{
+			tag = int( lowerTagBound + random() * ( upperTagBound - lowerTagBound + 0.499f ) );
+			if( tag > upperTagBound )
+			{
+				tag = upperTagBound;
+			}
+			// The tag is Grunt, Gunner or Runner, good enough
+			if( tag != PLAYERCLASS_MEDIC && tag != PLAYERCLASS_SUPPORT )
+			{
+				break;
+			}
+			// If tag is Medic or Support, try again once
+		}
+
+		setPlayerClass( tag );
+	}
 }
 
 cPlayer @GetPlayer( Client @client )

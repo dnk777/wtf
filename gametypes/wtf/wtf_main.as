@@ -775,7 +775,7 @@ void GT_PlayerRespawn( Entity @ent, int old_team, int new_team )
         {
             if ( @client.getBot() != null )
             {
-                player.setPlayerClass( rand() % PLAYERCLASS_TOTAL );
+                player.setAppropriateBotClass();
             }
             else
                 client.execGameCommand( SELECT_CLASS_COMMAND );
