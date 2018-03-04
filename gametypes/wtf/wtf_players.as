@@ -41,19 +41,19 @@ class cPlayer
 	Entity @detectionSprite;
 	Entity @detectionMinimap;
 
-    uint medicRegenCooldownTime;
-	uint shellActivationCooldownTime;
-	uint supportRegenCooldownTime;
-    uint buildCooldownTime;
-	uint blastCooldownTime;
-	uint bioGrenadeCooldownTime;
-	uint translocatorCooldownTime;
-	uint flagDispenserCooldownTime;
-	uint adrenalineTime;
-    uint respawnTime;
-	uint deployUpTime;
-	uint deployDownTime;
-	uint repeatedCommandTime;  // Prevents unitended execution of some non-idempotent commands twice
+    int64 medicRegenCooldownTime;
+	int64 shellActivationCooldownTime;
+	int64 supportRegenCooldownTime;
+    int64 buildCooldownTime;
+	int64 blastCooldownTime;
+	int64 bioGrenadeCooldownTime;
+	int64 translocatorCooldownTime;
+	int64 flagDispenserCooldownTime;
+	int64 adrenalineTime;
+    int64 respawnTime;
+	int64 deployUpTime;
+	int64 deployDownTime;
+	int64 repeatedCommandTime;  // Prevents unitended execution of some non-idempotent commands twice
 	bool isDeployed;
 	bool isDeployingUp;
 	bool isDeployingDown;
@@ -74,13 +74,13 @@ class cPlayer
     int lastNormalModeWeapon;
 	int lastNormalModePGAmmo;
 	int lastNormalModeGLAmmo;
-    uint invisibilityCooldownTime;
-    uint hudMessageTimeout;
+    int64 invisibilityCooldownTime;
+    int64 hudMessageTimeout;
 	uint nextTipDescriptionLine;
-	uint nextTipTime;
+	int64 nextTipTime;
 
     cPlayer @deadcamMedic;
-    uint deadcamMedicScanTime;
+    int64 deadcamMedicScanTime;
 
 	double medicInfluenceScore;
 	double supportInfluenceScore;

@@ -43,7 +43,7 @@ class cTranslocator
     bool inuse;
     Entity @bodyEnt;
     cPlayer @player;
-	uint returnTime;
+	int64 returnTime;
 
     void Init()
     {

@@ -29,8 +29,8 @@ Vec3 bombMins( -8, -8, -8 ), bombMaxs( 8, 8, 8 );
 class cBomb
 {
     bool inuse;
-	uint explodeTime;
-	uint expireTime;
+	int64 explodeTime;
+	int64 expireTime;
 	int bombAlarmSoundIndex;
 
     Entity @bombEnt;

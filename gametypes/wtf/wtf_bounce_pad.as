@@ -44,8 +44,8 @@ class cBouncePad
 	Vec3 normal;
 	Vec3 normalVelocity;
 
-	uint activatedTime;
-	uint[] lastTouchTime( maxEntities );
+	int64 activatedTime;
+	int64[] lastTouchTime( maxEntities );
 
     void Init()
     {
