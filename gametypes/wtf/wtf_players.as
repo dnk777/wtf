@@ -1666,13 +1666,15 @@ class cPlayer
 			client.inventorySetCount( AMMO_GUNBLADE, 1 );
 			if ( fullLoad )
 			{
-				client.inventorySetCount( AMMO_ROCKETS, 10 );
-				client.inventorySetCount( AMMO_PLASMA, 150 );
+				client.inventorySetCount( AMMO_WAVES, 13 );
+				client.inventorySetCount( AMMO_BOLTS, 0 );
+				client.inventorySetCount( AMMO_WEAK_BOLTS, 13 );
 			}
 			else
 			{
-				this.checkAndLoadAmmo( AMMO_ROCKETS, 5 );
-				this.checkAndLoadAmmo( AMMO_PLASMA, 75 );
+				this.checkAndLoadAmmo( AMMO_WAVES, 7 );
+				client.inventorySetCount( AMMO_BOLTS, 0 );
+				this.checkAndLoadAmmo( AMMO_WEAK_BOLTS, 7 );
 			}
 		}
 		else if ( this.playerClass.tag == PLAYERCLASS_SNIPER )

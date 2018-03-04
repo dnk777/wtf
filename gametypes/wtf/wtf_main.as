@@ -847,8 +847,8 @@ void GT_PlayerRespawn( Entity @ent, int old_team, int new_team )
 	else if ( player.playerClass.tag == PLAYERCLASS_SUPPORT )
 	{
 		// Weapons
-		client.inventoryGiveItem( WEAP_ROCKETLAUNCHER );
-		client.inventoryGiveItem( WEAP_PLASMAGUN );
+		client.inventoryGiveItem( WEAP_ELECTROBOLT );
+		client.inventoryGiveItem( WEAP_SHOCKWAVE );
 	}
 	else if ( player.playerClass.tag == PLAYERCLASS_SNIPER )
 	{
