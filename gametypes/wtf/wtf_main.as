@@ -403,23 +403,55 @@ bool GT_Command( Client @client, const String &cmdString, const String &argsStri
     return false;
 }
 
-void CTF_UpdateBotsExtraGoals()
+void WTF_UpdateBotsExtraGoals()
 {
     Entity @ent;
-    for ( int i = 1; i <= maxClients; ++i )
-    {
-        @ent = @G_GetEntity( i );
-        CTF_UpdateBotExtraGoals( ent );
-    }
+	Entity @reviver;
+	Bot @bot;
+	cPlayer @player;
+
+	array<Entity @> @revivers = @G_FindByClassname( "reviver" );
+
+	for( int i = 1; i <= maxClients; ++i )
+	{
+		@ent = @G_GetEntity( i );
+		@bot = ent.client.getBot();
+		if( @bot == null )
+			continue;
+
+		bot.clearOverriddenEntityWeights();
+
+		WTF_UpdateFlagAndBaseWeights( ent, bot );
+
+		@player = @GetPlayer( ent.client );
+		// TODO: Link all players of the same class in lists
+		if( player.playerClass.tag != PLAYERCLASS_MEDIC )
+		{
+			continue;
+		}
+
+		// Set a high weight for every reviver
+		for( int j = 0; j < revivers.size(); ++j )
+		{
+			@reviver = @revivers[j];
+			if( reviver.origin.distance( ent.origin ) < 512.0f )
+			{
+				if( G_InPVS( reviver.origin, ent.origin ) )
+				{
+					bot.overrideEntityWeight( reviver, reviver.team == ent.team ? 16.0f : 9.0f );
+					continue;
+				}
+			}
+
+			bot.overrideEntityWeight( reviver, reviver.team == ent.team ? 5.0f : 2.0f );
+		}
+	}
 }
 
 
-void CTF_UpdateBotExtraGoals( Entity @ent )
+// Updates extra weights related to flags and bases that are not covered by defense/offense spots logic
+void WTF_UpdateFlagAndBaseWeights( Entity @ent, Bot @bot )
 {
-    Bot @bot = @ent.client.getBot();
-    if ( @bot == null )
-        return;
-
     int enemyTeam;
     if ( ent.team == TEAM_ALPHA )
         enemyTeam = TEAM_BETA;
@@ -1035,6 +1067,8 @@ void GT_ThinkRules()
 	CTFT_UpdateHidenameEffects();
 
 	CTFT_UpdateDetectionEntities();
+
+	WTF_UpdateBotsExtraGoals();
 }
 
 // The game has detected the end of the match state, but it
