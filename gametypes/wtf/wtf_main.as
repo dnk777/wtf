@@ -900,6 +900,44 @@ void GT_PlayerRespawn( Entity @ent, int old_team, int new_team )
 	player.printNextTip();
 }
 
+// Sniper is the single truly defencive class
+// Runner is the single truly offensive class
+// Other classes are really versatile
+
+float GT_PlayerOffensiveAbilitiesRating( const Client @client )
+{
+	switch( GetPlayer( client ).playerClass.tag )
+	{
+		case PLAYERCLASS_SNIPER:
+			return 0.0f;
+		case PLAYERCLASS_RUNNER:
+			return 1.0f;
+	}
+
+	return 0.5f;
+}
+
+float GT_PlayerDefenciveAbilitiesRating( const Client @client )
+{
+	switch( GetPlayer( client ).playerClass.tag )
+	{
+		case PLAYERCLASS_SNIPER:
+			return 1.0f;
+		case PLAYERCLASS_RUNNER:
+			return 0.0f;
+		// Contrary to the offense rating, medics and supports
+		// should have a distinct and lower defence score.
+		case PLAYERCLASS_MEDIC:
+		case PLAYERCLASS_SUPPORT:
+			return 0.3f;
+		case PLAYERCLASS_GUNNER:
+		case PLAYERCLASS_GRUNT:
+			return 0.6f;
+	}
+
+	return 0.5f;
+}
+
 void CTFT_UpdateHidenameEffects()
 {
 	// First clear the hidename effect for regular players and set the hidename effect for invisible players

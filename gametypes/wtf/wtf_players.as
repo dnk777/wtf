@@ -2157,7 +2157,7 @@ class cPlayer
 	}
 }
 
-cPlayer @GetPlayer( Client @client )
+cPlayer @GetPlayer( const Client @client )
 {
     if ( @client == null )
         return null;
