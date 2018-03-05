@@ -938,6 +938,165 @@ float GT_PlayerDefenciveAbilitiesRating( const Client @client )
 	return 0.5f;
 }
 
+int GT_GetScriptWeaponsNum( const Client @client ) 
+{
+	switch( GetPlayer( client ).playerClass.tag )
+	{
+		case PLAYERCLASS_GRUNT:
+			return 1;
+		case PLAYERCLASS_MEDIC:
+			return 1;
+		// Consider a smoke grenade as just a weapon until a squad action planner is implenented. 
+		case PLAYERCLASS_SUPPORT:
+			return 1;
+	}
+	
+	return 0;
+}
+
+bool GT_GetScriptWeaponDef( const Client @client, int weaponNum, AIScriptWeaponDef &out weaponDef )
+{
+	if( weaponNum != 0 ) 
+		return false;
+
+	weaponDef.weaponNum = 0;
+	// All these "weapons" are grenades
+	weaponDef.aimType = AI_WEAPON_AIM_TYPE_DROP;
+	weaponDef.projectileSpeed = 1000;
+	// Don't even try to throw it further
+	weaponDef.maxRange = 2500;
+	
+	switch( GetPlayer( client ).playerClass.tag )
+	{
+		case PLAYERCLASS_GRUNT:
+			weaponDef.tier = 4;
+			weaponDef.minRange = 128;
+			weaponDef.bestRange = 768;
+			weaponDef.splashRadius = 250;
+			weaponDef.maxSelfDamage = 500;
+			return true;
+		case PLAYERCLASS_MEDIC:
+			weaponDef.tier = 3;
+			// Don't throw it being close to enemy and thus losing health in a volatile position
+			weaponDef.minRange = 192;
+			weaponDef.bestRange = 1000;
+			weaponDef.splashRadius = 96;
+			weaponDef.maxSelfDamage = 0;
+			return true;
+		case PLAYERCLASS_SUPPORT:
+			weaponDef.tier = 4;
+			// Same as for medic, moreover should force throwing it far away 
+			weaponDef.minRange = 768;
+			weaponDef.bestRange = 1200;
+			// A huge fake value to force throwing it
+			weaponDef.splashRadius = 500;
+			weaponDef.maxSelfDamage = 0;
+			return true;
+	}
+	
+	return false;
+}
+
+int GT_GetScriptWeaponCooldown( const Client @client, int weaponNum )
+{
+	if( weaponNum != 0 ) 
+		return 99999;
+
+	Entity @ent = @client.getEnt();
+	cPlayer @player = @GetPlayer( client );
+	switch( player.playerClass.tag ) 
+	{
+		case PLAYERCLASS_GRUNT:
+			if( client.armor < CTFT_CLUSTER_GRENADE_AP_COST ) 
+				return 99999;
+
+			if( ent.health < 75 && ( ent.effects & EF_SHELL ) == 0 ) 
+				return 99999;
+
+			return 0;
+		case PLAYERCLASS_MEDIC:
+			{
+				if( ent.health < CTFT_BIO_GRENADE_HEALTH_COST + 25 )
+					return 99999;
+
+				if( player.isBioGrenadeCooldown() )
+					return 99999;
+
+			
+				auto @selectedEnemies = @client.getBot().selectedEnemies;
+				if( selectedEnemies.areValid() && selectedEnemies.areThreatening() )
+					return 99999;
+			}
+			return 0;
+		case PLAYERCLASS_SUPPORT:
+			{
+				if( client.armor < WTF_SMOKE_GRENADE_AP_COST )
+					return 99999;
+
+				if( ent.health < 75 )
+					return 99999;
+
+				// Don't throw being at our base
+				float distanceToBotBase = 999999.0f;
+				float distanceToNmyBase = 999999.0f;				
+				for ( cFlagBase @flagBase = @fbHead; @flagBase != null; @flagBase = @flagBase.next )
+    			{
+					float distance = flagBase.owner.origin.distance( ent.origin );
+					if( flagBase.team == ent.team )
+						distanceToBotBase = distance;
+					else 
+						distanceToNmyBase = distance;					
+				}
+				// The only exception, throw at our base being a carrier
+				if( distanceToBotBase < distanceToNmyBase )
+				{
+					if( ( ent.effects & EF_CARRIER ) != 0 )
+						return 0;
+
+					return 99999;
+				}
+				// Don't throw if there are no threatening enemies being in the middle of the map
+				if( 2 * distanceToBotBase < 3 * distanceToNmyBase )
+				{
+					auto @selectedEnemies = @client.getBot().selectedEnemies;
+					if( !( selectedEnemies.areValid() && selectedEnemies.areThreatening() ) )
+						return 99999;
+				}
+			}
+			
+			return 0;
+	}
+
+	return 99999;
+}
+
+bool GT_SelectScriptWeapon( Client @client, int weaponNum )
+{
+	return weaponNum == 0;
+}
+
+bool GT_FireScriptWeapon( Client @client, int weaponNum )
+{
+	if( weaponNum != 0 )
+		return false;
+
+	cPlayer @player = GetPlayer( client );
+	switch( player.playerClass.tag )
+	{
+		case PLAYERCLASS_GRUNT:
+			CTFT_ThrowClusterGrenade( client, player );
+			return true;
+		case PLAYERCLASS_MEDIC:
+			CTFT_ThrowBioGrenade( client, player );
+			return true;
+		case PLAYERCLASS_SUPPORT:
+			CTFT_ThrowSmokeGrenade( client, player );
+			return true;
+	}
+
+	return false;
+}
+
 void CTFT_UpdateHidenameEffects()
 {
 	// First clear the hidename effect for regular players and set the hidename effect for invisible players
