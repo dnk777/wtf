@@ -108,11 +108,6 @@ int prcAnnouncerFlagScoreTeam02;
 int prcAnnouncerFlagScoreEnemy01;
 int prcAnnouncerFlagScoreEnemy02;
 
-int prcBouncePadActivateSound;
-int prcBouncePadSpawnerModel;
-int prcBouncePadNormalModel;
-int prcBouncePadActivatedModel;
-
 int prcAdrenalineTrailEmitterShaderIndex;
 
 int prcBioCloudShaderIndex;
@@ -246,49 +241,9 @@ bool GT_Command( Client @client, const String &cmdString, const String &argsStri
             GetPlayer( client ).setPlayerClassCommand( argsString );
         return true;
     }
-	else if ( cmdString == "classaction1" )
+	else if ( cmdString == "classaction" )
 	{
-		CTFT_Classaction1Command( client );
-		return true;
-	}
-	else if ( cmdString == "classaction2" )
-	{
-		CTFT_Classaction2Command( client );
-		return true;
-	}
-	else if ( cmdString == "altattack" )
-	{
-		CTFT_AltAttackCommand( client, argsString, argc );
-		return true;
-	}
-	else if ( cmdString == "build" )
-	{
-		CTFT_BuildCommand( client, argsString, argc );
-		return true;
-	}
-	else if ( cmdString == "destroy" )
-	{
-		CTFT_DestroyCommand( client, argsString, argc );
-		return true;
-	}
-	else if ( cmdString == "deploy" )
-	{
-		CTFT_DeployCommand( client, argsString, argc );
-		return true;
-	}
-	else if ( cmdString == "protect" )
-	{
-		CTFT_ProtectCommand( client, argsString, argc );
-		return true;
-	}
-	else if ( cmdString == "supply" )
-	{
-		CTFT_SupplyCommand( client, argsString, argc );
-		return true;
-	}
-	else if ( cmdString == "trans" )
-	{
-		CTFT_TransCommand( client, argsString, argc );
+		ClassactionCommand( client );
 		return true;
 	}
     // example of registered command
@@ -800,39 +755,6 @@ String @GT_ScoreboardMessage( uint maxlen )
     return scoreboardMessage;
 }
 
-// This is a big HACK to buff LG damage in deployed mode!
-// We can't call G_Damage() in GT_ScoreEvent() because GT_ScoreEvent() 
-// is called inside G_Damage() and G_Damage() is not reentrant.
-// For each entity we record 4 attackers that used the specified fire mode
-// (if there were > 4 attackers the target is likely to be dead instantly, don't bother about data loss).
-// Then we apply damage outside GT_ScoreEvent() in GT_ThinkRules()
-int[] entitySpecialLGAttackers(4 * maxEntities);
-int[] entitySpecialLGNumAttackers(maxEntities);
-
-void CTFT_ApplySpecialLGDamage()
-{
-	for (int i = 0; i < maxEntities; ++i)
-	{	
-		int numAttackers = entitySpecialLGNumAttackers[i];
-		if ( numAttackers > 0 )
-		{
-			Entity @target = @G_GetEntity( i );
-			for (int j = 0; j < numAttackers; ++j)
-			{
-				Entity @attacker = @G_GetEntity( entitySpecialLGAttackers[4 * i + j] );
-				Vec3 damageDir(target.origin);
-				damageDir -= attacker.origin;
-				damageDir.normalize();
-				// Base LG damage is 7.0 units per shot
-				// Base LG knockback is 14 knockback units per shot
-				// Add extra 1.5x damage and knockback
-				target.sustainDamage( attacker, attacker, damageDir, 10.5f, 21, 300, MOD_LASERGUN_W );
-			}
-		}
-		entitySpecialLGNumAttackers[i] = 0;
-	} 
-}
-
 // Some game actions get reported to the script as score events.
 // Warning: client can be null
 void GT_ScoreEvent( Client @client, const String &score_event, const String &args )
@@ -853,22 +775,6 @@ void GT_ScoreEvent( Client @client, const String &score_event, const String &arg
             	GetPlayer( target.client ).tookDamage( arg3, arg2 );
 			}
         }
-
-		if ( @attacker.client != null )
-		{
-			if ( GetPlayer( attacker.client ).isDeployed )
-			{
-				// Check whether this is actually LG damage 
-				// (otherwise damage from projectiles fired before deployment might be counted).
-				if ( arg2 == 7.0f )
-				{
-					if ( entitySpecialLGNumAttackers[arg1] < 4 )
-					{
-						entitySpecialLGAttackers[4 * arg1 + entitySpecialLGNumAttackers[arg1]++] = arg3;
-					}
-				}
-			}
-		}
     }
     else if ( score_event == "kill" )
     {
@@ -926,20 +832,6 @@ void GT_ScoreEvent( Client @client, const String &score_event, const String &arg
 		else if ( targetPlayer.playerClass.tag == PLAYERCLASS_GRUNT )
 		{
 			CTFT_DeathDrop( target.client, "Green Armor" );
-
-            // Explode all cluster bombs belonging to this grunt when dying
-            cBomb @bomb = null;
-            Entity @tmp = null;
-            for ( int i = 0; i < MAX_BOMBS; i++ )
-            {
-                if ( gtBombs[i].inuse == true )
-                {
-                    @bomb = @gtBombs[i];
-
-                    if ( @targetPlayer == @bomb.player )
-                        bomb.die(tmp, tmp);
-                }
-            }
         }
     }
 }
@@ -1066,11 +958,6 @@ void GT_PlayerRespawn( Entity @ent, int old_team, int new_team )
         player.invisibilityLoad = 0;
         player.invisibilityCooldownTime = 0;
         player.hudMessageTimeout = 0;
-
-		player.isDeployed = false;
-		player.isDeployingUp = false;
-		player.isDeployingDown = false;
-        player.lastNormalModeWeapon = -1;
     }
     else
         player.resetTimers();
@@ -1131,8 +1018,6 @@ int GT_GetScriptWeaponsNum( const Client @client )
 {
 	switch( GetPlayer( client ).playerClass.tag )
 	{
-		case PLAYERCLASS_GRUNT:
-			return 1;
 		case PLAYERCLASS_MEDIC:
 			return 1;
 		// Consider a smoke grenade as just a weapon until a squad action planner is implenented. 
@@ -1157,13 +1042,6 @@ bool GT_GetScriptWeaponDef( const Client @client, int weaponNum, AIScriptWeaponD
 	
 	switch( GetPlayer( client ).playerClass.tag )
 	{
-		case PLAYERCLASS_GRUNT:
-			weaponDef.tier = 4;
-			weaponDef.minRange = 128;
-			weaponDef.bestRange = 768;
-			weaponDef.splashRadius = 250;
-			weaponDef.maxSelfDamage = 500;
-			return true;
 		case PLAYERCLASS_MEDIC:
 			weaponDef.tier = 3;
 			// Don't throw it being close to enemy and thus losing health in a volatile position
@@ -1195,14 +1073,6 @@ int GT_GetScriptWeaponCooldown( const Client @client, int weaponNum )
 	cPlayer @player = @GetPlayer( client );
 	switch( player.playerClass.tag ) 
 	{
-		case PLAYERCLASS_GRUNT:
-			if( client.armor < CTFT_CLUSTER_GRENADE_AP_COST ) 
-				return 99999;
-
-			if( ent.health < 75 && ( ent.effects & EF_SHELL ) == 0 ) 
-				return 99999;
-
-			return 0;
 		case PLAYERCLASS_MEDIC:
 			{
 				if( ent.health < CTFT_BIO_GRENADE_HEALTH_COST + 25 )
@@ -1272,14 +1142,11 @@ bool GT_FireScriptWeapon( Client @client, int weaponNum )
 	cPlayer @player = GetPlayer( client );
 	switch( player.playerClass.tag )
 	{
-		case PLAYERCLASS_GRUNT:
-			CTFT_ThrowClusterGrenade( client, player );
-			return true;
 		case PLAYERCLASS_MEDIC:
-			CTFT_ThrowBioGrenade( client, player );
+			ThrowBioGrenade( client, player );
 			return true;
 		case PLAYERCLASS_SUPPORT:
-			CTFT_ThrowSmokeGrenade( client, player );
+			ThrowSmokeGrenade( client, player );
 			return true;
 	}
 
@@ -1387,8 +1254,6 @@ void GT_ThinkRules()
             match.launchState( match.getState() + 1 );
     }
 
-	CTFT_ApplySpecialLGDamage();
-
     GENERIC_Think();
     CTFT_RespawnQueuedPlayers();
 
@@ -1412,9 +1277,8 @@ void GT_ThinkRules()
 		{
 			if ( @player.translocator != null )
 				player.returnTranslocator();
+
 			// Prevent applying these commands after respawn
-			player.hasPendingSupplyAmmoCommand = false;
-			player.hasPendingSupplyAdrenalineCommand = false;
 			player.isTranslocating = false;
 			player.hasJustTranslocated = false;
 		}
@@ -1445,7 +1309,6 @@ void GT_ThinkRules()
 		player.refreshInfluenceAbsorption();
         player.refreshRegeneration();
         player.watchShell();
-		player.watchDeployedMode();
         player.updateHUDstats();
 		player.printNextTip();
     }
@@ -1515,10 +1378,8 @@ void GT_MatchStateStarted()
 
     case MATCH_STATE_POSTMATCH:
         GENERIC_SetUpEndMatch();
-        CTFT_RemoveBombs();
 		CTFT_RemoveTranslocators();
 		CTFT_RemoveSmokeGrenades();
-		CTFT_RemoveBouncePads();
 		CTFT_RemoveMotionDetectors();
         CTFT_RemoveRevivers();
         break;
@@ -1542,10 +1403,8 @@ void CTFT_SetUpMatch()
     // Reset flags
     CTF_ResetFlags();
     CTFT_ResetRespawnQueue();
-    CTFT_RemoveBombs();
 	CTFT_RemoveTranslocators();
 	CTFT_RemoveSmokeGrenades();
-	CTFT_RemoveBouncePads();
 	CTFT_RemoveMotionDetectors();
     CTFT_RemoveItemsByName("25 Health");
     CTFT_RemoveItemsByName("Yellow Armor");
@@ -1725,19 +1584,10 @@ void GT_InitGametype()
     prcAnnouncerFlagScoreEnemy02 = G_SoundIndex( "sounds/announcer/ctf/score_enemy02" );
 
     // add commands
-    G_RegisterCommand( "drop" );
     G_RegisterCommand( "gametype" );
     G_RegisterCommand( "gametypemenu" );
     G_RegisterCommand( "class" );
-	G_RegisterCommand( "classaction1" );
-	G_RegisterCommand( "classaction2" );
-	G_RegisterCommand( "build" );
-	G_RegisterCommand( "destroy" );
-	G_RegisterCommand( "deploy" );
-	G_RegisterCommand( "altattack" );
-	G_RegisterCommand( "protect" );
-	G_RegisterCommand( "supply" );
-	G_RegisterCommand( "trans" );
+	G_RegisterCommand( "classaction" );
 
   
 	// Make WTF assets pure
@@ -1756,12 +1606,6 @@ void GT_InitGametype()
     G_ImageIndex( "models/wtf/reviver" );
     G_ImageIndex( "models/wtf/reviver_outline" );
     G_ImageIndex( "gfx/wtf/reviver_decal" );
-
-	// Bouncepad
-	prcBouncePadActivateSound = G_SoundIndex( "sounds/wtf/bouncepad", true );
-	prcBouncePadSpawnerModel = G_ModelIndex( "models/wtf/bouncepad_spawner.md3", true );
-	prcBouncePadNormalModel = G_ModelIndex( "models/wtf/bouncepad_normal.md3", true );
-	prcBouncePadActivatedModel = G_ModelIndex( "models/wtf/bouncepad_activated.md3", true );
 
 	// Smoke
 	G_ImageIndex( "gfx/wtf/wtf_smoke" );

@@ -33,8 +33,6 @@ class cPlayer
     Client @client;
     Entity @ent;
     cReviver @reviver;
-	cBouncePad @bouncePad;   
-    cBomb @bomb;
 	cTranslocator @translocator;
 	Entity @motionDetector;
 
@@ -49,31 +47,16 @@ class cPlayer
 	int64 bioGrenadeCooldownTime;
 	int64 translocatorCooldownTime;
 	int64 flagDispenserCooldownTime;
-	int64 adrenalineTime;
     int64 respawnTime;
-	int64 deployUpTime;
-	int64 deployDownTime;
 	int64 repeatedCommandTime;  // Prevents unitended execution of some non-idempotent commands twice
-	bool isDeployed;
-	bool isDeployingUp;
-	bool isDeployingDown;
 	bool isHealingTeammates;
-	bool hasReceivedAmmo;
-	bool hasReceivedAdrenaline;
-	bool hasPendingSupplyAmmoCommand;
-	bool hasPendingSupplyAdrenalineCommand;
 	bool isTranslocating;     // A player entity is on its old origin and a teleport effect is shown
 	bool hasJustTranslocated; // A player entity is on its new origin and a teleport effect is shown
 	Vec3 translocationOrigin; // A translocator can be killed while translocation, so we save destination origin 
 	float medicInfluence;
 	float supportInfluence;
-	float adrenalineBaseSpeedBoost;
-	float adrenalineDashSpeedBoost;
     bool invisibilityEnabled;
     float invisibilityLoad;
-    int lastNormalModeWeapon;
-	int lastNormalModePGAmmo;
-	int lastNormalModeGLAmmo;
     int64 invisibilityCooldownTime;
     int64 hudMessageTimeout;
 	uint nextTipDescriptionLine;
@@ -90,8 +73,6 @@ class cPlayer
         // initialize all as grunt
         @this.playerClass = @cPlayerClassInfos[PLAYERCLASS_GRUNT];
         @this.reviver = null;
-		@this.bouncePad = null;
-        @this.bomb = null;
 		@this.translocator = null;
 		@this.motionDetector = null;
 		@this.detectionSprite = null;
@@ -114,25 +95,13 @@ class cPlayer
 		this.bioGrenadeCooldownTime = 0;
 		this.translocatorCooldownTime = 0;
 		this.flagDispenserCooldownTime = 0;
-		this.adrenalineTime = 0;
         this.respawnTime = 0;
-		this.deployUpTime = 0;
-		this.deployDownTime = 0;
 		this.repeatedCommandTime = 0;
-		this.isDeployed = false;
-		this.isDeployingUp = false;
-		this.isDeployingDown = false;
 		this.isHealingTeammates = false;
-		this.hasReceivedAmmo = false;
-		this.hasReceivedAdrenaline = false;
-		this.hasPendingSupplyAmmoCommand = false;
-		this.hasPendingSupplyAdrenalineCommand = false;
 		this.isTranslocating = false;
 		this.hasJustTranslocated = false;
 		this.medicInfluence = 0.0f;
 		this.supportInfluence = 0.0f;
-		this.adrenalineBaseSpeedBoost = 0.0f;
-		this.adrenalineDashSpeedBoost = 0.0f;
         this.invisibilityEnabled = false;
         this.invisibilityLoad = 0;
         this.invisibilityCooldownTime = 0;
@@ -140,8 +109,6 @@ class cPlayer
 		this.nextTipDescriptionLine = 0;
 		this.nextTipTime = 0;
         this.deadcamMedicScanTime = 0;
-
-        this.lastNormalModeWeapon = -1;
     }
 
     void printMessage( String &string )
@@ -228,12 +195,6 @@ class cPlayer
             this.client.setHUDStat( STAT_PROGRESS_SELF, int( frac * 100 ) );
         }
 
-		if ( this.isBlastCooldown() )
-		{
-			frac = float( this.blastCooldownTimeLeft() ) / float( CTFT_BLAST_COOLDOWN );
-            this.client.setHUDStat( STAT_PROGRESS_OTHER, int( frac * 100 ) );
-		}
-
 		if ( this.isBioGrenadeCooldown() )
 		{
 			frac = float( this.bioGrenadeCooldownTimeLeft() ) / float( CTFT_BIO_GRENADE_COOLDOWN );
@@ -249,19 +210,6 @@ class cPlayer
                 	this.client.setHUDStat( STAT_PROGRESS_SELF, -int( frac * 100 ) );
             	else
             	    this.client.setHUDStat( STAT_PROGRESS_SELF, int( frac * 100 ) );
-			}
-			if ( this.isDeployed )
-			{
-				if ( this.isDeployCooldown() )
-				{
-				    frac = this.deployCooldownTimeLeft() / float( WTF_GUNNER_DEPLOY_TIME );
-					this.client.setHUDStat( STAT_PROGRESS_OTHER, int( frac * 100 ) );
-				}
-				else
-				{
-					frac = this.client.inventoryCount( AMMO_WEAK_LASERS ) / float( CTFT_GUNNER_MAX_LG_AMMO );
-					this.client.setHUDStat( STAT_PROGRESS_OTHER, int( frac * 100 ) );
-				}
 			}
         }
 
@@ -763,37 +711,17 @@ class cPlayer
 				return;
 			}
 
-			if ( this.isDeployed )
-			{
-				this.client.pmoveMaxSpeed = 100;
-				this.client.pmoveFeatures = this.client.pmoveFeatures & ~GUNNER_DEPLOY_DISABLED_MOVEMENT_FEATURES;
-				this.ent.mass = 450;
-				return;
-			}
-
             this.client.pmoveJumpSpeed = this.playerClass.jumpSpeed;
 
-			// No adrenaline (the most common case)
-			if ( this.adrenalineTime <= levelTime )
-			{
-				// Apply the hack described in classes definition
-				if ( @this.ent.groundEntity == null )
-					this.client.pmoveMaxSpeed = this.playerClass.pmoveMaxSpeedInAir;
-				else
-					this.client.pmoveMaxSpeed = this.playerClass.pmoveMaxSpeedOnGround;
-
-				this.client.pmoveDashSpeed = this.playerClass.dashSpeed;
-			}
+			
+			// Apply the hack described in classes definition
+			if ( @this.ent.groundEntity == null )
+				this.client.pmoveMaxSpeed = this.playerClass.pmoveMaxSpeedInAir;
 			else
-			{
-				// Choose the best speed and add some bonus value
-				if ( this.playerClass.pmoveMaxSpeedInAir < this.playerClass.pmoveMaxSpeedOnGround )
-					this.client.pmoveMaxSpeed = this.playerClass.pmoveMaxSpeedOnGround + 30;
-				else
-					this.client.pmoveMaxSpeed = this.playerClass.pmoveMaxSpeedInAir + 30;
+				this.client.pmoveMaxSpeed = this.playerClass.pmoveMaxSpeedOnGround;
 
-				this.client.pmoveDashSpeed = this.playerClass.dashSpeed + 100;
-			}
+			this.client.pmoveDashSpeed = this.playerClass.dashSpeed;
+			
 
             if ( this.playerClass.tag == PLAYERCLASS_GRUNT )
 			{
@@ -824,8 +752,6 @@ class cPlayer
 		this.medicInfluence = 0.0f;
 		this.supportInfluence = 0.0f;
 		this.isHealingTeammates = false;
-		this.hasReceivedAmmo = false;
-		this.hasReceivedAdrenaline = false;
 	}
 
 	void refreshInfluenceEmission()
@@ -879,19 +805,6 @@ class cPlayer
 				this.isHealingTeammates = true;
 				this.medicInfluenceScore += 0.00035 * influence * frameTime;
 			}
-
-			player.hasReceivedAdrenaline = this.hasPendingSupplyAdrenalineCommand;
-		}
-
-		if ( this.hasPendingSupplyAdrenalineCommand )
-		{
-			if ( numAffectedTeammates > 0 )
-				this.client.stats.addScore( numAffectedTeammates );
-
-			// Give some adrenaline itself
-			this.hasReceivedAdrenaline = true;
-			// Reset this later to skip printing a message to itself
-			// this.hasPendingSupplyAdrenalineCommand = false;
 		}
 	}
 
@@ -930,20 +843,6 @@ class cPlayer
 				this.isHealingTeammates = true;
 				this.supportInfluenceScore += 0.00045 * influence * frameTime;
 			}
-
-			player.hasReceivedAmmo = this.hasPendingSupplyAmmoCommand;
-		}
-
-		if ( this.hasPendingSupplyAmmoCommand )
-		{
-			// Some teammates might have already full load of ammo but we don't care
-			if ( numAffectedTeammates > 0 )
-				this.client.stats.addScore( numAffectedTeammates );
-
-			// Give some ammo itself
-			this.hasReceivedAmmo = true;
-			// Reset this later to skip printing a message to itself
-			// this.hasPendingSupplyAmmoCommand = false;
 		}
 	}
 
@@ -958,61 +857,12 @@ class cPlayer
 		this.ent.effects &= ~( EF_QUAD | EF_REGEN | EF_GODMODE );
 		if ( !this.invisibilityEnabled )
 		{
-			if ( this.isDeployed )
-			{
-				this.ent.effects |= EF_QUAD;
-			}
-			else
-			{
-				if ( this.medicInfluence > 0 )
-					this.ent.effects |= EF_REGEN;
-		
-				if ( this.supportInfluence > 0 )
-					this.ent.effects |= EF_GODMODE;
-			}
+			if ( this.medicInfluence > 0 )
+				this.ent.effects |= EF_REGEN;
+
+			if ( this.supportInfluence > 0 )
+				this.ent.effects |= EF_GODMODE;
 		}
-
-
-		if ( this.hasReceivedAmmo )
-		{
-			onHasReceivedAmmo();
-			this.hasReceivedAmmo = false;	
-		}
-
-		if ( this.hasReceivedAdrenaline )
-		{
-			onHasReceivedAdrenaline();
-			this.hasReceivedAdrenaline = false;			
-		}
-
-		this.hasPendingSupplyAmmoCommand = false;
-		this.hasPendingSupplyAdrenalineCommand = false;
-	}
-
-	void onHasReceivedAmmo()
-	{
-		this.loadAmmo();
-		// loadAmmo() does not play this sound because it might be confusing on respawn when it is called too			
-		G_Sound( this.ent, CHAN_AUTO, G_SoundIndex( "sounds/items/weapon_pickup" ), 0.4f );
-		this.hasReceivedAmmo = false;
-
-		// if the player is not an ammo supplier
-		if ( !this.hasPendingSupplyAmmoCommand )
-			this.centerPrintMessage( S_COLOR_CYAN + "A teammate gave you some ammo!\n" );
-	}
-
-	void onHasReceivedAdrenaline()
-	{
-		this.adrenalineTime = levelTime + WTF_ADRENALINE_TIME;
-		this.ent.health += 50;
-		G_Sound( this.ent, CHAN_AUTO, G_SoundIndex( "sounds/items/regen_pickup" ), 0.4f );					
-		this.hasReceivedAdrenaline = false;
-
-		// it the player is not an adrenaline supplier
-		if ( !this.hasPendingSupplyAdrenalineCommand )
-			this.centerPrintMessage( S_COLOR_MAGENTA + "You gained some adrenaline! Be quick!\n" );
-
-		WTF_AddAdrenalineTrailEmitter( this.ent );
 	}
 
     void refreshRegeneration()
@@ -1209,22 +1059,6 @@ class cPlayer
 		return int( levelTime - this.supportRegenCooldownTime );
 	}
 
-	bool isBlastCooldown()
-	{
-		if ( this.playerClass.tag != PLAYERCLASS_SUPPORT )
-			return false;
-
-		return ( this.blastCooldownTime > levelTime ) ? true : false;
-	}
-
-	void setBlastCooldown()
-	{
-		if ( this.playerClass.tag != PLAYERCLASS_SUPPORT )
-			return;
-
-		this.blastCooldownTime = levelTime + CTFT_BLAST_COOLDOWN;
-	}
-
 	int blastCooldownTimeLeft()
 	{
 		if ( this.playerClass.tag != PLAYERCLASS_SUPPORT )
@@ -1356,9 +1190,6 @@ class cPlayer
         if ( this.isInvisibilityCooldown() )
             return;
 
-		if ( this.isDeployed )
-            return;
-
         if ( ( this.ent.effects & EF_CARRIER ) != 0 )
         {
             this.printMessage( "Cannot use the skill now\n" );
@@ -1372,7 +1203,6 @@ class cPlayer
         }
 
         this.invisibilityEnabled = true;
-        this.lastNormalModeWeapon = this.ent.weapon;
         this.client.selectWeapon( WEAP_NONE );
         this.ent.effects |= EF_PLAYER_HIDENAME;
 
@@ -1393,7 +1223,7 @@ class cPlayer
 
         this.invisibilityEnabled = false;
 
-        this.client.selectWeapon( this.lastNormalModeWeapon );
+        this.client.selectWeapon( -1 );
         this.client.pmoveFeatures = this.client.pmoveFeatures | PMFEAT_WEAPONSWITCH;
         this.ent.effects &= ~EF_PLAYER_HIDENAME;
 
@@ -1438,138 +1268,6 @@ class cPlayer
                 this.centerPrintMessage( "Warshell wearing off in " + this.client.inventoryCount( POWERUP_SHELL ) + " seconds" );
         }
     }
-
-	void deploy()
-	{
-		if ( this.isDeployingUp || this.isDeployingDown )
-			return;
-
-		if ( this.isDeployed )
-		{
-			setDeployingDown();
-			return;
-		}
-		
-		if ( this.invisibilityEnabled )
-			return;
-
-		if ( this.client.inventoryCount( AMMO_LASERS ) == 0 )
-		{
-			client.printMessage( "No LG ammo. Can't switch to the deployed mode\n" );
-			return;
-		}
-
-		G_Sound( this.ent, CHAN_MUZZLEFLASH, G_SoundIndex( "sounds/items/quad_spawn" ), 0.3f );
-		this.isDeployed = true;
-		setDeployingUp();
-	}
-
-	void setDeployingUp()
-	{
-		// Movement features switch is done in this.refreshMovement()
-
-		this.isDeployingUp = true;
-		this.deployUpTime = levelTime + WTF_GUNNER_DEPLOY_TIME;
-
-		this.client.inventorySetCount( WEAP_GUNBLADE, 0 );
-		this.client.inventorySetCount( AMMO_WEAK_LASERS, this.client.inventoryCount( AMMO_LASERS ) );
-		this.client.inventorySetCount( AMMO_LASERS, 0 );
-		this.lastNormalModePGAmmo = this.client.inventoryCount( AMMO_PLASMA );
-		this.client.inventorySetCount( AMMO_PLASMA, 0 );
-		this.client.inventorySetCount( WEAP_PLASMAGUN, 0 );
-		this.lastNormalModeGLAmmo = this.client.inventoryCount( AMMO_GRENADES );
-		this.client.inventorySetCount( AMMO_GRENADES, 0 );
-		this.client.inventorySetCount( WEAP_GRENADELAUNCHER, 0 );
-		
-		this.lastNormalModeWeapon = this.client.weapon;
-		this.client.selectWeapon( WEAP_NONE );
-	}
-
-	void setDeployingDown()
-	{
-		this.isDeployingDown = true;
-		this.deployDownTime = levelTime + WTF_GUNNER_DEPLOY_TIME;
-		
-		this.client.selectWeapon( WEAP_NONE );
-	}
-
-	void deployedUp()
-	{
-		this.isDeployingUp = false;
-		
-		this.client.selectWeapon( WEAP_LASERGUN );
-	}
-
-	void deployedDown()
-	{
-		// Movement features switch is done in this.refreshMovement()
-
-		this.isDeployingDown = false;
-		this.isDeployed = false;
-	
-		this.client.inventorySetCount( WEAP_GUNBLADE, 1 );		
-		this.client.inventorySetCount( AMMO_LASERS, this.client.inventoryCount( AMMO_WEAK_LASERS ) );
-		this.client.inventorySetCount( AMMO_WEAK_LASERS, 0 );
-		this.client.inventorySetCount( WEAP_PLASMAGUN, 1 );
-		this.client.inventorySetCount( AMMO_PLASMA, this.lastNormalModePGAmmo );
-		this.client.inventorySetCount( WEAP_GRENADELAUNCHER, 1 );
-		this.client.inventorySetCount( AMMO_GRENADES, this.lastNormalModeGLAmmo );
-		this.client.inventorySetCount( POWERUP_SHELL, 0 );
-		
-		// Prevent showing an empty screen when running out of ammo by selecting a best weapon first
-		this.client.selectWeapon( -1 );
-		this.client.selectWeapon( this.lastNormalModeWeapon );
-	}
-
-	void watchDeployedMode()
-	{
-		if ( !this.isDeployed )
-			return;
-
-		this.client.inventorySetCount( POWERUP_SHELL, 99 );
-	
-		if ( this.isDeployingUp && this.deployUpTime < levelTime )
-		{
-			this.deployedUp();
-			return;
-		}
-
-		if ( this.isDeployingDown )
-		{
-			if ( this.deployDownTime < levelTime )
-				this.deployedDown();
-		}
-		else
-		{ 
-			if ( this.client.inventoryCount( AMMO_WEAK_LASERS ) == 0 )
-				this.setDeployingDown();
-		}	
-	}
-
-	bool isDeployCooldown()
-	{
-		if ( this.playerClass.tag != PLAYERCLASS_GUNNER )
-			return false;
-		
-		if ( this.isDeployingUp || this.isDeployingDown )
-			return true;
-
-		return false;
-	}
-
-	int deployCooldownTimeLeft()
-	{
-		if ( this.playerClass.tag != PLAYERCLASS_GUNNER )
-			return 0;
-
-		if ( this.isDeployingUp && levelTime < this.deployUpTime )
-			return -int( this.deployUpTime - levelTime );
-
-		if ( this.isDeployingDown && levelTime < this.deployDownTime )
-			return -int( this.deployDownTime - levelTime );
-
-		return 0;
-	}
 
 	void checkAndLoadAmmo( int ammoTag, int minCount )
 	{
@@ -1628,36 +1326,15 @@ class cPlayer
 		{
 			if ( fullLoad )
 			{
-				if ( this.isDeployed )
-				{
-					client.inventorySetCount( AMMO_WEAK_LASERS, CTFT_GUNNER_MAX_LG_AMMO );
-					this.lastNormalModePGAmmo = 100;
-					this.lastNormalModeGLAmmo = 10;
-				}
-				else
-				{
-					client.inventorySetCount( AMMO_LASERS, CTFT_GUNNER_MAX_LG_AMMO );
-					client.inventorySetCount( AMMO_PLASMA, 100 );
-					client.inventorySetCount( AMMO_GRENADES, 10 );
-				}
+				client.inventorySetCount( AMMO_LASERS, CTFT_GUNNER_MAX_LG_AMMO );
+				client.inventorySetCount( AMMO_PLASMA, 100 );
+				client.inventorySetCount( AMMO_GRENADES, 10 );	
 			}
 			else
 			{
-				if ( this.isDeployed )
-				{
-					if ( client.inventoryCount( AMMO_WEAK_LASERS ) < ( 2 * CTFT_GUNNER_MAX_LG_AMMO ) / 3 )
-						client.inventorySetCount( AMMO_WEAK_LASERS, ( 2 * CTFT_GUNNER_MAX_LG_AMMO ) / 3 );
-					if ( this.lastNormalModePGAmmo < 50 )
-						this.lastNormalModePGAmmo = 50;
-					if ( this.lastNormalModeGLAmmo < 5 )
-						this.lastNormalModeGLAmmo = 5;
-				}
-				else
-				{
-					this.checkAndLoadAmmo( AMMO_LASERS, ( 2 * CTFT_GUNNER_MAX_LG_AMMO ) / 3 );
-					this.checkAndLoadAmmo( AMMO_PLASMA, 50 );
-					this.checkAndLoadAmmo( AMMO_GRENADES, 5 );
-				}
+				this.checkAndLoadAmmo( AMMO_LASERS, ( 2 * CTFT_GUNNER_MAX_LG_AMMO ) / 3 );
+				this.checkAndLoadAmmo( AMMO_PLASMA, 50 );
+				this.checkAndLoadAmmo( AMMO_GRENADES, 5 );
 			}
 		}
 		else if ( this.playerClass.tag == PLAYERCLASS_SUPPORT )
@@ -1972,99 +1649,6 @@ class cPlayer
 	{
 		this.centerPrintMessage( S_COLOR_RED + "Your motion detector has been destroyed" );
 		@this.motionDetector = null;
-	}
-
-	void buildOrDestroyBouncePad()
-	{
-		if ( this.repeatedCommandTime > levelTime )
-			return;
-
-		if ( @this.bouncePad == null )
-			this.buildBouncePad();
-		else
-			this.destroyBouncePad();
-
-		this.repeatedCommandTime = levelTime + 300;
-	}
-
-	void buildBouncePad()
-	{
-		if ( @this.bouncePad != null )
-		{
-			client.printMessage( "You have already built a bounce pad\n" );
-			return;
-		}
-
-		if ( this.isBuildCooldown() )
-   	 	{
-        	client.printMessage( "You cannot build yet\n" );
-        	return;
-    	}
-
-		if ( this.client.armor < CTFT_BUILD_AP_COST )
-		{
-			client.printMessage( "You do not have enough armor to build a bounce pad\n" );
-			return;
-		}
-
-		cBouncePad @bouncePad = ClientDropBouncePad( client );
-		if ( @bouncePad == null )
-			return;
-
-		client.armor -= CTFT_BUILD_AP_COST;
-		@this.bouncePad = bouncePad;
-		this.setBuildCooldown();
-	}
-
-	void destroyBouncePad()
-	{
-		if ( @this.bouncePad == null )
-		{
-			client.printMessage( "There is no your bounce pad\n" );
-			return;
-		}
-
-		this.bouncePad.die( null, null );
-		@this.bouncePad = null;
-		this.setBuildCooldown();
-		client.armor += CTFT_BUILD_AP_COST;
-	}
-
-	void bouncePadSpawningHasFailed()
-	{
-		@this.bouncePad = null;
-		client.printMessage( "Can't spawn a bounce pad here\n" );
-		// Return armor spent on throwing a bounce pad spawner
-		client.armor += CTFT_BUILD_AP_COST;
-	}
-
-	void bouncePadHasBeenDestroyed( Entity @padEnt )
-	{
-		this.centerPrintMessage( S_COLOR_RED + "Your bounce pad has been destroyed!\n" );
-		@this.bouncePad = null;
-	}
-
-	void printBuiltEntitiesStatus() 
-	{
-		if ( this.playerClass.tag == PLAYERCLASS_SNIPER )
-		{
-			if ( @this.motionDetector != null )
-				client.printMessage( "Motion detector health: " + this.motionDetector.health + "\n" );
-			else
-				client.printMessage( "Motion detector is not built (or is destroyed)\n" );
-		}
-		else
-		{
-			if ( @this.bouncePad != null )
-			{
-				if ( @this.bouncePad.bodyEnt != null )
-					client.printMessage( "Bounce pad health: " + this.bouncePad.bodyEnt.health + "\n" );
-				else
-					client.printMessage( "Bounce pad has not been built yet\n" );
-			}
-			else
-				client.printMessage( "Bounce pad is not built (or is destroyed)\n" );
-		}
 	}
 
 	void setAppropriateBotClass()

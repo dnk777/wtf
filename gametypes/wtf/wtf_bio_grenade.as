@@ -31,7 +31,7 @@ Entity @ClientThrowBioGrenade( Client @client )
 
     client.getEnt().angles.angleVectors( dir, r, u );
     start = client.getEnt().origin + Vec3( 0, 0, client.getEnt().viewHeight ) + ( dir * 48 );
-    end = ( start + ( 0.5 * ( bombMaxs + bombMins) ) ) + ( dir * 64 );
+    end = start + dir * 64;
 
     Trace tr;
 

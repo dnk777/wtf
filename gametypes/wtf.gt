@@ -16,13 +16,10 @@ wtf/wtf_main.as;
 wtf/wtf_entities.as;
 wtf/wtf_class_abilities.as;
 wtf/wtf_reviver.as;
-wtf/wtf_bomb.as;
 wtf/wtf_translocator.as;
 wtf/wtf_smoke_grenade.as;
-wtf/wtf_bounce_pad.as;
 wtf/wtf_bio_grenade.as;
 wtf/wtf_motion_detector.as;
-wtf/wtf_adrenaline_trail_emitter.as;
 
 legacy/quake1.as;
 

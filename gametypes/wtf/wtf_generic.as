@@ -44,17 +44,6 @@ void CTFT_RemoveRevivers()
     }
 }
 
-void CTFT_RemoveBombs()
-{
-    for ( int i = 0; i < MAX_BOMBS; i++ )
-    {
-        if ( gtBombs[i].inuse == true )
-        {
-            gtBombs[i].Free();
-        }
-    }
-}
-
 void CTFT_RemoveTranslocators()
 {
 	for ( int i = 0; i < MAX_TRANSLOCATORS; i++ )
@@ -71,23 +60,6 @@ void CTFT_RemoveSmokeGrenades()
 	array<Entity @> @ents = G_FindByClassname( "smoke_emitter" );
 	for ( uint i = 0; i < ents.size(); ++i )
 		ents[i].freeEntity();
-}
-
-void CTFT_RemoveBouncePads()
-{
-	for ( int i = 0; i < MAX_BOUNCE_PADS; i++ )
-	{
-		if ( gtBouncePads[i].inuse )
-		{
-			// Remove the pad in a silent way for the owner
-			if ( @gtBouncePads[i].player != null )
-			{
-				@gtBouncePads[i].player.bouncePad = null;
-				@gtBouncePads[i].player = null;
-			}
-			gtBouncePads[i].Free();
-		}
-	}
 }
 
 void CTFT_RemoveMotionDetectors()

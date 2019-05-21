@@ -134,11 +134,8 @@ const int FAST_DASH_SPEED = 450;
 const String[] gruntDescription =
 {
 	"You're spawned as ^1GRUNT^7. This is a tank class with slow movement, strong armor and weapons.\n",
-    "Command ^6altattack^7: Throw a cluster grenade\n",
-	"Command ^6protect^7: Use a protection Warshell\n",
 	"Note that you cannot use dash, walljump and aircontrol being protected by a shell\n",
-	"Command ^8classaction1^7: Same as ^6protect^7 (activate a shell)\n",
-	"Command ^8classaction2^7: Same as ^6altattack^7 (throw a cluster grenade)\n" 
+	"Command ^8classaction^7: Activate a protection shell\n"
 };
 
 const String[] medicDescription =
@@ -147,66 +144,38 @@ const String[] medicDescription =
 	"You heal teammates in your aura radius\n",
 	"You can revive dead teammates by walking over their reviver marker\n",
 	"You can disable enemy revivers by walking over their reviver marker\n",
-	"Command ^6altattack^7: Throw a bio grenade that heals teammates and hurts enemies\n",	
-	"Command ^6supply^7: Give an adrenaline yourself and teammates in your aura\n",	
-	"The adrenaline boosts teammates speed for a couple of seconds and gives some health\n",
-	"Command ^8classaction1^7: Same as ^6altattack^7 (throw a bio grenade)\n",
-	"Command ^8classaction2^7: Same as ^6supply^7 (give an adrenaline)\n"
+	"Command ^8classaction^7: Throw a bio grenade that heals teammates and hurts enemies\n"
 };
 
 const String[] runnerDescription =
 {
 	"You're spawned as ^3RUNNER^7. This is the fastest offensive class.\n",
 	"You can use a translocator, the throwable personal teleporter\n",
-	"You can also build a bounce pad that pushes players in air preserving the horizontal velocity\n",
-	"Command ^6trans throw^7: Throw (or return and throw) a translocator\n",
-	"Command ^6trans check^7: Check the translocator status\n",
-	"Command ^6trans return^7: Force returning a translocator\n",
-	"Command ^6trans use^7: Teleport to the translocator origin\n",
-	"Command ^6build pad^7: Build a bounce pad at the armor points cost\n",
-	"Command ^6destroy pad^7: Destroy the bounce pad\n",
-	"Commands ^6build status^7, ^6destroy status^7: Print built entity status\n",
 	"A translocator gets returned automatically in a few seconds\n",
 	"Your translocator may be damaged. Consider checking it first before using it.\n",
-	"Command ^8classaction1^7: Builds or destroy a bounce pad^7\n",
-	"Command ^8classaction2^7: Throws your translocator, if it is thrown uses it\n",
+	"Command ^8classaction^7: Throws your translocator, if it is thrown uses it\n"
 };
 
 const String[] gunnerDescription = 
 {
-	"You're spawned as ^8GUNNER^7. This is a class with the most powerful weapon.\n",
-	"You can switch 3 player modes: normal, invisible and deployed\n",
-	"In deployed mode you can barely move but have a protection shell and a powerful laser beam\n",
-	"Take a good position in normal or invisible mode and wreck your enemies in deployed one\n",
-	"Command ^6protect^7: Toggle invisibility\n",
-	"Command ^6deploy^7: Toggle deployed mode\n",
-	"Command ^8classaction1^7: Same as ^6protect^7 (toggle invisibility)\n",
-	"Command ^8classaction2^7: Same as ^6deploy^7 (toggle deployed mode)\n"
+	"You're spawned as ^8GUNNER^7. FIXME use a different class name.\n",
+	"You can activate invisibility for a couple of seconds\n",
+	"Command ^8classaction^7: Toggle invisibility\n"
 };
 
 const String[] supportDescription =
 {
 	"You're spawned as ^4SUPPORT^7. This is a supportive class with armor regeneration.\n",
 	"You repair teammates armor in your aura radius\n",
-	"Command ^6altattack^7: Throw a smoke grenade at the armor points cost\n",
-	"Command ^6supply^7: Give ammo yourself and teammates in your aura\n",
-	"Command ^8classaction1^7: Same as ^6altattack^7 (throw a smoke grenade)\n",
-	"Command ^8classaction2^7: Same as ^6supply^7 (give ammo)\n" 
+	"Command ^6classaction^7: Throw a smoke grenade at the armor points cost\n"
 };
 
 const String[] sniperDescription =
 {
 	"You're spawned as ^5SNIPER^7. This is a defencive class with best weapons for far-range fights.\n",
-	"You can buy shots for your InstaGun at the armor points cost\n",
-	"You can also build a motion detector\n",
+	"You can also build and listen to a motion detector\n",
 	"This entity detects fast moving nearby enemies and highlights ones for you and your team\n",
-	"Command ^6supply^7: Buy an instagun shot\n",
-	"You can't carry more than 3 instagun shots\n",
-	"Command ^6build detector^7: Build a motion detector at the armor points cost\n",
-	"Command ^6destroy detector^7: Destroy the built motion detector\n",
-	"Commands ^6build status^7, ^6destroy status^7: Print built entity status\n",
-	"Generic command ^8classaction1^7: Build or destroy a motion detector\n",
-	"Generic command ^8classaction2^7: Same as ^6supply^7 (buy an instangun shot)\n"
+	"Command ^8classaction^7: Build or destroy a motion detector\n"
 };
 
 // Initialize player classes

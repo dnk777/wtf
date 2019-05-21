@@ -90,7 +90,7 @@ class cTranslocator
 
         // check the initial position is not inside solid
 
-        if ( tr.doTrace( origin, bombMins , bombMaxs, origin, -1, MASK_PLAYERSOLID ) )
+        if ( tr.doTrace( origin, Vec3( -8, -8, -8 ), Vec3( +8, +8, +8 ), origin, -1, MASK_PLAYERSOLID ) )
             return false;
 
         if ( tr.startSolid || tr.allSolid )
