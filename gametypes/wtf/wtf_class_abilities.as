@@ -87,7 +87,7 @@ void ClassactionCommand( Client @client )
 		case PLAYERCLASS_RUNNER:
 			player.throwOrUseTranslocator();
 			break;
-		case PLAYERCLASS_GUNNER:
+		case PLAYERCLASS_INFILTRATOR:
 			player.activateInvisibility();			
 			break;
 		case PLAYERCLASS_SUPPORT:

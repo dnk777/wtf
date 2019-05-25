@@ -21,7 +21,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 const int PLAYERCLASS_RUNNER = 0;
 const int PLAYERCLASS_MEDIC = 1;
 const int PLAYERCLASS_GRUNT = 2;
-const int PLAYERCLASS_GUNNER = 3;
+const int PLAYERCLASS_INFILTRATOR = 3;
 const int PLAYERCLASS_SUPPORT = 4;
 // Sniper must be at the end of the list, the bot class selection code relies on it
 const int PLAYERCLASS_SNIPER = 5;
@@ -156,9 +156,9 @@ const String[] runnerDescription =
 	"Command ^8classaction^7: Throws your translocator, if it is thrown uses it\n"
 };
 
-const String[] gunnerDescription = 
+const String[] infiltratorDescription =
 {
-	"You're spawned as ^8GUNNER^7. FIXME use a different class name.\n",
+	"You're spawned as ^8INFILTRATOR^7. This is the best class for sabotaging enemy plans!\n",
 	"You can activate invisibility for a couple of seconds\n",
 	"Command ^8classaction^7: Toggle invisibility\n"
 };
@@ -239,9 +239,9 @@ void GENERIC_InitPlayerClasses()
 		runnerDescription
     );
 
-    cPlayerClassInfos[ PLAYERCLASS_GUNNER ].setup(
-        "Gunner",			     	  // name
-        PLAYERCLASS_GUNNER,
+    cPlayerClassInfos[ PLAYERCLASS_INFILTRATOR ].setup(
+        "Infiltrator",	        	  // name
+        PLAYERCLASS_INFILTRATOR,
         "$models/players/silverclaw", // player model
         100,						  // initial health
         50,						      // initial armor
@@ -250,10 +250,10 @@ void GENERIC_InitPlayerClasses()
 		SLOW_MAX_SPEED_ON_GROUND,
 		SLOW_DASH_SPEED,
         true,					  	  // can be stunned
-        "gfx/wtf/wtf_gunner",
-        "gfx/wtf/gunner1",
-        "gfx/wtf/gunner2",
-		gunnerDescription
+        "gfx/wtf/wtf_infiltrator",
+        "gfx/wtf/infiltrator1",
+        "gfx/wtf/infiltrator2",
+		infiltratorDescription
     );
 
 	cPlayerClassInfos[ PLAYERCLASS_SUPPORT ].setup(

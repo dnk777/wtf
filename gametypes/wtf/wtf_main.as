@@ -37,10 +37,9 @@ int CTFT_DISABLED_REVIVER_RESPAWN_PENALTY = 4000;
 int CTFT_BUILD_AP_COST = 50;
 int CTFT_CLUSTER_GRENADE_AP_COST = 50;
 uint CTFT_BUILD_COOLDOWN_TIME = 1500;
-float CTFT_GUNNER_INVISIBILITY_MINLOAD = 20;
-float CTFT_GUNNER_INVISIBILITY_MAXLOAD = 100;
-uint CTFT_INVISIBILITY_COOLDOWN = 1000;
-uint WTF_GUNNER_DEPLOY_TIME = 1000;
+float WTF_INFILTRATOR_INVIS_MINLOAD = 20;
+float WTF_INFILTRATOR_INVIS_MAXLOAD = 100;
+uint WTF_INFILTRATOR_INVIS_COOLDOWN = 1000;
 uint WTF_SHELL_COOLDOWN = 6000;
 uint CTFT_DETECTOR_GRENADE_COOLDOWN = 8000;
 uint CTFT_FLAG_DISPENSER_COOLDOWN_TIME = 30000;
@@ -133,7 +132,7 @@ Cvar wtfForceFullbrightSkins( "wtf_forceFullbrightSkins", "0", CVAR_ARCHIVE );
 const String SELECT_CLASS_COMMAND = 
 	"mecu \"Select class\"" 
 	+ " Grunt \"class grunt\" Medic \"class medic\" Runner \"class runner\"" 
-	+ " Gunner \"class gunner\" Support \"class support\" Sniper \"class sniper\"";
+	+ " Infiltrator \"class infiltrator\" Support \"class support\" Sniper \"class sniper\"";
 
 ///*****************************************************************
 /// LOCAL FUNCTIONS
@@ -817,7 +816,7 @@ void GT_ScoreEvent( Client @client, const String &score_event, const String &arg
 		{
 			CTFT_DeathDrop( target.client, "Armor Shard", 5 );
 		}
-		else if ( targetPlayer.playerClass.tag == PLAYERCLASS_GUNNER )
+		else if ( targetPlayer.playerClass.tag == PLAYERCLASS_INFILTRATOR )
 		{
 			CTFT_DeathDrop( target.client, "Armor Shard", 5 );
 		}
@@ -917,8 +916,8 @@ void GT_PlayerRespawn( Entity @ent, int old_team, int new_team )
         client.inventoryGiveItem( WEAP_LASERGUN );
         client.inventoryGiveItem( WEAP_GRENADELAUNCHER );
     }
-    // Gunner
-    else if ( player.playerClass.tag == PLAYERCLASS_GUNNER )
+    // Infiltrator
+    else if ( player.playerClass.tag == PLAYERCLASS_INFILTRATOR )
     {
         // Weapons
         client.inventoryGiveItem( WEAP_LASERGUN );
@@ -1006,7 +1005,7 @@ float GT_PlayerDefenciveAbilitiesRating( const Client @client )
 		case PLAYERCLASS_MEDIC:
 		case PLAYERCLASS_SUPPORT:
 			return 0.3f;
-		case PLAYERCLASS_GUNNER:
+		case PLAYERCLASS_INFILTRATOR:
 		case PLAYERCLASS_GRUNT:
 			return 0.6f;
 	}

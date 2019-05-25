@@ -201,15 +201,15 @@ class cPlayer
             this.client.setHUDStat( STAT_PROGRESS_OTHER, int( frac * 100 ) );
 		}
 
-        if ( this.playerClass.tag == PLAYERCLASS_GUNNER )
+        if ( this.playerClass.tag == PLAYERCLASS_INFILTRATOR )
         {
 			if ( this.invisibilityLoad > 0 )
 			{
-            	frac = this.invisibilityLoad / CTFT_GUNNER_INVISIBILITY_MAXLOAD;
-            	if ( this.isInvisibilityCooldown() || this.invisibilityLoad < CTFT_GUNNER_INVISIBILITY_MINLOAD )
-                	this.client.setHUDStat( STAT_PROGRESS_SELF, -int( frac * 100 ) );
-            	else
-            	    this.client.setHUDStat( STAT_PROGRESS_SELF, int( frac * 100 ) );
+				frac = this.invisibilityLoad / WTF_INFILTRATOR_INVIS_MAXLOAD;
+				if ( this.isInvisibilityCooldown() || this.invisibilityLoad < WTF_INFILTRATOR_INVIS_MINLOAD )
+					this.client.setHUDStat( STAT_PROGRESS_SELF, -int( frac * 100 ) );
+				else
+					this.client.setHUDStat( STAT_PROGRESS_SELF, int( frac * 100 ) );
 			}
         }
 
@@ -942,7 +942,7 @@ class cPlayer
 				this.client.armor += armorGain;
 			}
 		}
-		else if ( this.playerClass.tag == PLAYERCLASS_GUNNER )
+		else if ( this.playerClass.tag == PLAYERCLASS_INFILTRATOR )
 		{
 			// if carrying the flag, disable invisibility
             if ( ( this.ent.effects & EF_CARRIER ) != 0 )
@@ -965,8 +965,8 @@ class cPlayer
             else
             {
                 this.invisibilityLoad += ( frameTime * 0.033f );
-                if ( this.invisibilityLoad > CTFT_GUNNER_INVISIBILITY_MAXLOAD )
-                    this.invisibilityLoad = CTFT_GUNNER_INVISIBILITY_MAXLOAD;
+                if ( this.invisibilityLoad > WTF_INFILTRATOR_INVIS_MAXLOAD )
+                    this.invisibilityLoad = WTF_INFILTRATOR_INVIS_MAXLOAD;
             }
 		}
 
@@ -995,7 +995,7 @@ class cPlayer
         {
             this.setMedicRegenCooldown();
         }
-        else if ( this.playerClass.tag == PLAYERCLASS_GUNNER )
+        else if ( this.playerClass.tag == PLAYERCLASS_INFILTRATOR )
         {
             this.setInvisibilityCooldown();
         }
@@ -1099,15 +1099,15 @@ class cPlayer
 
     void setInvisibilityCooldown()
     {
-        if ( this.playerClass.tag != PLAYERCLASS_GUNNER )
+        if ( this.playerClass.tag != PLAYERCLASS_INFILTRATOR )
             return;
 
-        this.invisibilityCooldownTime = levelTime + CTFT_INVISIBILITY_COOLDOWN;
+        this.invisibilityCooldownTime = levelTime + WTF_INFILTRATOR_INVIS_COOLDOWN;
     }
 
     bool isInvisibilityCooldown()
     {
-        if ( this.playerClass.tag != PLAYERCLASS_GUNNER )
+        if ( this.playerClass.tag != PLAYERCLASS_INFILTRATOR )
             return false;
 
         return ( this.invisibilityCooldownTime > levelTime ) ? true : false;
@@ -1196,7 +1196,7 @@ class cPlayer
             return;
         }
 
-        if ( this.invisibilityLoad < CTFT_GUNNER_INVISIBILITY_MINLOAD )
+        if ( this.invisibilityLoad < WTF_INFILTRATOR_INVIS_MINLOAD )
         {
             this.printMessage( "Cannot use the skill yet\n" );
             return;
@@ -1322,7 +1322,7 @@ class cPlayer
 				this.checkAndLoadAmmo( AMMO_GRENADES, 7 );
 			}
 		}
-		else if ( this.playerClass.tag == PLAYERCLASS_GUNNER )
+		else if ( this.playerClass.tag == PLAYERCLASS_INFILTRATOR )
 		{
 			if ( fullLoad )
 			{
@@ -1682,7 +1682,7 @@ class cPlayer
 			}
 
 			numBotsInTeam++;
-			if( classTag == PLAYERCLASS_SNIPER || classTag == PLAYERCLASS_GUNNER )
+			if( classTag == PLAYERCLASS_SNIPER || classTag == PLAYERCLASS_INFILTRATOR )
 			{
 				numDefClassBotsInTeam++;
 			}
@@ -1691,7 +1691,7 @@ class cPlayer
 		// If there is no bots with classes that are suitable for defence
 		if( numDefClassBotsInTeam == 0 )
 		{
-			setPlayerClass( random() > 0.5f ? PLAYERCLASS_SNIPER : PLAYERCLASS_GUNNER );
+			setPlayerClass( random() > 0.5f ? PLAYERCLASS_SNIPER : PLAYERCLASS_INFILTRATOR );
 			return;
 		}
 
