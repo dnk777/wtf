@@ -169,7 +169,7 @@ class cPlayer
 
         if ( this.isBuildCooldown() )
         {
-            frac = float( this.buildCooldownTimeLeft() ) / float( CTFT_BUILD_COOLDOWN_TIME );
+            frac = float( this.buildCooldownTimeLeft() ) / float( WTF_BUILD_COOLDOWN_TIME );
             this.client.setHUDStat( STAT_PROGRESS_SELF, int( frac * 100 ) );
         }
 
@@ -187,19 +187,19 @@ class cPlayer
 
 		if ( this.isMedicRegenCooldown() )
         {
-            frac = float( this.medicRegenCooldownTimeLeft() ) / float( CTFT_MEDIC_REGEN_COOLDOWN );
+            frac = float( this.medicRegenCooldownTimeLeft() ) / float( WTF_MEDIC_REGEN_COOLDOWN );
             this.client.setHUDStat( STAT_PROGRESS_SELF, int( frac * 100 ) );
         }
 
 		if ( this.isSupportRegenCooldown() )
         {
-            frac = float( this.supportCooldownTimeLeft() ) / float( CTFT_SUPPORT_REGEN_COOLDOWN );
+            frac = float( this.supportCooldownTimeLeft() ) / float( WTF_SUPPORT_REGEN_COOLDOWN );
             this.client.setHUDStat( STAT_PROGRESS_SELF, int( frac * 100 ) );
         }
 
 		if ( this.isBioGrenadeCooldown() )
 		{
-			frac = float( this.bioGrenadeCooldownTimeLeft() ) / float( CTFT_BIO_GRENADE_COOLDOWN );
+			frac = float( this.bioGrenadeCooldownTimeLeft() ) / float( WTF_BIO_GRENADE_COOLDOWN );
             this.client.setHUDStat( STAT_PROGRESS_OTHER, int( frac * 100 ) );
 		}
 
@@ -369,7 +369,7 @@ class cPlayer
         {
             if ( this.respawnTime <= levelTime )
             {
-                this.respawnTime = levelTime + CTFT_BASE_RESPAWN_TIME;
+                this.respawnTime = levelTime + WTF_BASE_RESPAWN_TIME;
                 this.client.respawn( true );
                 this.ent.spawnqueueAdd();
                 this.client.chaseCam( null, true );
@@ -485,7 +485,7 @@ class cPlayer
                 }
 
                 Vec3 lookAngles, lookOrigin;
-                visible = CTFT_LookAtEntity( this.reviver.ent.origin, Vec3(0.0), this.deadcamMedic.ent, this.ent.entNum, true, 72, 32, lookOrigin, lookAngles );
+                visible = WTF_LookAtEntity( this.reviver.ent.origin, Vec3(0.0), this.deadcamMedic.ent, this.ent.entNum, true, 72, 32, lookOrigin, lookAngles );
 
                 this.ent.origin = lookOrigin;
                 this.ent.origin2 = lookOrigin;
@@ -647,7 +647,7 @@ class cPlayer
 		}
 
 		// if the translocator is damaged
-		if ( this.translocator.bodyEnt.health < CTFT_TRANSLOCATOR_HEALTH )
+		if ( this.translocator.bodyEnt.health < WTF_TRANSLOCATOR_HEALTH )
 		{
 			this.centerPrintMessage( S_COLOR_RED + "Your translocator was damaged!\n" );
 			// move the player entity, use an actual translocator origin
@@ -775,7 +775,7 @@ class cPlayer
 
 	void refreshMedicInfluenceEmission()
 	{
-		float radius = CTFT_MEDIC_INFLUENCE_BASE_RADIUS;
+		float radius = WTF_MEDIC_INFLUENCE_BASE_RADIUS;
 		float speed = this.ent.velocity.length();
 		if ( speed > this.playerClass.dashSpeed )
 			radius += 0.75f * ( speed - this.playerClass.dashSpeed );
@@ -812,7 +812,7 @@ class cPlayer
 
 	void refreshSupportInfluenceEmission()
 	{
-		float radius = CTFT_SUPPORT_INFLUENCE_BASE_RADIUS;
+		float radius = WTF_SUPPORT_INFLUENCE_BASE_RADIUS;
 		float speed = this.ent.velocity.length();
 		if ( speed > this.playerClass.dashSpeed )
 			radius += 0.75f * ( speed - this.playerClass.dashSpeed );
@@ -1012,7 +1012,7 @@ class cPlayer
         if ( this.playerClass.tag != PLAYERCLASS_MEDIC )
             return;
 
-        this.medicRegenCooldownTime = levelTime + CTFT_MEDIC_REGEN_COOLDOWN;
+        this.medicRegenCooldownTime = levelTime + WTF_MEDIC_REGEN_COOLDOWN;
     }
 
     bool isMedicRegenCooldown()
@@ -1047,7 +1047,7 @@ class cPlayer
 		if ( this.playerClass.tag != PLAYERCLASS_SUPPORT )
 			return;
 
-		this.supportRegenCooldownTime = levelTime + CTFT_SUPPORT_REGEN_COOLDOWN;
+		this.supportRegenCooldownTime = levelTime + WTF_SUPPORT_REGEN_COOLDOWN;
 	}
 
 	int supportCooldownTimeLeft()
@@ -1085,7 +1085,7 @@ class cPlayer
 		if ( this.playerClass.tag != PLAYERCLASS_MEDIC )
 			return;
 
-		this.bioGrenadeCooldownTime = levelTime + CTFT_BIO_GRENADE_COOLDOWN;
+		this.bioGrenadeCooldownTime = levelTime + WTF_BIO_GRENADE_COOLDOWN;
 	}
 
 	int bioGrenadeCooldownTimeLeft()
@@ -1120,7 +1120,7 @@ class cPlayer
         if ( this.playerClass.tag != PLAYERCLASS_SNIPER )
             return;
 
-        this.buildCooldownTime = levelTime + CTFT_BUILD_COOLDOWN_TIME;
+        this.buildCooldownTime = levelTime + WTF_BUILD_COOLDOWN_TIME;
     }
 
     bool isBuildCooldown()
@@ -1316,7 +1316,7 @@ class cPlayer
 		if ( @this.translocator == null )
 			return;
 
-		if ( this.translocator.bodyEnt.health < CTFT_TRANSLOCATOR_HEALTH )
+		if ( this.translocator.bodyEnt.health < WTF_TRANSLOCATOR_HEALTH )
 		{
 			client.printMessage( S_COLOR_YELLOW + "Your translocator was damaged!\n" );
 			this.returnTranslocator();
@@ -1513,7 +1513,7 @@ class cPlayer
         	return;
     	}
 
-		if ( this.client.armor < CTFT_BUILD_AP_COST )
+		if ( this.client.armor < WTF_BUILD_AP_COST )
 		{
 			client.printMessage( "You do not have enough armor to build a motion detector\n" );
 			return;
@@ -1524,7 +1524,7 @@ class cPlayer
 			return;
 
 		this.setBuildCooldown();
-		this.client.armor -= CTFT_BUILD_AP_COST;
+		this.client.armor -= WTF_BUILD_AP_COST;
 	}
 
 	void destroyMotionDetector()
@@ -1543,7 +1543,7 @@ class cPlayer
 
 	void motionDetectorBuildingCanceled()
 	{
-		this.client.armor += CTFT_BUILD_AP_COST;
+		this.client.armor += WTF_BUILD_AP_COST;
 		@this.motionDetector = null;
 	}
 

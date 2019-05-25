@@ -60,7 +60,7 @@ Entity @ClientThrowMotionDetector( Client @client )
     ent.mass = 50;
     
     dir.normalize();
-    dir *= CTFT_GRENADE_SPEED;
+    dir *= WTF_GRENADE_SPEED;
 
     ent.velocity = dir;
     ent.linkEntity();

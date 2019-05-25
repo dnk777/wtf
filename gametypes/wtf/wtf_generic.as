@@ -17,7 +17,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
-void CTFT_RespawnQueuedPlayers()
+void WTF_RespawnQueuedPlayers()
 {
     for ( int i = 0; i < maxClients; i++ )
     {
@@ -25,7 +25,7 @@ void CTFT_RespawnQueuedPlayers()
     }
 }
 
-void CTFT_ResetRespawnQueue()
+void WTF_ResetRespawnQueue()
 {
     for ( int i = 0; i < maxClients; i++ )
     {
@@ -33,7 +33,7 @@ void CTFT_ResetRespawnQueue()
     }
 }
 
-void CTFT_RemoveRevivers()
+void WTF_RemoveRevivers()
 {
     for ( int i = 0; i < maxClients; i++ )
     {
@@ -44,7 +44,7 @@ void CTFT_RemoveRevivers()
     }
 }
 
-void CTFT_RemoveTranslocators()
+void WTF_RemoveTranslocators()
 {
 	for ( int i = 0; i < MAX_TRANSLOCATORS; i++ )
 	{
@@ -55,14 +55,14 @@ void CTFT_RemoveTranslocators()
 	}
 }
 
-void CTFT_RemoveSmokeGrenades()
+void WTF_RemoveSmokeGrenades()
 {
 	array<Entity @> @ents = G_FindByClassname( "smoke_emitter" );
 	for ( uint i = 0; i < ents.size(); ++i )
 		ents[i].freeEntity();
 }
 
-void CTFT_RemoveMotionDetectors()
+void WTF_RemoveMotionDetectors()
 {
 	array<Entity @> @ents = G_FindByClassname( "motion_detector" );
 	for ( uint i = 0; i < ents.size(); ++i )
@@ -79,7 +79,7 @@ void CTFT_RemoveMotionDetectors()
 	}
 }
 
-bool CTFT_RemoveItemsByName( String type )
+bool WTF_RemoveItemsByName( String type )
 {
 	Item @tmp = G_GetItemByName( type );
 	if (@tmp == null)
@@ -91,36 +91,23 @@ bool CTFT_RemoveItemsByName( String type )
 	return true;
 }
 
-bool CTFT_TeamHasTooMany( int team, String type, uint count )
-{
-	Item @tmp = G_GetItemByName( type );
-	if (@tmp == null)
-		return false;
 
-	array<Entity @> @ents = G_FindByClassname( tmp.classname );
-	if( ents.size() > count )
-		return true;
-	return false;
+void WTF_DeathDrop( Entity @ent, String type )
+{
+	WTF_DeathDrop( ent, type, 1 );
 }
 
-void CTFT_DeathDrop( Client @client, String type )
+void WTF_DeathDrop( Entity @ent, String type, int count )
 {
-	CTFT_DeathDrop( client, type, 1 );
-}
+	Client @client = ent.client;
+	if ( @client == null )
+		return;
 
-void CTFT_DeathDrop( Client @client, String type, int count )
-{
-    Item @item;
-    Entity @dropped = null;
-
-    @item = @G_GetItemByName( type );
-
+    Item @item = @G_GetItemByName( type );
     if ( @item == null )
         return;
 
-    if ( @client == null )
-        return;
-
+	Entity @dropped = null;
 	for( int i = 0; i < count; ++i )
 	{
 		@dropped = @client.getEnt().dropItem( item.tag );
@@ -139,7 +126,7 @@ void CTFT_DeathDrop( Client @client, String type, int count )
 	}
 }
 
-bool CTFT_LookAtEntity( Vec3 origin, Vec3 angles, Entity @lookTarget, int ignoreNum, bool lockPitch, int backOffset, int upOffset, Vec3 &out lookOrigin, Vec3 &out lookAngles )
+bool WTF_LookAtEntity( Vec3 origin, Vec3 angles, Entity @lookTarget, int ignoreNum, bool lockPitch, int backOffset, int upOffset, Vec3 &out lookOrigin, Vec3 &out lookAngles )
 {
     if ( @lookTarget == null )
         return false;

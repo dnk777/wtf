@@ -32,47 +32,46 @@ const float CTF_FLAG_RECOVERY_BONUS_DISTANCE = 512.0f;
 const float CTF_CARRIER_KILL_BONUS_DISTANCE = 512.0f;
 const float CTF_OBJECT_DEFENSE_BONUS_DISTANCE = 512.0f;
 
-int CTFT_BASE_RESPAWN_TIME = 7000;
-int CTFT_DISABLED_REVIVER_RESPAWN_PENALTY = 4000;
-int CTFT_BUILD_AP_COST = 50;
-int CTFT_CLUSTER_GRENADE_AP_COST = 50;
-uint CTFT_BUILD_COOLDOWN_TIME = 1500;
-float WTF_INFILTRATOR_INVIS_MINLOAD = 20;
-float WTF_INFILTRATOR_INVIS_MAXLOAD = 100;
-uint WTF_INFILTRATOR_INVIS_COOLDOWN = 1000;
+const int WTF_BASE_RESPAWN_TIME = 7000;
+const int WTF_REVIVER_RESPAWN_PENALTY = 4000;
+
+const int WTF_BUILD_AP_COST = 50;
+const int WTF_BUILD_COOLDOWN_TIME = 1500;
+
+const float WTF_INFILTRATOR_INVIS_MINLOAD = 20.0f;
+const float WTF_INFILTRATOR_INVIS_MAXLOAD = 100.0f;
+const uint WTF_INFILTRATOR_INVIS_COOLDOWN = 1000;
+
 uint WTF_SHELL_COOLDOWN = 6000;
-uint CTFT_DETECTOR_GRENADE_COOLDOWN = 8000;
-int CTFT_MEDIC_REGEN_COOLDOWN = 1200;
-int CTFT_SUPPORT_REGEN_COOLDOWN = 1200;
-uint WTF_TRANSLOCATOR_COOLDOWN = 2000;
-uint WTF_TRANSLOCATOR_RETURN_TIME = WTF_TRANSLOCATOR_COOLDOWN + 3000;
-uint WTF_ADRENALINE_TIME = 1750;
-int CTFT_BLAST_COOLDOWN = 1000;
-int CTFT_BLAST_AP_COST = 15;
-int WTF_SMOKE_GRENADE_AP_COST = 50;
-int WTF_ADRENALINE_AP_COST = 50;
-int WTF_INSTA_SHOT_AP_COST = 25;
-float CTFT_TRANSLOCATOR_HEALTH = 99;
-float CTFT_RESPAWN_RADIUS = 384.0f;
-float CTFT_BUILD_RADIUS = 160.0f;
-float CTFT_BUILD_DESTROY_RADIUS = 96.0f;
-float CTFT_MEDIC_INFLUENCE_BASE_RADIUS = 192.0f;
-float CTFT_SUPPORT_INFLUENCE_BASE_RADIUS = 192.0f;
 
-const int CTFT_BLAST_DAMAGE = 101;
+const int WTF_MEDIC_REGEN_COOLDOWN = 1200;
+const int WTF_SUPPORT_REGEN_COOLDOWN = 1200;
 
-const uint CTFT_BIO_GRENADE_COOLDOWN = 2000;
-const uint CTFT_BIO_GRENADE_DECAY = 2000;
-const float CTFT_BIO_GRENADE_RADIUS = 96.0f;
-const int CTFT_BIO_GRENADE_HEALTH_COST = 50;
+const uint WTF_TRANSLOCATOR_COOLDOWN = 2000;
+const uint WTF_TRANSLOCATOR_RETURN_TIME = WTF_TRANSLOCATOR_COOLDOWN + 3000;
+const float WTF_TRANSLOCATOR_HEALTH = 99.0f;
+
+const int WTF_SMOKE_GRENADE_AP_COST = 50;
+
+const float WTF_RESPAWN_RADIUS = 384.0f;
+const float WTF_BUILD_RADIUS = 160.0f;
+const float WTF_BUILD_DESTROY_RADIUS = 96.0f;
+
+const float WTF_MEDIC_INFLUENCE_BASE_RADIUS = 192.0f;
+const float WTF_SUPPORT_INFLUENCE_BASE_RADIUS = 192.0f;
+
+const uint WTF_BIO_GRENADE_COOLDOWN = 2000;
+const uint WTF_BIO_GRENADE_DECAY = 2000;
+const float WTF_BIO_GRENADE_RADIUS = 96.0f;
+const int WTF_BIO_GRENADE_HEALTH_COST = 50;
 
 // Shared values for all grenades.
 // Values should match GL projectile ones to aid aiming.
-const float CTFT_GRENADE_SPEED = 1000;
-const uint CTFT_GRENADE_TIMEOUT = 1250;
+const float WTF_GRENADE_SPEED = 1000.0f;
+const uint WTF_GRENADE_TIMEOUT = 1250;
 
-const float CTFT_PLAYER_DETECTION_RADIUS = 512;
-const int CTFT_MOTION_DETECTOR_AP_COST = 40;
+const float WTF_PLAYER_DETECTION_RADIUS = 512.0f;
+const int WTF_MOTION_DETECTOR_AP_COST = 40;
 
 // precache images and sounds
 
@@ -788,7 +787,7 @@ void GT_ScoreEvent( Client @client, const String &score_event, const String &arg
         // Class-specific death stuff
         cPlayer @targetPlayer = @GetPlayer( target.client );
 		// Set base player respawn time
-		targetPlayer.respawnTime = levelTime + CTFT_BASE_RESPAWN_TIME;
+		targetPlayer.respawnTime = levelTime + WTF_BASE_RESPAWN_TIME;
 		// Shorten respawn time when fragged at the team base
 		cFlagBase @targetBase = @CTF_getBaseForTeam( target.team );
 		if ( @targetBase != null )
@@ -811,23 +810,23 @@ void GT_ScoreEvent( Client @client, const String &score_event, const String &arg
 
         if ( targetPlayer.playerClass.tag == PLAYERCLASS_SUPPORT )
 		{
-			CTFT_DeathDrop( target.client, "Armor Shard", 5 );
+			WTF_DeathDrop( target, "Armor Shard", 5 );
 		}
 		else if ( targetPlayer.playerClass.tag == PLAYERCLASS_INFILTRATOR )
 		{
-			CTFT_DeathDrop( target.client, "Armor Shard", 5 );
+			WTF_DeathDrop( target, "Armor Shard", 5 );
 		}
 		else if ( targetPlayer.playerClass.tag == PLAYERCLASS_SNIPER )
 		{
-			CTFT_DeathDrop( target.client, "Armor Shard", 5 );
+			WTF_DeathDrop( target, "Armor Shard", 5 );
 		}
 		else if ( targetPlayer.playerClass.tag == PLAYERCLASS_MEDIC )
 		{
-			CTFT_DeathDrop( target.client, "50 Health" );
+			WTF_DeathDrop( target, "50 Health" );
 		}
 		else if ( targetPlayer.playerClass.tag == PLAYERCLASS_GRUNT )
 		{
-			CTFT_DeathDrop( target.client, "Green Armor" );
+			WTF_DeathDrop( target, "Green Armor" );
         }
     }
 }
@@ -860,7 +859,7 @@ void GT_PlayerRespawn( Entity @ent, int old_team, int new_team )
 
         // Set newly joined players to respawn queue
         if ( new_team == TEAM_ALPHA || new_team == TEAM_BETA )
-            player.respawnTime = levelTime + CTFT_BASE_RESPAWN_TIME;
+            player.respawnTime = levelTime + WTF_BASE_RESPAWN_TIME;
     }
 
     if ( ent.isGhosting() )
@@ -1017,7 +1016,7 @@ int GT_GetScriptWeaponCooldown( const Client @client, int weaponNum )
 	{
 		case PLAYERCLASS_MEDIC:
 			{
-				if( ent.health < CTFT_BIO_GRENADE_HEALTH_COST + 25 )
+				if( ent.health < WTF_BIO_GRENADE_HEALTH_COST + 25 )
 					return 99999;
 
 				if( player.isBioGrenadeCooldown() )
@@ -1095,7 +1094,7 @@ bool GT_FireScriptWeapon( Client @client, int weaponNum )
 	return false;
 }
 
-void CTFT_UpdateHidenameEffects()
+void WTF_UpdateHidenameEffects()
 {
 	// First clear the hidename effect for regular players and set the hidename effect for invisible players
 	for ( int i = 0; i < maxClients; i++ )
@@ -1131,9 +1130,9 @@ void CTFT_UpdateHidenameEffects()
 			float timeToNextThink = emitter.nextThink - levelTime;
 			// If emitter has not finished emission yet ( count == 0 )
 			if ( emitter.count == 0 )
-				radius += 512.0f * ( 1.0f - timeToNextThink / CTFT_SMOKE_EMITTER_EMISSION_TIME );
+				radius += 512.0f * ( 1.0f - timeToNextThink / WTF_SMOKE_EMITTER_EMISSION_TIME );
 			else
-				radius += 512.0f + 384.0f * ( 1.0f - timeToNextThink / CTFT_SMOKE_EMITTER_DECAY_TIME );
+				radius += 512.0f + 384.0f * ( 1.0f - timeToNextThink / WTF_SMOKE_EMITTER_DECAY_TIME );
 		}
 
 		array<Entity @> @inradius = @G_FindInRadius( smokeEmitters[i].origin, radius );
@@ -1152,7 +1151,7 @@ void CTFT_UpdateHidenameEffects()
 	}
 }
 
-void CTFT_UpdateDetectionEntities()
+void WTF_UpdateDetectionEntities()
 {
 	for ( int i = 0; i < maxClients; ++i )
 	{
@@ -1165,7 +1164,7 @@ void CTFT_UpdateDetectionEntities()
 	for ( uint i = 0; i < detectors.size(); ++i )
 	{
 		Entity @detector = detectors[i];
-		array<Entity @> @inradius = @G_FindInRadius( detector.origin, CTFT_PLAYER_DETECTION_RADIUS );
+		array<Entity @> @inradius = @G_FindInRadius( detector.origin, WTF_PLAYER_DETECTION_RADIUS );
 		for ( uint j = 0; j < inradius.size(); ++j )
 		{
 			Entity @ent = inradius[j];
@@ -1197,7 +1196,7 @@ void GT_ThinkRules()
     }
 
     GENERIC_Think();
-    CTFT_RespawnQueuedPlayers();
+    WTF_RespawnQueuedPlayers();
 
     if ( match.getState() >= MATCH_STATE_POSTMATCH )
     {
@@ -1256,9 +1255,9 @@ void GT_ThinkRules()
 		player.printNextTip();
     }
 
-	CTFT_UpdateHidenameEffects();
+	WTF_UpdateHidenameEffects();
 
-	CTFT_UpdateDetectionEntities();
+	WTF_UpdateDetectionEntities();
 
 	WTF_UpdateBotsExtraGoals();
 }
@@ -1302,7 +1301,7 @@ void GT_MatchStateStarted()
     switch ( match.getState() )
     {
     case MATCH_STATE_WARMUP:
-        CTFT_SetUpWarmup();
+        WTF_SetUpWarmup();
 		SpawnIndicators::Create( "team_CTF_alphaplayer", TEAM_ALPHA );
 		SpawnIndicators::Create( "team_CTF_alphaspawn", TEAM_ALPHA );
 		SpawnIndicators::Create( "team_CTF_betaplayer", TEAM_BETA );
@@ -1316,15 +1315,15 @@ void GT_MatchStateStarted()
 
     case MATCH_STATE_PLAYTIME:
         GENERIC_SetUpMatch();
-        CTFT_SetUpMatch();
+        WTF_SetUpMatch();
         break;
 
     case MATCH_STATE_POSTMATCH:
         GENERIC_SetUpEndMatch();
-		CTFT_RemoveTranslocators();
-		CTFT_RemoveSmokeGrenades();
-		CTFT_RemoveMotionDetectors();
-        CTFT_RemoveRevivers();
+		WTF_RemoveTranslocators();
+		WTF_RemoveSmokeGrenades();
+		WTF_RemoveMotionDetectors();
+        WTF_RemoveRevivers();
         break;
 
     default:
@@ -1332,7 +1331,7 @@ void GT_MatchStateStarted()
     }
 }
 
-void CTFT_SetUpWarmup()
+void WTF_SetUpWarmup()
 {
     GENERIC_SetUpWarmup();
 
@@ -1341,18 +1340,18 @@ void CTFT_SetUpWarmup()
         gametype.setTeamSpawnsystem( team, SPAWNSYSTEM_INSTANT, 0, 0, false );
 }
 
-void CTFT_SetUpMatch()
+void WTF_SetUpMatch()
 {
     // Reset flags
     CTF_ResetFlags();
-    CTFT_ResetRespawnQueue();
-	CTFT_RemoveTranslocators();
-	CTFT_RemoveSmokeGrenades();
-	CTFT_RemoveMotionDetectors();
-    CTFT_RemoveItemsByName("25 Health");
-    CTFT_RemoveItemsByName("Yellow Armor");
-    CTFT_RemoveItemsByName("5 Health");
-    CTFT_RemoveItemsByName("Armor Shard");
+    WTF_ResetRespawnQueue();
+	WTF_RemoveTranslocators();
+	WTF_RemoveSmokeGrenades();
+	WTF_RemoveMotionDetectors();
+    WTF_RemoveItemsByName("25 Health");
+    WTF_RemoveItemsByName("Yellow Armor");
+    WTF_RemoveItemsByName("5 Health");
+    WTF_RemoveItemsByName("Armor Shard");
 
     // set spawnsystem type to not respawn the players when they die
     for ( int team = TEAM_PLAYERS; team < GS_MAX_TEAMS; team++ )

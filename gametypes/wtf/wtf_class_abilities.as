@@ -53,7 +53,7 @@ void ThrowBioGrenade( Client @client, cPlayer @player )
 		return;
 	}
 
-    if ( player.ent.health < CTFT_BIO_GRENADE_HEALTH_COST + 15 )
+    if ( player.ent.health < WTF_BIO_GRENADE_HEALTH_COST + 15 )
     {
         client.printMessage( "You don't have enough health to throw a grenade\n" );
 		return;
@@ -61,7 +61,7 @@ void ThrowBioGrenade( Client @client, cPlayer @player )
     
 	if ( @ClientThrowBioGrenade( client ) != null )
 	{
-        player.ent.health -= CTFT_BIO_GRENADE_HEALTH_COST;
+        player.ent.health -= WTF_BIO_GRENADE_HEALTH_COST;
 		player.setBioGrenadeCooldown();
     }
 }

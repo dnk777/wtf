@@ -56,7 +56,7 @@ Entity @ClientThrowBioGrenade( Client @client )
     ent.takeDamage = 0;
     
     dir.normalize();
-    dir *= CTFT_GRENADE_SPEED;
+    dir *= WTF_GRENADE_SPEED;
 
     ent.velocity = dir;
     ent.linkEntity();
@@ -65,7 +65,7 @@ Entity @ClientThrowBioGrenade( Client @client )
 }
 
 
-void CTFT_SpawnBioSparksEmitter( int ownerNum, const Vec3 &in origin, int showToTeam, int shaderIndex )
+void WTF_SpawnBioSparksEmitter( int ownerNum, const Vec3 &in origin, int showToTeam, int shaderIndex )
 {
 	Entity @emitter = @G_SpawnEntity( "bio_grenade_sparks_emitter" );
 	emitter.type = ET_PARTICLES;
@@ -100,7 +100,7 @@ void bio_grenade_touch( Entity @self, Entity @other, const Vec3 planeNormal, int
 	if ( @owner == @other )
 		return;
 
-	other.splashDamage( owner, CTFT_BIO_GRENADE_RADIUS, 75, 50, 500, MOD_GRENADE_W );
+	other.splashDamage( owner, WTF_BIO_GRENADE_RADIUS, 75, 50, 500, MOD_GRENADE_W );
 
 	// Offset the emitter a bit (otherwise it looks poor).
 	Vec3 origin = self.origin + 10 * planeNormal;
@@ -123,15 +123,15 @@ void bio_grenade_touch( Entity @self, Entity @other, const Vec3 planeNormal, int
 	emitter.team = self.team;
 	// Hack! ownerNum is overwritten for particles! Keep entity num of the owner in maxHealth.
 	emitter.maxHealth = self.ownerNum + 1;
-	emitter.count = CTFT_BIO_GRENADE_DECAY;
+	emitter.count = WTF_BIO_GRENADE_DECAY;
 	@emitter.think = bio_cloud_emitter_think; 
 	emitter.nextThink = levelTime + 1;
 	emitter.linkEntity();
 
 	int enemyTeam = ( self.team == TEAM_ALPHA ) ? TEAM_BETA : TEAM_ALPHA;
 
-	CTFT_SpawnBioSparksEmitter( self.ownerNum, origin, self.team, prcBioTeamSparksShaderIndex );
-	CTFT_SpawnBioSparksEmitter( self.ownerNum, origin, enemyTeam, prcBioEnemySparksShaderIndex );
+	WTF_SpawnBioSparksEmitter( self.ownerNum, origin, self.team, prcBioTeamSparksShaderIndex );
+	WTF_SpawnBioSparksEmitter( self.ownerNum, origin, enemyTeam, prcBioEnemySparksShaderIndex );
 
 	emitter.explosionEffect( 96 );
 	G_Sound( emitter, CHAN_AUTO, prcBioEmissionSound, ATTN_NORM );
@@ -151,7 +151,7 @@ void bio_cloud_emitter_think( Entity @self )
 		self.freeEntity();
 		return;
 	}
-	if ( self.count < CTFT_BIO_GRENADE_DECAY - 500 )
+	if ( self.count < WTF_BIO_GRENADE_DECAY - 500 )
 	{
 		// Keep the entity but stop emitting particles
 		self.particlesFrequency = 0;
@@ -163,7 +163,7 @@ void bio_cloud_emitter_think( Entity @self )
 	Entity @owner = G_GetEntity( self.maxHealth );
 	const float damagePerFrame = 150 * 0.001f * frameTime;
 	const float knockbackPerFrame = 150 * 0.001f * frameTime;
-	array<Entity @> @inradius = G_FindInRadius( self.origin, CTFT_BIO_GRENADE_RADIUS );
+	array<Entity @> @inradius = G_FindInRadius( self.origin, WTF_BIO_GRENADE_RADIUS );
 	for ( uint i = 0; i < inradius.size(); ++i )
 	{
 		Entity @ent = inradius[i];
@@ -184,7 +184,7 @@ void bio_cloud_emitter_think( Entity @self )
 		}
 
 		float distance = self.origin.distance( ent.origin );
-		float damageScale = 0.6f + 0.4f * distance / CTFT_BIO_GRENADE_RADIUS;
+		float damageScale = 0.6f + 0.4f * distance / WTF_BIO_GRENADE_RADIUS;
 		// Damage has "magnetic effect"
 		Vec3 damageDir = self.origin - ent.origin;
 		damageDir.normalize();

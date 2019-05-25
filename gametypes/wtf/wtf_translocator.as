@@ -117,7 +117,7 @@ class cTranslocator
         this.bodyEnt.clipMask = MASK_PLAYERSOLID;
         this.bodyEnt.moveType = MOVETYPE_TOSS;
         this.bodyEnt.svflags &= ~SVF_NOCLIENT;
-        this.bodyEnt.health = CTFT_TRANSLOCATOR_HEALTH;
+        this.bodyEnt.health = WTF_TRANSLOCATOR_HEALTH;
         this.bodyEnt.mass = 25;
         this.bodyEnt.takeDamage = 1;
         this.bodyEnt.nextThink = levelTime + 1;

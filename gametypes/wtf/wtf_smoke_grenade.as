@@ -17,8 +17,8 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
-const uint CTFT_SMOKE_EMITTER_EMISSION_TIME = 1000;
-const uint CTFT_SMOKE_EMITTER_DECAY_TIME = 5000;
+const uint WTF_SMOKE_EMITTER_EMISSION_TIME = 1000;
+const uint WTF_SMOKE_EMITTER_DECAY_TIME = 5000;
 
 Entity @ClientThrowSmokeGrenade( Client @client )
 {
@@ -57,11 +57,11 @@ Entity @ClientThrowSmokeGrenade( Client @client )
     ent.health = 999;
     ent.mass = 50;
     ent.takeDamage = 0;
-    ent.nextThink = levelTime + CTFT_GRENADE_TIMEOUT;
+    ent.nextThink = levelTime + WTF_GRENADE_TIMEOUT;
     
     // assign some frontal velocity to the grenade, as for being dropped by the player
     dir.normalize();
-    dir *= CTFT_GRENADE_SPEED;
+    dir *= WTF_GRENADE_SPEED;
 
     ent.velocity = dir;
     ent.linkEntity();
@@ -118,7 +118,7 @@ void smoke_grenade_think( Entity @grenade )
     emitter.particlesShaderIndex = G_ImageIndex( "gfx/wtf/smoke" );
     emitter.particlesSpread = 250;
     emitter.particlesSize = 90;
-    emitter.particlesTime = ( CTFT_SMOKE_EMITTER_EMISSION_TIME + CTFT_SMOKE_EMITTER_DECAY_TIME ) / 1000;
+    emitter.particlesTime = ( WTF_SMOKE_EMITTER_EMISSION_TIME + WTF_SMOKE_EMITTER_DECAY_TIME ) / 1000;
     emitter.particlesFrequency = 48;
     emitter.particlesSpherical = true;
     emitter.particlesBounce = true;
@@ -128,8 +128,8 @@ void smoke_grenade_think( Entity @grenade )
 	emitter.team = grenade.team;
 	emitter.count = 0;
 	@emitter.think = smoke_emitter_think;
-	emitter.nextThink = levelTime + CTFT_SMOKE_EMITTER_EMISSION_TIME;
-	
+	emitter.nextThink = levelTime + WTF_SMOKE_EMITTER_EMISSION_TIME;
+
 	grenade.freeEntity();
 
 	emitter.linkEntity();
@@ -137,14 +137,14 @@ void smoke_grenade_think( Entity @grenade )
 
 void smoke_emitter_think( Entity @emitter )
 {
-	// The emitter has already stopped emission CTFT_SMOKE_EMITTER_DECAY_TIME ago
+	// The emitter has already stopped emission WTF_SMOKE_EMITTER_DECAY_TIME ago
 	if ( emitter.count != 0 )
 	{
 		emitter.freeEntity();
 		return;
 	}
 	// Stop emitting particles but keep the entity for hidename cloud tests 
-	emitter.nextThink = levelTime + CTFT_SMOKE_EMITTER_DECAY_TIME;
+	emitter.nextThink = levelTime + WTF_SMOKE_EMITTER_DECAY_TIME;
 	emitter.particlesFrequency = 0;
 	emitter.count = 1;
 }

@@ -40,7 +40,7 @@ class cReviver
         this.triggered = false;
         this.decalindex = G_ImageIndex( "gfx/wtf/reviver_decal" );
         this.modelindex = G_ModelIndex( "models/wtf/reviver.md3" );
-        this.duration = CTFT_BASE_RESPAWN_TIME - 250;
+        this.duration = WTF_BASE_RESPAWN_TIME - 250;
         @this.player = null;
     }
 
@@ -217,7 +217,7 @@ class cReviver
 	{
 		activator.printMessage( S_COLOR_CYAN + "You have disabled an enemy reviver!\n" );
 		// Add respawn penalty delay for the dead player
-		this.player.respawnTime += CTFT_DISABLED_REVIVER_RESPAWN_PENALTY;
+		this.player.respawnTime += WTF_REVIVER_RESPAWN_PENALTY;
 		this.triggered = true;
 	}
 }
