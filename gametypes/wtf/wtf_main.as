@@ -232,13 +232,18 @@ bool GT_Command( Client @client, const String &cmdString, const String &argsStri
     }
     else if ( cmdString == "class" )
     {
-        if ( @client != null )
-            GetPlayer( client ).setPlayerClassCommand( argsString );
-        return true;
+		if ( @client != null )
+		{
+			GetPlayer( client ).handlePlayerClassCommand( argsString );
+		}
+		return true;
     }
 	else if ( cmdString == "classaction" )
 	{
-		ClassactionCommand( client );
+		if ( @client != null )
+		{
+			GetPlayer( client ).handleClassactionCommand( argsString );
+		}
 		return true;
 	}
     // example of registered command
@@ -1084,10 +1089,10 @@ bool GT_FireScriptWeapon( Client @client, int weaponNum )
 	switch( player.playerClass.tag )
 	{
 		case PLAYERCLASS_MEDIC:
-			ThrowBioGrenade( client, player );
+			player.throwBioGrenade();
 			return true;
 		case PLAYERCLASS_SUPPORT:
-			ThrowSmokeGrenade( client, player );
+			player.throwSmokeGrenade();
 			return true;
 	}
 

@@ -337,7 +337,7 @@ class cPlayer
         return success;
     }
 
-    void setPlayerClassCommand( String &argsString )
+    void handlePlayerClassCommand( String &argsString )
     {
         String token = argsString.getToken( 0 );
 
@@ -1640,6 +1640,74 @@ class cPlayer
 		}
 
 		setPlayerClass( tag );
+	}
+
+	void throwSmokeGrenade()
+	{
+		const int armorCost = 50;
+		if ( client.armor < armorCost )
+		{
+			client.printMessage( "You don't have enough armor to throw a grenade\n" );
+			return;
+		}
+
+		if ( @ClientThrowSmokeGrenade( client ) != null )
+		{
+			client.armor -= armorCost;
+		}
+	}
+
+	void throwBioGrenade()
+	{
+		if ( this.isBioGrenadeCooldown() )
+		{
+			client.printMessage( "You can't throw a grenade yet\n" );
+			return;
+		}
+
+		const int healthCost = 50;
+		if ( this.ent.health < healthCost + 25 )
+		{
+			client.printMessage( "You don't have enough health to throw a grenade\n" );
+			return;
+		}
+
+		if ( @ClientThrowBioGrenade( client ) != null )
+		{
+			this.ent.health -= healthCost;
+			this.setBioGrenadeCooldown();
+		}
+	}
+
+	void handleClassactionCommand( String &argsString )
+	{
+		if ( this.client.getEnt().isGhosting() )
+		{
+			return;
+		}
+
+		// TODO: Should be a virtual method of an overridden player class
+		switch ( this.playerClass.tag )
+		{
+			case PLAYERCLASS_GRUNT:
+				this.activateShell();
+				break;
+			case PLAYERCLASS_MEDIC:
+				this.throwBioGrenade();
+				break;
+			case PLAYERCLASS_RUNNER:
+				this.throwOrUseTranslocator();
+				break;
+			case PLAYERCLASS_INFILTRATOR:
+				this.activateInvisibility();
+				break;
+			case PLAYERCLASS_SUPPORT:
+				this.throwSmokeGrenade();
+				break;
+			case PLAYERCLASS_SNIPER:
+				this.buildOrDestroyMotionDetector();
+				break;
+		}
 	}
 }
 

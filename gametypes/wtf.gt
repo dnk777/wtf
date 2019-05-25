@@ -14,7 +14,6 @@ wtf/wtf_classes.as;
 wtf/wtf_players.as;
 wtf/wtf_main.as;
 wtf/wtf_entities.as;
-wtf/wtf_class_abilities.as;
 wtf/wtf_reviver.as;
 wtf/wtf_translocator.as;
 wtf/wtf_smoke_grenade.as;
