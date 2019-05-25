@@ -44,7 +44,7 @@ class cPlayer
 	int64 shellActivationCooldownTime;
 	int64 supportRegenCooldownTime;
     int64 buildCooldownTime;
-	int64 blastCooldownTime;
+	int64 smokeGrenadeCooldownTime;
 	int64 bioGrenadeCooldownTime;
 	int64 translocatorCooldownTime;
 	int64 flagDispenserCooldownTime;
@@ -93,7 +93,7 @@ class cPlayer
 		this.shellActivationCooldownTime = 0;
 		this.supportRegenCooldownTime = 0;
         this.buildCooldownTime = 0;
-   		this.blastCooldownTime = 0;
+		this.smokeGrenadeCooldownTime = 0;
 		this.bioGrenadeCooldownTime = 0;
 		this.translocatorCooldownTime = 0;
 		this.flagDispenserCooldownTime = 0;
@@ -199,8 +199,12 @@ class cPlayer
 
 		if ( this.isBioGrenadeCooldown() )
 		{
-			frac = float( this.bioGrenadeCooldownTimeLeft() ) / float( WTF_BIO_GRENADE_COOLDOWN );
-            this.client.setHUDStat( STAT_PROGRESS_OTHER, int( frac * 100 ) );
+            this.client.setHUDStat( STAT_PROGRESS_OTHER, this.bioCooldownProgress() );
+		}
+
+		if ( this.isSmokeGrenadeCooldown() )
+		{
+			this.client.setHUDStat( STAT_PROGRESS_OTHER, this.smokeCooldownProgress() );
 		}
 
         if ( this.playerClass.tag == PLAYERCLASS_INFILTRATOR )
@@ -1061,17 +1065,33 @@ class cPlayer
 		return int( levelTime - this.supportRegenCooldownTime );
 	}
 
-	int blastCooldownTimeLeft()
+	bool isSmokeGrenadeCooldown()
+	{
+		if ( this.playerClass.tag != PLAYERCLASS_SUPPORT )
+			return false;
+
+		return this.smokeGrenadeCooldownTime > levelTime;
+	}
+
+	void setSmokeGrenadeCooldown()
+	{
+		if ( this.playerClass.tag != PLAYERCLASS_SUPPORT )
+			return;
+
+		this.smokeGrenadeCooldownTime = levelTime + 5000;
+	}
+
+	int smokeCooldownProgress()
 	{
 		if ( this.playerClass.tag != PLAYERCLASS_SUPPORT )
 			return 0;
-		
-		if ( this.blastCooldownTime <= levelTime )
+
+		if ( this.smokeGrenadeCooldownTime <= levelTime )
 			return 0;
 
-		return int( levelTime - this.blastCooldownTime );
+		return int( 100 * ( levelTime - this.smokeGrenadeCooldownTime ) / 5000.0f );
 	}
-   
+
 	bool isBioGrenadeCooldown()
 	{
 		if ( this.playerClass.tag != PLAYERCLASS_MEDIC )
@@ -1085,18 +1105,18 @@ class cPlayer
 		if ( this.playerClass.tag != PLAYERCLASS_MEDIC )
 			return;
 
-		this.bioGrenadeCooldownTime = levelTime + WTF_BIO_GRENADE_COOLDOWN;
+		this.bioGrenadeCooldownTime = levelTime + 2000;
 	}
 
-	int bioGrenadeCooldownTimeLeft()
+	int bioCooldownProgress()
 	{
 		if ( this.playerClass.tag != PLAYERCLASS_MEDIC )
 			return 0;
-		
+
 		if ( this.bioGrenadeCooldownTime <= levelTime )
 			return 0;
 
-		return int( levelTime - this.bioGrenadeCooldownTime );
+		return int( 100 * ( levelTime - this.bioGrenadeCooldownTime ) / 2000.0f );
 	}
 
     void setInvisibilityCooldown()
@@ -1644,16 +1664,15 @@ class cPlayer
 
 	void throwSmokeGrenade()
 	{
-		const int armorCost = 50;
-		if ( client.armor < armorCost )
+		if ( this.isSmokeGrenadeCooldown() )
 		{
-			client.printMessage( "You don't have enough armor to throw a grenade\n" );
+			client.printMessage( "You can't throw a grenade yet\n" );
 			return;
 		}
 
-		if ( @ClientThrowSmokeGrenade( client ) != null )
+		if( @ClientThrowSmokeGrenade( client ) != null )
 		{
-			client.armor -= armorCost;
+			this.setSmokeGrenadeCooldown();
 		}
 	}
 
@@ -1665,16 +1684,8 @@ class cPlayer
 			return;
 		}
 
-		const int healthCost = 50;
-		if ( this.ent.health < healthCost + 25 )
-		{
-			client.printMessage( "You don't have enough health to throw a grenade\n" );
-			return;
-		}
-
 		if ( @ClientThrowBioGrenade( client ) != null )
 		{
-			this.ent.health -= healthCost;
 			this.setBioGrenadeCooldown();
 		}
 	}

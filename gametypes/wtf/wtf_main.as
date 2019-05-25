@@ -51,8 +51,6 @@ const uint WTF_TRANSLOCATOR_COOLDOWN = 2000;
 const uint WTF_TRANSLOCATOR_RETURN_TIME = WTF_TRANSLOCATOR_COOLDOWN + 3000;
 const float WTF_TRANSLOCATOR_HEALTH = 99.0f;
 
-const int WTF_SMOKE_GRENADE_AP_COST = 50;
-
 const float WTF_RESPAWN_RADIUS = 384.0f;
 const float WTF_BUILD_RADIUS = 160.0f;
 const float WTF_BUILD_DESTROY_RADIUS = 96.0f;
@@ -60,10 +58,8 @@ const float WTF_BUILD_DESTROY_RADIUS = 96.0f;
 const float WTF_MEDIC_INFLUENCE_BASE_RADIUS = 192.0f;
 const float WTF_SUPPORT_INFLUENCE_BASE_RADIUS = 192.0f;
 
-const uint WTF_BIO_GRENADE_COOLDOWN = 2000;
 const uint WTF_BIO_GRENADE_DECAY = 2000;
 const float WTF_BIO_GRENADE_RADIUS = 96.0f;
-const int WTF_BIO_GRENADE_HEALTH_COST = 50;
 
 // Shared values for all grenades.
 // Values should match GL projectile ones to aid aiming.
@@ -1021,26 +1017,12 @@ int GT_GetScriptWeaponCooldown( const Client @client, int weaponNum )
 	{
 		case PLAYERCLASS_MEDIC:
 			{
-				if( ent.health < WTF_BIO_GRENADE_HEALTH_COST + 25 )
-					return 99999;
-
 				if( player.isBioGrenadeCooldown() )
-					return 99999;
-
-			
-				auto @selectedEnemies = @client.getBot().selectedEnemies;
-				if( selectedEnemies.areValid() && selectedEnemies.areThreatening() )
 					return 99999;
 			}
 			return 0;
 		case PLAYERCLASS_SUPPORT:
 			{
-				if( client.armor < WTF_SMOKE_GRENADE_AP_COST )
-					return 99999;
-
-				if( ent.health < 75 )
-					return 99999;
-
 				// Don't throw being at our base
 				float distanceToBotBase = 999999.0f;
 				float distanceToNmyBase = 999999.0f;				
