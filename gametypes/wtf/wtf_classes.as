@@ -30,6 +30,105 @@ const int PLAYERCLASS_TOTAL = 6;
 
 int[] playerClasses( maxClients ); // class of each player
 
+class ClassInventoryEntry
+{
+	int weaponNum;
+	int ammoLimit;
+	int regenStepMillis;
+	int regenStepAmmo;
+
+	ClassInventoryEntry( int weaponNum, int ammoLimit, int regenStepMillis, int regenStepAmmo )
+	{
+		this.weaponNum = weaponNum;
+		this.ammoLimit = ammoLimit;
+		this.regenStepMillis = regenStepMillis;
+		this.regenStepAmmo = regenStepAmmo;
+	}
+}
+
+class PlayerInventoryTracker
+{
+	array<int> regenAccumTimes;
+	cPlayer @player;
+
+	void frame() {
+		Client @client = @player.client;
+		const array<ClassInventoryEntry> @classInventory = @player.playerClass.inventory;
+
+		if ( classInventory.size() != regenAccumTimes.size() )
+		{
+			regenAccumTimes.resize( classInventory.size() );
+		}
+
+		for ( uint i = 0; i < classInventory.size(); ++i )
+		{
+			const int weaponNum = classInventory[i].weaponNum;
+			// Do not regenerate ammo for current weapon
+			if ( client.weapon == weaponNum )
+			{
+				continue;
+			}
+			// Do not regenerate ammo for weapon we're switching to
+			if ( client.pendingWeapon == weaponNum )
+			{
+				continue;
+			}
+
+			const int accumTime = regenAccumTimes[i] + frameTime;
+			regenAccumTimes[i] = accumTime;
+			if ( accumTime < classInventory[i].regenStepMillis )
+			{
+				continue;
+			}
+
+			regenAccumTimes[i] = 0;
+
+			const int ammoNum = weaponNum + ( AMMO_GUNBLADE - WEAP_GUNBLADE );
+			int currCount = client.inventoryCount( ammoNum );
+			const int ammoLimit = classInventory[i].ammoLimit;
+			if ( currCount >= ammoLimit )
+			{
+				continue;
+			}
+
+			currCount += classInventory[i].regenStepAmmo;
+			if ( currCount > ammoLimit )
+			{
+				currCount = ammoLimit;
+			}
+
+			client.inventorySetCount( ammoNum, currCount );
+		}
+	}
+
+	void resetPlayerInventory()
+	{
+		Client @client = @player.client;
+		const array<ClassInventoryEntry> @classInventory = @player.playerClass.inventory;
+
+		bool wasGunbladeMet = false;
+
+		for ( uint i = 0; i < classInventory.size(); ++i )
+		{
+			const ClassInventoryEntry @entry = classInventory[i];
+			int weaponNum = entry.weaponNum;
+			if ( weaponNum == WEAP_GUNBLADE )
+			{
+				wasGunbladeMet = true;
+			}
+
+			client.inventoryGiveItem( weaponNum );
+			client.inventorySetCount( weaponNum + ( AMMO_GUNBLADE - WEAP_GUNBLADE ), entry.ammoLimit );
+		}
+
+		if ( !wasGunbladeMet )
+		{
+			client.inventorySetCount( WEAP_GUNBLADE, 0 );
+		}
+	}
+}
+
+
 // definition of the classes
 class cPlayerClass
 {
@@ -60,6 +159,7 @@ class cPlayerClass
     int action2IconIndex;
 
 	const String[] @description;
+	const array<ClassInventoryEntry> @inventory;
 
     cPlayerClass()
     {
@@ -83,7 +183,7 @@ class cPlayerClass
 	void setup( String &class_name, int tag, String &model, int health, int armor, int maxArmor, 
 				int maxSpeedInAir, int maxSpeedOnGround, int dashSpeed, bool stun, 
 				const String &icon, const String @action1Icon, const String @action2Icon, 
-			    const String[] @description )
+			    const String[] @description, const ClassInventoryEntry[] @inventory )
     {
         this.name = class_name;
         this.playerModel = model;
@@ -109,6 +209,7 @@ class cPlayerClass
             this.action2IconIndex = G_ImageIndex( action2Icon );
 
 		@this.description = description;
+		@this.inventory = inventory;
 
         this.initialized = true;
     }
@@ -138,6 +239,18 @@ const String[] gruntDescription =
 	"Command ^8classaction^7: Activate a protection shell\n"
 };
 
+const ClassInventoryEntry[] gruntInventory =
+{
+	// Just give a blade
+	ClassInventoryEntry( WEAP_GUNBLADE, 0, 0, 0 ),
+	// Regenerate 1 grenade every 333 millis up to 10 grenades
+	ClassInventoryEntry( WEAP_GRENADELAUNCHER, 10, 333, 1 ),
+	// Regenerate 1 rocket every 333 millis up to 10 rockets
+	ClassInventoryEntry( WEAP_ROCKETLAUNCHER, 10, 333, 1 ),
+	// Regenerate 5 lasers every 333 millis up to 150 lasers
+	ClassInventoryEntry( WEAP_LASERGUN, 150, 333, 5 )
+};
+
 const String[] medicDescription =
 {
 	"You're spawned as ^2MEDIC^7. This is a supportive class with health regenration\n",
@@ -145,6 +258,16 @@ const String[] medicDescription =
 	"You can revive dead teammates by walking over their reviver marker\n",
 	"You can disable enemy revivers by walking over their reviver marker\n",
 	"Command ^8classaction^7: Throw a bio grenade that heals teammates and hurts enemies\n"
+};
+
+const ClassInventoryEntry[] medicInventory =
+{
+	// Just give it with initial blaster ammo
+	ClassInventoryEntry( WEAP_GUNBLADE, 1, 0, 0 ),
+	// Regenerate 5 bullets every 333 millis up to 50 bullets
+	ClassInventoryEntry( WEAP_MACHINEGUN, 50, 333, 5 ),
+	// Regenerate 5 plasmas every 333 millis up to 50 plasmas
+	ClassInventoryEntry( WEAP_PLASMAGUN, 50, 333, 5 )
 };
 
 const String[] runnerDescription =
@@ -156,11 +279,33 @@ const String[] runnerDescription =
 	"Command ^8classaction^7: Throws your translocator, if it is thrown uses it\n"
 };
 
+const ClassInventoryEntry[] runnerInventory =
+{
+	// Just give it with initial blaster ammo
+	ClassInventoryEntry( WEAP_GUNBLADE, 1, 0, 0 ),
+	// Regenerate 1 shell every 750 millis up to 5 shells
+	ClassInventoryEntry( WEAP_RIOTGUN, 5, 750, 1 ),
+	// Regenerate 1 rocket every 750 millis up to 5 rockets
+	ClassInventoryEntry( WEAP_ROCKETLAUNCHER, 5, 750, 1 )
+};
+
 const String[] infiltratorDescription =
 {
 	"You're spawned as ^8INFILTRATOR^7. This is the best class for sabotaging enemy plans!\n",
 	"You can activate invisibility for a couple of seconds\n",
 	"Command ^8classaction^7: Toggle invisibility\n"
+};
+
+const ClassInventoryEntry[] infiltratorInventory =
+{
+	// Just give a blade
+	ClassInventoryEntry( WEAP_GUNBLADE, 0, 0, 0 ),
+	// Regenerate 1 shell every 1500 millis up to 5 shells
+	ClassInventoryEntry( WEAP_RIOTGUN, 5, 1500, 1 ),
+	// Regenerate 1 wave every 1000 millis up to 5 waves
+	ClassInventoryEntry( WEAP_SHOCKWAVE, 5, 1000, 1 ),
+	// Regenerate 5 lasers every 333 millis up to 100 lasers
+	ClassInventoryEntry( WEAP_LASERGUN, 100, 333, 5 )
 };
 
 const String[] supportDescription =
@@ -170,12 +315,34 @@ const String[] supportDescription =
 	"Command ^6classaction^7: Throw a smoke grenade at the armor points cost\n"
 };
 
+const ClassInventoryEntry[] supportInventory =
+{
+	// Just give a blade
+	ClassInventoryEntry( WEAP_GUNBLADE, 0, 0, 0 ),
+	// Regenerate 1 grenade every 1000 millis up to 3 grenades
+	ClassInventoryEntry( WEAP_GRENADELAUNCHER, 3, 1000, 1 ),
+	// Regenerate 1 rocket every 1000 millis up to 3 rockets
+	ClassInventoryEntry( WEAP_ROCKETLAUNCHER, 3, 1000, 1 ),
+	// Regenerate 1 bolt every 1000 millis up to 3 bolts
+	ClassInventoryEntry( WEAP_ELECTROBOLT, 3, 1000, 1 )
+};
+
 const String[] sniperDescription =
 {
 	"You're spawned as ^5SNIPER^7. This is a defencive class with best weapons for far-range fights.\n",
 	"You can also build and listen to a motion detector\n",
 	"This entity detects fast moving nearby enemies and highlights ones for you and your team\n",
 	"Command ^8classaction^7: Build or destroy a motion detector\n"
+};
+
+const ClassInventoryEntry[] sniperInventory =
+{
+	// Regenerate a single shot every 1000 millis
+	ClassInventoryEntry( WEAP_INSTAGUN, 1, 1000, 1 ),
+	// Regenerate 1 bolt every 333 millis up to 5 bolts
+	ClassInventoryEntry( WEAP_ELECTROBOLT, 5, 333, 1 ),
+	// Regenerate 3 bullets every 500 millis up to 50 bullets
+	ClassInventoryEntry( WEAP_MACHINEGUN, 50, 500, 5 )
 };
 
 // Initialize player classes
@@ -202,7 +369,8 @@ void GENERIC_InitPlayerClasses()
         "gfx/wtf/wtf_grunt",
         "gfx/wtf/wtf_grunt1",
         "gfx/wtf/wtf_grunt2",
-		gruntDescription
+		gruntDescription,
+		gruntInventory
     );
 
     cPlayerClassInfos[ PLAYERCLASS_MEDIC ].setup(
@@ -219,7 +387,8 @@ void GENERIC_InitPlayerClasses()
         "gfx/wtf/wtf_medic",
         "gfx/wtf/medic1",
         null,
-		medicDescription
+		medicDescription,
+		medicInventory
     );
 
     cPlayerClassInfos[ PLAYERCLASS_RUNNER ].setup(
@@ -236,7 +405,8 @@ void GENERIC_InitPlayerClasses()
         "gfx/wtf/wtf_runner",
         "gfx/wtf/runner1",
         "gfx/wtf/runner2",
-		runnerDescription
+		runnerDescription,
+		runnerInventory
     );
 
     cPlayerClassInfos[ PLAYERCLASS_INFILTRATOR ].setup(
@@ -253,7 +423,8 @@ void GENERIC_InitPlayerClasses()
         "gfx/wtf/wtf_infiltrator",
         "gfx/wtf/infiltrator1",
         "gfx/wtf/infiltrator2",
-		infiltratorDescription
+		infiltratorDescription,
+		infiltratorInventory
     );
 
 	cPlayerClassInfos[ PLAYERCLASS_SUPPORT ].setup(
@@ -270,7 +441,8 @@ void GENERIC_InitPlayerClasses()
 		"gfx/wtf/wtf_support",
 		null,
 		null,
-		supportDescription
+		supportDescription,
+		supportInventory
 	);
 
 	cPlayerClassInfos[ PLAYERCLASS_SNIPER ].setup(
@@ -287,7 +459,8 @@ void GENERIC_InitPlayerClasses()
 		"gfx/wtf/wtf_sniper",
 		null,
 		null,
-		sniperDescription
+		sniperDescription,
+		sniperInventory
 	);
 }
 

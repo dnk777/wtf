@@ -29,6 +29,7 @@ const int GRUNT_SHELL_DISABLED_MOVEMENT_FEATURES = PMFEAT_DASH|PMFEAT_WALLJUMP|P
 
 class cPlayer
 {
+	PlayerInventoryTracker inventoryTracker;
     cPlayerClass @playerClass;
     Client @client;
     Entity @ent;
@@ -70,6 +71,7 @@ class cPlayer
 
     cPlayer()
     {
+		@this.inventoryTracker.player = @this;
         // initialize all as grunt
         @this.playerClass = @cPlayerClassInfos[PLAYERCLASS_GRUNT];
         @this.reviver = null;
@@ -1268,106 +1270,6 @@ class cPlayer
                 this.centerPrintMessage( "Warshell wearing off in " + this.client.inventoryCount( POWERUP_SHELL ) + " seconds" );
         }
     }
-
-	void checkAndLoadAmmo( int ammoTag, int minCount )
-	{
-		if ( client.inventoryCount( ammoTag ) < minCount )
-			client.inventorySetCount( ammoTag, minCount );
-	}
-
-	void loadAmmo( bool fullLoad = true )
-	{
-		if ( this.playerClass.tag == PLAYERCLASS_RUNNER )
-		{
-		    // Enable gunblade blast
-			client.inventorySetCount( AMMO_GUNBLADE, 1 );
-			if ( fullLoad )
-			{
-				client.inventorySetCount( AMMO_ROCKETS, 9 );
-				client.inventorySetCount( AMMO_SHELLS, 9 );
-			}
-			else
-			{
-				this.checkAndLoadAmmo( AMMO_ROCKETS, 5 );
-				this.checkAndLoadAmmo( AMMO_SHELLS, 5 );
-			}
-		}
-		else if ( this.playerClass.tag == PLAYERCLASS_MEDIC )
-		{
-			if ( fullLoad )
-			{
-		    	client.inventorySetCount( AMMO_SHELLS, 10 );
-				client.inventorySetCount( AMMO_BULLETS, 150 );
-				client.inventorySetCount( AMMO_GRENADES, 10 );
-			}
-			else
-			{
-				this.checkAndLoadAmmo( AMMO_SHELLS, 5 );
-				this.checkAndLoadAmmo( AMMO_BULLETS, 100 );
-				this.checkAndLoadAmmo( AMMO_GRENADES, 5 );
-			}
-		}
-		else if ( this.playerClass.tag == PLAYERCLASS_GRUNT )
-		{
-			if ( fullLoad )
-			{
-		    	client.inventorySetCount( AMMO_ROCKETS, 15 );
-				client.inventorySetCount( AMMO_LASERS, 100 );
-				client.inventorySetCount( AMMO_GRENADES, 15 );
-			}
-			else
-			{
-				this.checkAndLoadAmmo( AMMO_ROCKETS, 7 );
-				this.checkAndLoadAmmo( AMMO_LASERS, 75 );
-				this.checkAndLoadAmmo( AMMO_GRENADES, 7 );
-			}
-		}
-		else if ( this.playerClass.tag == PLAYERCLASS_INFILTRATOR )
-		{
-			if ( fullLoad )
-			{
-				client.inventorySetCount( AMMO_LASERS, CTFT_GUNNER_MAX_LG_AMMO );
-				client.inventorySetCount( AMMO_PLASMA, 100 );
-				client.inventorySetCount( AMMO_GRENADES, 10 );	
-			}
-			else
-			{
-				this.checkAndLoadAmmo( AMMO_LASERS, ( 2 * CTFT_GUNNER_MAX_LG_AMMO ) / 3 );
-				this.checkAndLoadAmmo( AMMO_PLASMA, 50 );
-				this.checkAndLoadAmmo( AMMO_GRENADES, 5 );
-			}
-		}
-		else if ( this.playerClass.tag == PLAYERCLASS_SUPPORT )
-		{
-			// Enable gunblade blast
-			client.inventorySetCount( AMMO_GUNBLADE, 1 );
-			if ( fullLoad )
-			{
-				client.inventorySetCount( AMMO_WAVES, 13 );
-				client.inventorySetCount( AMMO_BOLTS, 0 );
-				client.inventorySetCount( AMMO_WEAK_BOLTS, 13 );
-			}
-			else
-			{
-				this.checkAndLoadAmmo( AMMO_WAVES, 7 );
-				client.inventorySetCount( AMMO_BOLTS, 0 );
-				this.checkAndLoadAmmo( AMMO_WEAK_BOLTS, 7 );
-			}
-		}
-		else if ( this.playerClass.tag == PLAYERCLASS_SNIPER )
-		{
-			if ( fullLoad )
-			{
-				client.inventorySetCount( AMMO_BOLTS, 13 );
-				client.inventorySetCount( AMMO_BULLETS, 75 );
-			}
-			else
-			{
-				this.checkAndLoadAmmo( AMMO_BOLTS, 7 );
-				this.checkAndLoadAmmo( AMMO_BULLETS, 50 );
-			}
-		}
-	}
 
 	void throwTranslocator()
 	{

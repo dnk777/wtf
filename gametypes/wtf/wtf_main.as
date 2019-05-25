@@ -42,7 +42,6 @@ float WTF_INFILTRATOR_INVIS_MAXLOAD = 100;
 uint WTF_INFILTRATOR_INVIS_COOLDOWN = 1000;
 uint WTF_SHELL_COOLDOWN = 6000;
 uint CTFT_DETECTOR_GRENADE_COOLDOWN = 8000;
-uint CTFT_FLAG_DISPENSER_COOLDOWN_TIME = 30000;
 int CTFT_MEDIC_REGEN_COOLDOWN = 1200;
 int CTFT_SUPPORT_REGEN_COOLDOWN = 1200;
 uint WTF_TRANSLOCATOR_COOLDOWN = 2000;
@@ -71,8 +70,6 @@ const int CTFT_BIO_GRENADE_HEALTH_COST = 50;
 // Values should match GL projectile ones to aid aiming.
 const float CTFT_GRENADE_SPEED = 1000;
 const uint CTFT_GRENADE_TIMEOUT = 1250;
-
-const int CTFT_GUNNER_MAX_LG_AMMO = 180;
 
 const float CTFT_PLAYER_DETECTION_RADIUS = 512;
 const int CTFT_MOTION_DETECTOR_AP_COST = 40;
@@ -891,56 +888,7 @@ void GT_PlayerRespawn( Entity @ent, int old_team, int new_team )
     player.refreshModel();
     player.refreshMovement();
 
-	client.inventorySetCount( WEAP_GUNBLADE, 1 );
-
-    // Runner
-    if ( player.playerClass.tag == PLAYERCLASS_RUNNER )
-    {
-        // Weapons
-        client.inventoryGiveItem( WEAP_ROCKETLAUNCHER );
-        client.inventoryGiveItem( WEAP_RIOTGUN );
-    }
-    // Medic
-    else if ( player.playerClass.tag == PLAYERCLASS_MEDIC )
-    {
-        // Weapons
-        client.inventoryGiveItem( WEAP_RIOTGUN );
-        client.inventoryGiveItem( WEAP_MACHINEGUN );
-		client.inventoryGiveItem( WEAP_GRENADELAUNCHER );
-    }
-    // Grunt
-    else if ( player.playerClass.tag == PLAYERCLASS_GRUNT )
-    {
-        // Weapons
-        client.inventoryGiveItem( WEAP_ROCKETLAUNCHER );
-        client.inventoryGiveItem( WEAP_LASERGUN );
-        client.inventoryGiveItem( WEAP_GRENADELAUNCHER );
-    }
-    // Infiltrator
-    else if ( player.playerClass.tag == PLAYERCLASS_INFILTRATOR )
-    {
-        // Weapons
-        client.inventoryGiveItem( WEAP_LASERGUN );
-        client.inventoryGiveItem( WEAP_PLASMAGUN );
-        client.inventoryGiveItem( WEAP_GRENADELAUNCHER );
-    }
-	else if ( player.playerClass.tag == PLAYERCLASS_SUPPORT )
-	{
-		// Weapons
-		client.inventoryGiveItem( WEAP_ELECTROBOLT );
-		client.inventoryGiveItem( WEAP_SHOCKWAVE );
-	}
-	else if ( player.playerClass.tag == PLAYERCLASS_SNIPER )
-	{
-		// Weapons
-		client.inventoryGiveItem( WEAP_INSTAGUN );		
-		client.inventoryGiveItem( WEAP_ELECTROBOLT );
-		client.inventoryGiveItem( WEAP_MACHINEGUN );
-		// Remove GB
-		client.inventorySetCount( WEAP_GUNBLADE, 0 );
-		// Remove IG ammo
-		client.inventorySetCount( AMMO_INSTAS, 0 );
-	}
+	player.inventoryTracker.resetPlayerInventory();
 
 	ent.svflags |= SVF_FORCETEAM;
 
@@ -960,11 +908,6 @@ void GT_PlayerRespawn( Entity @ent, int old_team, int new_team )
     }
     else
         player.resetTimers();
-
-	// must be called after resetting deployed mode (since it depends of it)
-	player.loadAmmo();
-	// if was fragged in deployed mode, some weak lasers ammo might be left
-	client.inventorySetCount( AMMO_WEAK_LASERS, 0 );
 
     // select rocket launcher if available
     client.selectWeapon( -1 ); // auto-select best weapon in the inventory
@@ -1308,6 +1251,7 @@ void GT_ThinkRules()
 		player.refreshInfluenceAbsorption();
         player.refreshRegeneration();
         player.watchShell();
+        player.inventoryTracker.frame();
         player.updateHUDstats();
 		player.printNextTip();
     }
