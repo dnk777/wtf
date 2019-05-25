@@ -17,8 +17,8 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
-const uint WTF_SMOKE_EMITTER_EMISSION_TIME = 1000;
-const uint WTF_SMOKE_EMITTER_DECAY_TIME = 5000;
+const uint WTF_SMOKE_EMITTER_EMISSION_TIME = 250;
+const uint WTF_SMOKE_EMITTER_DECAY_TIME = 3000;
 
 Entity @ClientThrowSmokeGrenade( Client @client )
 {

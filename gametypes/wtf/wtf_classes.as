@@ -226,8 +226,8 @@ const int SLOW_MAX_SPEED_ON_GROUND = 320;
 const int SLOW_DASH_SPEED = 450;
 
 // "Fast" classes (the Medic and the Support)
-const int FAST_MAX_SPEED_IN_AIR = 300;
-const int FAST_MAX_SPEED_ON_GROUND = 330;
+const int FAST_MAX_SPEED_IN_AIR = 290;
+const int FAST_MAX_SPEED_ON_GROUND = 320;
 const int FAST_DASH_SPEED = 450;
 
 // AS does not have array literals, so we have to define descriptions separately
@@ -276,6 +276,7 @@ const String[] runnerDescription =
 	"You can use a translocator, the throwable personal teleporter\n",
 	"A translocator gets returned automatically in a few seconds\n",
 	"Your translocator may be damaged. Consider checking it first before using it.\n",
+	"Also you can slide while crouching\n",
 	"Command ^8classaction^7: Throws your translocator, if it is thrown uses it\n"
 };
 
@@ -361,7 +362,7 @@ void GENERIC_InitPlayerClasses()
         "$models/players/bigvic",	// player model
         100,						// initial health
         100,						// initial armor
-		125,                        // max armor
+		150,                        // max armor
         SLOW_MAX_SPEED_IN_AIR,
 		SLOW_MAX_SPEED_ON_GROUND,
 		SLOW_DASH_SPEED,
@@ -398,9 +399,9 @@ void GENERIC_InitPlayerClasses()
         100,						// initial health
         0,						    // initial armor
 		50,                         // max armor
-        370,						// pmoveMaxSpeedInAir
-		370,                        // pmoveMaxSpeedOnGround
-        475,						// dash speed
+        320,						// pmoveMaxSpeedInAir
+		320,                        // pmoveMaxSpeedOnGround
+        450,						// dash speed
         false,						// can be stunned
         "gfx/wtf/wtf_runner",
         "gfx/wtf/runner1",

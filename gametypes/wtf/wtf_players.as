@@ -122,8 +122,8 @@ class cPlayer
 	void centerPrintMessage( String &string )
 	{
 		G_CenterPrintMsg( this.ent, string );
-		if ( this.nextTipTime >= levelTime && levelTime - this.nextTipTime < 2500 )
-			this.nextTipTime = levelTime + 2500;
+		if ( this.nextTipTime >= levelTime && levelTime - this.nextTipTime < 3000 )
+			this.nextTipTime = levelTime + 3000;
 	}
 
     void setHudMessage( String &message, int timeout, int placement )
@@ -705,6 +705,15 @@ class cPlayer
         else
         {
 			this.client.pmoveFeatures = this.client.pmoveFeatures | ALL_DISABLED_MOVEMENT_FEATURES;
+			if ( this.playerClass.tag == PLAYERCLASS_RUNNER )
+			{
+				this.client.pmoveFeatures = this.client.pmoveFeatures | PMFEAT_CROUCHSLIDING;
+			}
+			else
+			{
+				this.client.pmoveFeatures = this.client.pmoveFeatures & ~PMFEAT_CROUCHSLIDING;
+			}
+
 			if ( this.isTranslocating )
 			{
 				handleIsTranslocatingState();
@@ -1078,7 +1087,7 @@ class cPlayer
 		if ( this.playerClass.tag != PLAYERCLASS_SUPPORT )
 			return;
 
-		this.smokeGrenadeCooldownTime = levelTime + 5000;
+		this.smokeGrenadeCooldownTime = levelTime + 3000;
 	}
 
 	int smokeCooldownProgress()
@@ -1089,7 +1098,7 @@ class cPlayer
 		if ( this.smokeGrenadeCooldownTime <= levelTime )
 			return 0;
 
-		return int( 100 * ( levelTime - this.smokeGrenadeCooldownTime ) / 5000.0f );
+		return int( 100 * ( levelTime - this.smokeGrenadeCooldownTime ) / 3000.0f );
 	}
 
 	bool isBioGrenadeCooldown()
